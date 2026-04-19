@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { Pool } from 'pg'
 import { requireAuth, asyncHandler, validate } from '@clickup/sdk'
-import { UpdateProfileSchema, ChangePasswordSchema } from '@clickup/contracts'
+import { UpdateProfileSchema, ChangePasswordSchema, BatchGetUsersSchema } from '@clickup/contracts'
 import { UsersRepository } from './users.repository.js'
 import { UsersService } from './users.service.js'
 
@@ -47,8 +47,8 @@ export function usersRoutes(db: Pool): Router {
     '/batch',
     requireAuth,
     asyncHandler(async (req, res) => {
-      const { ids } = req.body as { ids: string[] }
-      const users = await service.batchGetUsers(ids ?? [])
+      const { ids } = validate(BatchGetUsersSchema, req.body)
+      const users = await service.batchGetUsers(ids)
       res.json({ data: users })
     }),
   )
