@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import { createClient } from 'redis'
 import { AppError } from '@clickup/sdk'
+import { ErrorCode } from '@clickup/contracts'
 
 let redisClient: ReturnType<typeof createClient> | null = null
 
@@ -46,12 +47,7 @@ export function rateLimiter(isMutation: boolean) {
       }
 
       if (current > max) {
-        next(
-          new AppError(
-            'RATE_LIMITED',
-            `Rate limit exceeded: ${max} ${suffix}s per ${windowSeconds}s`,
-          ),
-        )
+        next(new AppError(ErrorCode.SYSTEM_RATE_LIMITED, `Rate limit exceeded: ${max} ${suffix}s per ${windowSeconds}s`))
         return
       }
     } catch {
