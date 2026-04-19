@@ -1,0 +1,86 @@
+{
+  "repo": "Shashank2577/clickup",
+  "branch": "main",
+  "created_at": "2026-04-19T00:00:00Z",
+  "total_tasks": 9,
+  "notes": "Wave 1 — Infrastructure layer. All 9 WOs must merge before Wave 2 starts. Batch 1 is fully independent. Batch 2 waits for Batch 1.",
+  "batches": [
+    {
+      "batch": 1,
+      "name": "Fully Independent — Fire Immediately",
+      "rationale": "These 5 WOs touch completely different files and have no inter-dependencies. All depend only on the Wave 0 foundation which is on main.",
+      "tasks": [
+        {
+          "id": "WO-001",
+          "title": "Identity Service: Auth (register, login, logout, JWT, sessions)",
+          "branch": "wave1/identity-auth",
+          "prompt": "Read the work order at .omc/work-orders/WO-001-identity-auth.md — follow it EXACTLY.\n\nYou are implementing the auth module for the identity-service. Create the branch wave1/identity-auth from main.\n\nFiles to create (listed in the WO):\n- services/identity-service/src/auth/auth.handler.ts\n- services/identity-service/src/auth/auth.service.ts\n- services/identity-service/src/auth/auth.repository.ts\n- services/identity-service/src/index.ts (copy from services/_template, update name/port)\n- services/identity-service/src/routes.ts\n- services/identity-service/package.json\n- services/identity-service/tsconfig.json\n- services/identity-service/.env.example\n- tests/unit/auth.service.test.ts\n- tests/integration/auth.handler.test.ts\n\nIMPORTANT:\n- Import all types from @clickup/contracts (read-only)\n- Import all middleware/utils from @clickup/sdk (read-only)\n- NEVER use console.log — use logger from @clickup/sdk\n- NEVER throw raw Error — use AppError(ErrorCode.X)\n- NEVER write validation logic — use validate(Schema, data) from @clickup/sdk\n- The users table does NOT have password_hash yet — run this migration first in identity-service/migrations/001_add_password_hash.sql: ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT NOT NULL DEFAULT ''\n- Start from services/_template for index.ts and package.json\n- PORT=3001\n\nRead AGENTS.md for full architecture rules. Read the WO for mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-001): identity auth — register, login, logout, JWT, sessions'",
+          "depends_on": []
+        },
+        {
+          "id": "WO-005",
+          "title": "API Gateway: Routing & Proxy",
+          "branch": "wave1/gateway-routing",
+          "prompt": "Read the work order at .omc/work-orders/WO-005-gateway-routing.md — follow it EXACTLY.\n\nYou are implementing the API gateway routing layer. Create the branch wave1/gateway-routing from main.\n\nFiles to create (listed in the WO):\n- services/api-gateway/src/index.ts\n- services/api-gateway/src/routes.ts\n- services/api-gateway/src/proxy/proxy.config.ts\n- services/api-gateway/src/proxy/proxy.middleware.ts\n- services/api-gateway/src/middleware/rate-limiter.ts\n- services/api-gateway/src/middleware/auth-forward.ts\n- services/api-gateway/package.json\n- services/api-gateway/tsconfig.json\n- services/api-gateway/.env.example\n- tests/integration/gateway.handler.test.ts\n\nInstall these packages in api-gateway: http-proxy-middleware express-rate-limit\n\nIMPORTANT:\n- This service has NO database connection\n- Use SERVICE_ROUTES array from proxy.config.ts exactly as specified in the WO\n- Auth forwarding calls identity-service GET /api/v1/auth/verify\n- Rate limiting uses Redis from @clickup/sdk\n- x-trace-id correlation ID must propagate to all upstream requests\n- PORT=3000\n\nRead AGENTS.md for full architecture rules. Read the WO for mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-005): api-gateway — routing, proxy, auth forwarding, rate limiting'",
+          "depends_on": []
+        },
+        {
+          "id": "WO-007",
+          "title": "DB Seed Script",
+          "branch": "wave1/db-seed",
+          "prompt": "Read the work order at .omc/work-orders/WO-007-db-seed.md — follow it EXACTLY.\n\nYou are creating the development seed script. Create the branch wave1/db-seed from main.\n\nFiles to create:\n- infra/seeds/seed.ts — main seed script (run with: pnpm seed)\n- infra/seeds/fixtures/users.fixture.ts\n- infra/seeds/fixtures/workspaces.fixture.ts\n- infra/seeds/fixtures/tasks.fixture.ts\n\nAdd to root package.json scripts: \"seed\": \"tsx infra/seeds/seed.ts\"\n\nThe seed creates:\n- 1 demo user (demo@clickup.oss / password123) with specific UUID 00000000-0000-0000-0000-000000000001\n- 1 demo workspace (slug: demo) with UUID 00000000-0000-0000-0000-000000000010\n- 2 spaces: Engineering, Marketing\n- 3 lists per space\n- 5 default statuses per list (Backlog, Todo, In Progress, Done, Cancelled)\n- 10 tasks per list\n- 3 subtasks per task\n- 2 comments per task\n\nIMPORTANT:\n- Seed must be idempotent (INSERT ... ON CONFLICT DO NOTHING for known UUIDs)\n- Use bcrypt.hash('password123', 12) for demo user password\n- Tasks need materialized path AND seq_id (see WO for exact pattern)\n- The createTestTask function in the WO section 4 shows the seq_id insert pattern\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-007): db seed script — demo data and test fixtures'",
+          "depends_on": []
+        },
+        {
+          "id": "WO-008",
+          "title": "Pact Broker Setup & Contract Validator",
+          "branch": "wave1/pact-broker",
+          "prompt": "Read the work order at .omc/work-orders/WO-008-pact-broker.md — follow it EXACTLY.\n\nYou are setting up Pact contract testing infrastructure. Create the branch wave1/pact-broker from main.\n\nFiles to create:\n- infra/pact/docker-compose.pact.yml — Pact Broker + postgres sidecar\n- infra/pact/README.md — how to run locally\n- packages/test-helpers/src/contract-validator.ts — validateResponse() and validatePaginatedResponse() helpers\n- .github/workflows/pact.yml — CI workflow for consumer pact publish + provider verification\n\nIMPORTANT:\n- The Pact Broker runs at http://localhost:9292 with credentials pact/pact\n- contract-validator.ts validates response shapes against expected entity schemas using Zod\n- validateResponse('task', data) returns true if valid, throws with field-level error if invalid\n- The pact.yml CI workflow runs AFTER the main ci.yml\n- Do NOT create packages/test-helpers/package.json (that's WO-009's job)\n- Only create the contract-validator.ts file inside packages/test-helpers/src/\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-008): pact broker setup, contract validator, CI workflow'",
+          "depends_on": []
+        },
+        {
+          "id": "WO-009",
+          "title": "Test Helpers Package",
+          "branch": "wave1/test-helpers",
+          "prompt": "Read the work order at .omc/work-orders/WO-009-test-helpers.md — follow it EXACTLY.\n\nYou are creating the shared test helpers package used by ALL service integration tests. Create the branch wave1/test-helpers from main.\n\nFiles to create:\n- packages/test-helpers/package.json\n- packages/test-helpers/tsconfig.json\n- packages/test-helpers/src/index.ts (barrel export)\n- packages/test-helpers/src/db.ts (getTestDb, closeTestDb, withRollback, setupTestDb)\n- packages/test-helpers/src/auth.ts (makeTestToken, authHeader, testAuth)\n- packages/test-helpers/src/request.ts (createTestRequest with AuthedRequest)\n- packages/test-helpers/src/contract-validator.ts (validateResponse, validatePaginatedResponse)\n- packages/test-helpers/src/fixtures/users.fixture.ts (createTestUser)\n- packages/test-helpers/src/fixtures/workspaces.fixture.ts (createTestWorkspace, createTestSpace, createTestList)\n- packages/test-helpers/src/fixtures/tasks.fixture.ts (createTestTask, createTestComment)\n\nIMPORTANT:\n- This package is NEVER a runtime dependency — devDependency only in services\n- bcrypt cost factor 4 in fixtures for test speed (NOT production code)\n- createTestList seeds exactly 3 statuses (Todo, In Progress, Done)\n- createTestTask: inserts task AND task_sequences row with MAX(seq_id)+1, then updates tasks.seq_id\n- withRollback always rolls back the transaction, even if the inner function throws\n- makeTestToken uses signToken from @clickup/sdk (same secret as services)\n- Register this package in pnpm-workspace.yaml under packages/\n- Add to tsconfig.base.json references\n\nDependencies to add: pg, bcrypt, supertest (runtime); @pact-foundation/pact, @types/bcrypt, @types/pg, @types/supertest, typescript, zod (dev)\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-009): test-helpers package — DB fixtures, auth factory, request helper'",
+          "depends_on": []
+        }
+      ]
+    },
+    {
+      "batch": 2,
+      "name": "Depends on Batch 1 — Fire After All Batch 1 PRs Merge",
+      "rationale": "WO-002/003/004 depend on WO-001 (identity auth must exist). WO-006 depends on WO-005 (gateway routing must exist). These 4 touch different files and can run in parallel within this batch.",
+      "tasks": [
+        {
+          "id": "WO-002",
+          "title": "Identity Service: User Profiles",
+          "branch": "wave1/identity-users",
+          "prompt": "Read the work order at .omc/work-orders/WO-002-identity-users.md — follow it EXACTLY.\n\nYou are adding user profile management to the identity-service. Create the branch wave1/identity-users from main (after WO-001 has merged).\n\nFiles to create:\n- services/identity-service/src/users/users.handler.ts\n- services/identity-service/src/users/users.service.ts\n- services/identity-service/src/users/users.repository.ts\n- tests/unit/users.service.test.ts\n- tests/integration/users.handler.test.ts\n\nUpdate services/identity-service/src/routes.ts to register user routes.\n\nIMPORTANT:\n- NEVER expose password_hash in responses — use toUserDto() helper that strips it\n- Batch GET /api/v1/users/batch?ids=... uses DataLoader from @clickup/sdk\n- Avatar upload delegates to file-service (HTTP call, don't implement file handling here)\n- Cache user profiles in Tier 2 (60s) via CacheKeys.userProfile(userId)\n- Invalidate cache on profile update and password change\n- Password change: verify current password with bcrypt.compare before hashing new one\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-002): identity — user profile CRUD, avatar, password change'",
+          "depends_on": ["WO-001"]
+        },
+        {
+          "id": "WO-003",
+          "title": "Identity Service: Workspaces & Members",
+          "branch": "wave1/identity-workspaces",
+          "prompt": "Read the work order at .omc/work-orders/WO-003-identity-workspaces.md — follow it EXACTLY.\n\nYou are adding workspace management to the identity-service. Create the branch wave1/identity-workspaces from main (after WO-001 has merged).\n\nFiles to create:\n- services/identity-service/src/workspaces/workspaces.handler.ts\n- services/identity-service/src/workspaces/workspaces.service.ts\n- services/identity-service/src/workspaces/workspaces.repository.ts\n- tests/unit/workspaces.service.test.ts\n- tests/integration/workspaces.handler.test.ts\n\nUpdate services/identity-service/src/routes.ts to register workspace routes.\n\nIMPORTANT:\n- Workspace creation is ATOMIC: workspace + owner member in one DB transaction\n- Slug uniqueness check before creation — throw WORKSPACE_SLUG_TAKEN if taken\n- Cannot remove the workspace owner — throw WORKSPACE_OWNER_CANNOT_LEAVE\n- Invite member: user must already have an account (find by email); throw USER_NOT_FOUND if not\n- Cache workspace members in Tier 2 — CacheKeys.workspaceMembers(workspaceId)\n- Invalidate members cache on every member add/remove/role-change\n- Publish events AFTER DB commit, NEVER inside transaction:\n  - workspace.member_added on invite\n  - workspace.member_removed on removal\n- GET /workspaces/:id/members/:userId is called by other services for auth checks — must be fast\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-003): identity — workspace CRUD, member invite/remove/role'",
+          "depends_on": ["WO-001"]
+        },
+        {
+          "id": "WO-004",
+          "title": "Identity Service: Spaces & Lists",
+          "branch": "wave1/identity-spaces-lists",
+          "prompt": "Read the work order at .omc/work-orders/WO-004-identity-spaces-lists.md — follow it EXACTLY.\n\nYou are adding Spaces and Lists to the identity-service. Create the branch wave1/identity-spaces-lists from main (after WO-001 and WO-003 have merged).\n\nFiles to create:\n- services/identity-service/src/spaces/spaces.handler.ts\n- services/identity-service/src/spaces/spaces.service.ts\n- services/identity-service/src/spaces/spaces.repository.ts\n- services/identity-service/src/lists/lists.handler.ts\n- services/identity-service/src/lists/lists.service.ts\n- services/identity-service/src/lists/lists.repository.ts\n- tests/unit/spaces.service.test.ts\n- tests/unit/lists.service.test.ts\n- tests/integration/spaces.handler.test.ts\n- tests/integration/lists.handler.test.ts\n\nUpdate services/identity-service/src/routes.ts to register space and list routes.\n\nIMPORTANT:\n- CRITICAL: GET /api/v1/lists/:id must return workspaceId (joined from spaces table) — task-service depends on this\n- On list creation: seed 5 default statuses (Backlog, Todo, In Progress, Done, Cancelled) with correct status_group values from the WO\n- Private spaces: only visible to creator (is_private=true → filter WHERE created_by=$userId OR is_private=FALSE)\n- Soft-delete a space → also soft-delete all its lists (UPDATE lists SET deleted_at=NOW() WHERE space_id=$1)\n- Use float position for ordering spaces and lists (default 65535, prepend=-10000, append=+10000)\n- This query pattern for GET /lists/:id:\n  SELECT l.*, s.workspace_id FROM lists l JOIN spaces s ON s.id = l.space_id WHERE l.id=$1 AND l.deleted_at IS NULL AND s.deleted_at IS NULL\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-004): identity — spaces CRUD, lists CRUD, default status seeding'",
+          "depends_on": ["WO-001", "WO-003"]
+        },
+        {
+          "id": "WO-006",
+          "title": "API Gateway: WebSocket Hub",
+          "branch": "wave1/gateway-websocket",
+          "prompt": "Read the work order at .omc/work-orders/WO-006-gateway-websocket.md — follow it EXACTLY.\n\nYou are adding WebSocket support to the API gateway. Create the branch wave1/gateway-websocket from main (after WO-005 has merged).\n\nFiles to create:\n- services/api-gateway/src/websocket/ws.server.ts\n- services/api-gateway/src/websocket/ws.auth.ts\n- services/api-gateway/src/websocket/ws.rooms.ts\n- services/api-gateway/src/websocket/ws.nats-bridge.ts\n- tests/integration/websocket.test.ts\n\nAdd to api-gateway: pnpm add ws && pnpm add -D @types/ws\n\nIMPORTANT:\n- Use native ws package — NOT socket.io\n- Clients connect to ws://gateway:3000/ws — path is /ws\n- JWT token from query param ?token= OR Authorization header\n- On connect: auto-join workspace:{workspaceId} and user:{userId} rooms\n- Client can join list:{id} and task:{id} rooms on demand — validate prefix before joining\n- NATS bridge: subscribe to ALL_EVENTS from @clickup/contracts, use EmitRules to determine target rooms\n- Message deduplication: client in multiple target rooms receives event only ONCE (use seen Set)\n- Heartbeat: ping every 30s, terminate if no pong within interval\n- WS close code 4001 = Unauthorized (no/invalid token)\n\nDo NOT store WS state in Redis — single instance for now.\n\nRead AGENTS.md. Read WO mandatory tests — all must pass.\n\nCreate a PR titled 'feat(WO-006): api-gateway — WebSocket hub, rooms, NATS bridge, heartbeat'",
+          "depends_on": ["WO-005"]
+        }
+      ]
+    }
+  ]
+}
