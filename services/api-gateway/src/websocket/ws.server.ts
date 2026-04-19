@@ -23,7 +23,7 @@ export function createWsServer(server: Server): void {
       const client = ws as AuthedSocket
       if (!client.isAlive) {
         client.terminate()
-        return
+        continue
       }
       client.isAlive = false
       client.ping()
