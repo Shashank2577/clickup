@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  pact-broker:
+    image: pactfoundation/pact-broker:latest
+    ports:
+      - '9292:9292'
+    environment:
+      PACT_BROKER_DATABASE_URL: postgres://pact:pact@pact-db:5432/pact
+      PACT_BROKER_LOG_LEVEL: INFO
+      PACT_BROKER_BASIC_AUTH_USERNAME: pact
+      PACT_BROKER_BASIC_AUTH_PASSWORD: pact
+      PACT_BROKER_ALLOW_PUBLIC_READ: 'false'
+    depends_on:
+      pact-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pact-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pact
+      POSTGRES_USER: pact
+      POSTGRES_PASSWORD: pact
+    volumes:
+      - pact_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pact']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pact_db_data:
