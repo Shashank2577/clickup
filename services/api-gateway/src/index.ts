@@ -2,6 +2,7 @@ import express from 'express'
 import { httpLogger, correlationId, errorHandler } from '@clickup/sdk'
 import { buildRouter } from './routes.js'
 import { initRedis } from './middleware/rate-limiter.js'
+import { createWsServer } from './websocket/ws.server.js'
 
 const SERVICE_NAME = process.env['SERVICE_NAME'] ?? 'api-gateway'
 const PORT = parseInt(process.env['PORT'] ?? '3000', 10)
@@ -27,9 +28,10 @@ async function bootstrap(): Promise<void> {
   // Error handler — MUST be last
   app.use(errorHandler)
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.warn(`${SERVICE_NAME} listening on :${PORT}`)
   })
+  createWsServer(server)
 }
 
 bootstrap().catch((err) => {
