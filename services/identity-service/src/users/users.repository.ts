@@ -26,15 +26,15 @@ export class UsersRepository {
   async updateUser(
     id: string,
     input: { name?: string; avatarUrl?: string; timezone?: string },
-  ): Promise<UserRow> {
-    const result = await this.db.query<UserRow>(
+  ): Promise<Omit<UserRow, 'password_hash'>> {
+    const result = await this.db.query<Omit<UserRow, 'password_hash'>>(
       `UPDATE users
        SET name = COALESCE($2, name),
            avatar_url = COALESCE($3, avatar_url),
            timezone = COALESCE($4, timezone),
            updated_at = NOW()
        WHERE id = $1 AND deleted_at IS NULL
-       RETURNING id, email, name, avatar_url, timezone, password_hash, created_at, updated_at`,
+       RETURNING id, email, name, avatar_url, timezone, created_at, updated_at`,
       [id, input.name ?? null, input.avatarUrl ?? null, input.timezone ?? null],
     )
     if (!result.rows[0]) throw new Error('User not found after update')
