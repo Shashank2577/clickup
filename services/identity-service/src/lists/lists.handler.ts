@@ -13,7 +13,8 @@ function toListDto(
     position: number
     is_archived: boolean
     created_by: string
-  } & { workspace_id?: string },
+    workspace_id?: string
+  },
 ) {
   return {
     id: row.id,
@@ -23,7 +24,7 @@ function toListDto(
     position: row.position,
     isArchived: row.is_archived,
     createdBy: row.created_by,
-    ...(row.workspace_id !== undefined && { workspaceId: row.workspace_id }),
+    workspaceId: row.workspace_id ?? null,
   }
 }
 
@@ -42,6 +43,7 @@ export function spaceListsRoutes(db: Pool): Router {
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
       if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+      if (!['owner', 'admin'].includes(member.role)) throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
 
       const input = validate(CreateListSchema, req.body)
       const maxPos = await repository.getMaxPosition(spaceId)

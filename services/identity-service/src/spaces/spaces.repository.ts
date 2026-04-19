@@ -1,4 +1,4 @@
-import { Pool } from 'pg'
+import { Pool, PoolClient } from 'pg'
 
 export interface SpaceRow {
   id: string
@@ -66,15 +66,17 @@ export class SpacesRepository {
     return r.rows[0]!
   }
 
-  async softDeleteSpace(id: string): Promise<void> {
-    await this.db.query(
+  async softDeleteSpace(id: string, client?: PoolClient): Promise<void> {
+    const q = client ?? this.db
+    await q.query(
       `UPDATE spaces SET deleted_at = NOW() WHERE id = $1`,
       [id],
     )
   }
 
-  async softDeleteListsBySpace(spaceId: string): Promise<void> {
-    await this.db.query(
+  async softDeleteListsBySpace(spaceId: string, client?: PoolClient): Promise<void> {
+    const q = client ?? this.db
+    await q.query(
       `UPDATE lists SET deleted_at = NOW() WHERE space_id = $1 AND deleted_at IS NULL`,
       [spaceId],
     )
