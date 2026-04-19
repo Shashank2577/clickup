@@ -10,9 +10,10 @@ export interface WsAuthContext {
 
 export function verifyWsAuth(req: IncomingMessage): WsAuthContext | null {
   const url = new URL(req.url ?? '/', 'http://localhost')
+  const authHeader = req.headers['authorization']
   const token =
     url.searchParams.get('token') ??
-    req.headers['authorization']?.slice(7)
+    (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined)
 
   if (!token) return null
 
