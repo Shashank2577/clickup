@@ -50,6 +50,5 @@ export async function setupTestDb(): Promise<void> {
     await pool.query(sql)
   }
 
-  await pool.end()
-  _pool = null
+  await closeTestDb()
 }

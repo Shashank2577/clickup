@@ -1,4 +1,5 @@
 import { z, type ZodTypeAny } from 'zod'
+import { AppError } from '@clickup/sdk'
 
 const validators: Record<string, ZodTypeAny> = {
   task: z.object({
@@ -55,11 +56,13 @@ const validators: Record<string, ZodTypeAny> = {
 export function validateResponse(entityType: string, data: unknown): boolean {
   const validator = validators[entityType]
   if (!validator) {
-    throw new Error(`No validator registered for entity type: "${entityType}"`)
+    throw new AppError('VALIDATION_INVALID_INPUT', `No validator registered for entity type: "${entityType}"`)
+
   }
   const result = validator.safeParse(data)
   if (!result.success) {
-    throw new Error(
+    throw new AppError(
+      'VALIDATION_INVALID_INPUT',
       `Contract violation for "${entityType}":\n${result.error.issues
         .map((i) => `  ${i.path.join('.')}: ${i.message}`)
         .join('\n')}`,
@@ -74,7 +77,8 @@ export function validatePaginatedResponse(
 ): boolean {
   const itemValidator = validators[entityType]
   if (!itemValidator) {
-    throw new Error(`No validator registered for entity type: "${entityType}"`)
+    throw new AppError('VALIDATION_INVALID_INPUT', `No validator registered for entity type: "${entityType}"`)
+
   }
   const schema = z.object({
     items: z.array(itemValidator),
@@ -84,7 +88,8 @@ export function validatePaginatedResponse(
   })
   const result = schema.safeParse(data)
   if (!result.success) {
-    throw new Error(
+    throw new AppError(
+      'VALIDATION_INVALID_INPUT',
       `Paginated contract violation for "${entityType}":\n${result.error.issues
         .map((i) => `  ${i.path.join('.')}: ${i.message}`)
         .join('\n')}`,
