@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================
+  # Check shared packages first — all service jobs depend on this
+  # ============================================================
+  packages:
+    name: Packages (contracts + sdk)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @clickup/contracts typecheck
+      - run: pnpm --filter @clickup/contracts build
+      - run: pnpm --filter @clickup/sdk typecheck
+      - run: pnpm --filter @clickup/sdk build
+      - run: pnpm --filter @clickup/sdk test
+
+  # ============================================================
+  # Service CI — runs in parallel, each service is independent
+  # Add a new entry here when a new service is added.
+  # ============================================================
+  service:
+    name: Service (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: packages
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - identity-service
+          - task-service
+          - comment-service
+          - docs-service
+          - ai-service
+          - notification-service
+          - search-service
+          - file-service
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: clickup_test
+          POSTGRES_USER: clickup
+          POSTGRES_PASSWORD: clickup_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run DB migrations
+        run: pnpm migrate
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: clickup_test
+          POSTGRES_USER: clickup
+          POSTGRES_PASSWORD: clickup_test
+
+      - name: Typecheck
+        run: pnpm --filter @clickup/${{ matrix.service }} typecheck
+
+      - name: Lint
+        run: pnpm --filter @clickup/${{ matrix.service }} lint
+
+      - name: Unit + Integration Tests
+        run: pnpm --filter @clickup/${{ matrix.service }} test
+        env:
+          SERVICE_NAME: ${{ matrix.service }}
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: clickup_test
+          POSTGRES_USER: clickup
+          POSTGRES_PASSWORD: clickup_test
+          REDIS_HOST: localhost
+          NATS_URL: nats://localhost:4222
+          JWT_SECRET: test-secret-do-not-use-in-production
+
+      - name: Check coverage threshold (80%)
+        run: pnpm --filter @clickup/${{ matrix.service }} test --coverage
+        env:
+          COVERAGE_THRESHOLD: 80
+
+  # ============================================================
+  # Contract tests — runs after all services pass
+  # ============================================================
+  contract-tests:
+    name: Contract Tests (Pact)
+    runs-on: ubuntu-latest
+    needs: service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify all Pact contracts
+        run: pnpm run pact:verify
