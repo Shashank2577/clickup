@@ -40,6 +40,15 @@ export function workspacesRoutes(db: Pool): Router {
         client.release()
       }
 
+      await tier2Del(CacheKeys.workspaceMembers(workspace.id))
+      await publish(WORKSPACE_EVENTS.MEMBER_ADDED, {
+        workspaceId: workspace.id,
+        userId: req.auth.userId,
+        role: 'owner',
+        addedBy: req.auth.userId,
+        occurredAt: new Date().toISOString(),
+      })
+
       res.status(201).json({ data: toWorkspaceDto(workspace) })
     }),
   )
@@ -168,6 +177,9 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      const self = await repository.getMember(workspaceId, req.auth.userId)
+      if (!self) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+
       const cacheKey = CacheKeys.workspaceMembers(workspaceId)
       const cached = await tier2Get<ReturnType<typeof toMemberDto>[]>(cacheKey)
       if (cached) return res.json({ data: cached })
@@ -185,6 +197,8 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId, userId } = req.params
+      const self = await repository.getMember(workspaceId, req.auth.userId)
+      if (!self) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
       const member = await repository.getMember(workspaceId, userId)
       if (!member) throw new AppError(ErrorCode.WORKSPACE_MEMBER_NOT_FOUND)
       res.json({ data: toMemberDto(member) })
