@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { requireAuth, asyncHandler, validate, AppError, tier2Del, CacheKeys } from '@clickup/sdk'
 import { ErrorCode, CreateSpaceSchema, UpdateSpaceSchema } from '@clickup/contracts'
 import { SpacesRepository } from './spaces.repository.js'
@@ -87,6 +87,8 @@ export function spacesRoutes(db: Pool): Router {
       const { spaceId } = req.params
       const space = await repository.getSpace(spaceId)
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
+      const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
+      if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
       res.json({ data: toSpaceDto(space) })
     }),
   )
@@ -120,8 +122,19 @@ export function spacesRoutes(db: Pool): Router {
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
       if (!member || member.role !== 'owner') throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
 
-      await repository.softDeleteListsBySpace(spaceId)
-      await repository.softDeleteSpace(spaceId)
+      // Atomic: soft-delete lists then space in a single transaction
+      const client: PoolClient = await db.connect()
+      try {
+        await client.query('BEGIN')
+        await repository.softDeleteListsBySpace(spaceId, client)
+        await repository.softDeleteSpace(spaceId, client)
+        await client.query('COMMIT')
+      } catch (err) {
+        await client.query('ROLLBACK')
+        throw err
+      } finally {
+        client.release()
+      }
       await tier2Del(CacheKeys.spaceHierarchy(space.workspace_id))
       res.status(204).end()
     }),
