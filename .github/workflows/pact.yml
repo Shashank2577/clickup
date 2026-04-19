@@ -1,0 +1,129 @@
+name: Contract Tests
+
+on:
+  push:
+    branches: [main, 'wave*/**']
+  pull_request:
+
+jobs:
+  consumer-pacts:
+    name: Consumer Pacts (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - task-service
+          - comment-service
+          - notification-service
+          - ai-service
+          - search-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run consumer pact tests
+        run: pnpm --filter @clickup/${{ matrix.service }} test:contract
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL || 'http://localhost:9292' }}
+          PACT_BROKER_USERNAME: ${{ secrets.PACT_BROKER_USERNAME || 'pact' }}
+          PACT_BROKER_PASSWORD: ${{ secrets.PACT_BROKER_PASSWORD || 'pact' }}
+
+      - name: Publish pacts to broker
+        if: github.event_name == 'push'
+        run: |
+          pnpm pact-broker publish ./services/${{ matrix.service }}/pacts \
+            --broker-base-url ${{ secrets.PACT_BROKER_URL || 'http://localhost:9292' }} \
+            --broker-username ${{ secrets.PACT_BROKER_USERNAME || 'pact' }} \
+            --broker-password ${{ secrets.PACT_BROKER_PASSWORD || 'pact' }} \
+            --consumer-app-version ${{ github.sha }} \
+            --tag ${{ github.ref_name }}
+
+  provider-verification:
+    name: Provider Verification (${{ matrix.provider }})
+    needs: consumer-pacts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider:
+          - identity-service
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: clickup_test
+          POSTGRES_USER: clickup
+          POSTGRES_PASSWORD: clickup
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run migrations
+        run: pnpm migrate
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: clickup_test
+          POSTGRES_USER: clickup
+          POSTGRES_PASSWORD: clickup
+
+      - name: Verify provider against published pacts
+        run: pnpm --filter @clickup/${{ matrix.provider }} test:pact-provider
+        env:
+          DATABASE_URL: postgres://clickup:clickup@localhost:5432/clickup_test
+          REDIS_HOST: localhost
+          NATS_URL: nats://localhost:4222
+          JWT_SECRET: test-secret-for-pact-verification
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL || 'http://localhost:9292' }}
+          PACT_BROKER_USERNAME: ${{ secrets.PACT_BROKER_USERNAME || 'pact' }}
+          PACT_BROKER_PASSWORD: ${{ secrets.PACT_BROKER_PASSWORD || 'pact' }}
+          PACT_PROVIDER_VERSION: ${{ github.sha }}
+          PACT_PROVIDER_BRANCH: ${{ github.ref_name }}
