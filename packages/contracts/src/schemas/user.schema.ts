@@ -39,6 +39,11 @@ export const ChangePasswordSchema = z
     path: ['confirmPassword'],
   })
 
+export const BatchGetUsersSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+})
+
 export type RegisterInput = z.infer<typeof RegisterSchema>
 export type LoginInput = z.infer<typeof LoginSchema>
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>
+export type BatchGetUsersInput = z.infer<typeof BatchGetUsersSchema>
