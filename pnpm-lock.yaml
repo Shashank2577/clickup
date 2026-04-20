@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@pact-foundation/pact-cli':
+        specifier: ^18.0.0
+        version: 18.0.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.0.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
@@ -673,6 +676,43 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@pact-foundation/pact-cli-darwin-arm64@18.0.0':
+    resolution: {integrity: sha512-LPfGWnEWCte6d8hs2vKoUQOp358ljMXW725ahOTizPXptol1EtvnX4wQyx3sewWJYBohsj963Xqn2VwS5OCcQA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@pact-foundation/pact-cli-darwin-x64@18.0.0':
+    resolution: {integrity: sha512-pfcFVeNtHAqphMkhTvMwMkripbFhliS1MHLjkFb+4UDX4+BKx+xE+cZGT8MfA83P9/8znZOr/1hwLAV5byGlAw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@pact-foundation/pact-cli-linux-arm64@18.0.0':
+    resolution: {integrity: sha512-edHhv7L/MoNgdh+C/1wgyPk/5BZTKhSJZVZ69mHNS/K1B8/P25vDZMVe5hPFD1t8SlI2r1+3JibtFa7/QjLGyw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@pact-foundation/pact-cli-linux-x64@18.0.0':
+    resolution: {integrity: sha512-7auX0wg2Hl4xytX8RXVu9lLcpYNEJVB6kyMYECpI6iKM0O7Riu/Iqf77G2qq7Fw50O1WZGOf3dW+bdFKwB9Aow==}
+    cpu: [x64]
+    os: [linux]
+
+  '@pact-foundation/pact-cli-windows-arm64@18.0.0':
+    resolution: {integrity: sha512-NllKbNRstZA9oXQcMDAlakMk7dArQl1Qt/mlRxBMCQ/nP0qWbHxTRZXZ+B1LLWeP+/dGyellGybYN+/zq++rwA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@pact-foundation/pact-cli-windows-x64@18.0.0':
+    resolution: {integrity: sha512-vA+k1PrJ+YxrftEtlicmvy68HkuHSzQmO/H/k576yRZVEqdFwCBfMChuelg0OcderGPFY8zeupyOA0aeBlG5dA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@pact-foundation/pact-cli@18.0.0':
+    resolution: {integrity: sha512-MV2VfUUj1rlyzyvioplNKYRSLnJ0uKDcl4gHd6W0ToncbvJQz2Cj5pSzTITKx3a56oMkJ9LILdiC6CUHSzlEVg==}
+    engines: {node: '>=16'}
+    cpu: [x64, arm64]
+    os: [darwin, linux, win32]
+    hasBin: true
 
   '@pact-foundation/pact-core@14.3.8':
     resolution: {integrity: sha512-CG1DhuA/ROEgmAaj9DaFnSZ8fpLNoiSgK5QyM9WkFsx5gFoRHBS2g4Gw+s7ZDp9NkoxbMuZ3HCCicXoVPCGUwg==}
@@ -2885,6 +2925,33 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@pact-foundation/pact-cli-darwin-arm64@18.0.0':
+    optional: true
+
+  '@pact-foundation/pact-cli-darwin-x64@18.0.0':
+    optional: true
+
+  '@pact-foundation/pact-cli-linux-arm64@18.0.0':
+    optional: true
+
+  '@pact-foundation/pact-cli-linux-x64@18.0.0':
+    optional: true
+
+  '@pact-foundation/pact-cli-windows-arm64@18.0.0':
+    optional: true
+
+  '@pact-foundation/pact-cli-windows-x64@18.0.0':
+    optional: true
+
+  '@pact-foundation/pact-cli@18.0.0':
+    optionalDependencies:
+      '@pact-foundation/pact-cli-darwin-arm64': 18.0.0
+      '@pact-foundation/pact-cli-darwin-x64': 18.0.0
+      '@pact-foundation/pact-cli-linux-arm64': 18.0.0
+      '@pact-foundation/pact-cli-linux-x64': 18.0.0
+      '@pact-foundation/pact-cli-windows-arm64': 18.0.0
+      '@pact-foundation/pact-cli-windows-x64': 18.0.0
 
   '@pact-foundation/pact-core@14.3.8':
     dependencies:

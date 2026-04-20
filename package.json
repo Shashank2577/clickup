@@ -9,9 +9,11 @@
     "typecheck": "pnpm -r typecheck",
     "migrate": "tsx infra/migrations/run-migrations.ts",
     "dev:infra": "docker-compose -f infra/docker-compose.yml up -d",
-    "seed": "tsx infra/seeds/seed.ts"
+    "seed": "tsx infra/seeds/seed.ts",
+    "pact-broker": "pact-broker"
   },
   "devDependencies": {
+    "@pact-foundation/pact-cli": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.57.0",

@@ -35,12 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run consumer pact tests
-        run: |
-          if [ -d "services/${{ matrix.service }}" ] && grep -q '"test:contract"' "services/${{ matrix.service }}/package.json" 2>/dev/null; then
-            pnpm --filter @clickup/${{ matrix.service }} test:contract
-          else
-            echo "Skipping contract tests for ${{ matrix.service }} (not found or no test:contract script)"
-          fi
+        run: pnpm --filter @clickup/${{ matrix.service }} test:contract
         env:
           PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL || 'http://localhost:9292' }}
           PACT_BROKER_USERNAME: ${{ secrets.PACT_BROKER_USERNAME || 'pact' }}
@@ -49,17 +44,12 @@ jobs:
       - name: Publish pacts to broker
         if: github.event_name == 'push'
         run: |
-          if [ -d "services/${{ matrix.service }}/pacts" ]; then
-            pnpm pact-broker publish ./services/${{ matrix.service }}/pacts \
-              --broker-base-url ${{ secrets.PACT_BROKER_URL || 'http://localhost:9292' }} \
-              --broker-username ${{ secrets.PACT_BROKER_USERNAME || 'pact' }} \
-              --broker-password ${{ secrets.PACT_BROKER_PASSWORD || 'pact' }} \
-              --consumer-app-version ${{ github.sha }} \
-              --tag ${{ github.ref_name }}
-          else
-            echo "Skipping pact publish for ${{ matrix.service }} (no pacts directory)"
-          fi
-
+          pnpm pact-broker publish ./services/${{ matrix.service }}/pacts \
+            --broker-base-url ${{ secrets.PACT_BROKER_URL || 'http://localhost:9292' }} \
+            --broker-username ${{ secrets.PACT_BROKER_USERNAME || 'pact' }} \
+            --broker-password ${{ secrets.PACT_BROKER_PASSWORD || 'pact' }} \
+            --consumer-app-version ${{ github.sha }} \
+            --tag ${{ github.ref_name }}
 
   provider-verification:
     name: Provider Verification (${{ matrix.provider }})
@@ -126,12 +116,7 @@ jobs:
           POSTGRES_PASSWORD: clickup
 
       - name: Verify provider against published pacts
-        run: |
-          if grep -q '"test:pact-provider"' "services/${{ matrix.provider }}/package.json" 2>/dev/null; then
-            pnpm --filter @clickup/${{ matrix.provider }} test:pact-provider
-          else
-            echo "Skipping provider verification for ${{ matrix.provider }} (no test:pact-provider script)"
-          fi
+        run: pnpm --filter @clickup/${{ matrix.provider }} test:pact-provider
         env:
           DATABASE_URL: postgres://clickup:clickup@localhost:5432/clickup_test
           REDIS_HOST: localhost
