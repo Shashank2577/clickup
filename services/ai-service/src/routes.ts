@@ -1,14 +1,16 @@
 import { Router } from 'express'
-import { requireAuth, asyncHandler } from '@clickup/sdk'
+import { createBreakdownRouter }  from './capabilities/breakdown.handler.js'
+import { createSummarizeRouter }  from './capabilities/summarize.handler.js'
+import { createPrioritizeRouter } from './capabilities/prioritize.handler.js'
+import { createDailyPlanRouter }  from './capabilities/daily-plan.handler.js'
 
 export function routes(): Router {
   const router = Router()
-  const notImplemented = asyncHandler(async (_req, res) => {
-    res.status(501).json({ error: { code: 'NOT_IMPLEMENTED', message: 'AI capability not yet implemented', status: 501 } })
-  })
-  router.post('/api/v1/ai/task-breakdown', requireAuth, notImplemented)
-  router.post('/api/v1/ai/summarize', requireAuth, notImplemented)
-  router.post('/api/v1/ai/prioritize', requireAuth, notImplemented)
-  router.post('/api/v1/ai/daily-plan', requireAuth, notImplemented)
+
+  router.use(createBreakdownRouter())
+  router.use(createSummarizeRouter())
+  router.use(createPrioritizeRouter())
+  router.use(createDailyPlanRouter())
+
   return router
 }
