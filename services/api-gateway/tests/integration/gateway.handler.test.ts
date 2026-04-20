@@ -17,7 +17,9 @@ beforeAll(async () => {
   process.env['REALTIME_SERVICE_URL'] = `http://localhost:${MOCK_PORT}`
   process.env['AI_SERVICE_URL'] = `http://localhost:${MOCK_PORT}`
   process.env['SEARCH_SERVICE_URL'] = `http://localhost:${MOCK_PORT}`
+  process.env['FILE_SERVICE_URL'] = `http://localhost:${MOCK_PORT}`
   process.env['REDIS_HOST'] = 'localhost'
+  process.env['JWT_SECRET'] = process.env['JWT_SECRET'] ?? 'test-secret-do-not-use-in-production'
 
   // Start a simple mock upstream that echoes the request path and headers
   const mock = express()

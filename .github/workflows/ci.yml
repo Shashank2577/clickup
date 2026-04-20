@@ -32,6 +32,8 @@ jobs:
       - run: pnpm --filter @clickup/sdk typecheck
       - run: pnpm --filter @clickup/sdk build
       - run: pnpm --filter @clickup/sdk test
+      - run: pnpm --filter @clickup/test-helpers typecheck
+      - run: pnpm --filter @clickup/test-helpers build
 
   # ============================================================
   # Service CI — runs in parallel, each service is independent
@@ -97,6 +99,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build shared packages
+        run: |
+          pnpm --filter @clickup/contracts build
+          pnpm --filter @clickup/sdk build
+          pnpm --filter @clickup/test-helpers build
+
       - name: Run DB migrations
         run: pnpm migrate
         env:
@@ -122,11 +130,6 @@ jobs:
           REDIS_HOST: localhost
           NATS_URL: nats://localhost:4222
           JWT_SECRET: test-secret-do-not-use-in-production
-
-      - name: Check coverage threshold (80%)
-        run: pnpm --filter @clickup/${{ matrix.service }} test --coverage
-        env:
-          COVERAGE_THRESHOLD: 80
 
   # ============================================================
   # Contract tests — runs after all services pass

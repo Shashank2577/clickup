@@ -27,7 +27,7 @@ export function authForward(req: Request, res: Response, next: NextFunction): vo
     delete req.headers[header]
   }
 
-  if (isPublic(req.path)) {
+  if (isPublic(req.baseUrl + req.path)) {
     next()
     return
   }
