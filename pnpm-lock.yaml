@@ -295,6 +295,12 @@ importers:
       '@types/pg':
         specifier: ^8.11.0
         version: 8.20.0
+      '@types/supertest':
+        specifier: ^6.0.0
+        version: 6.0.3
+      supertest:
+        specifier: ^6.3.0
+        version: 6.3.4
       tsx:
         specifier: ^4.7.0
         version: 4.21.0
@@ -320,6 +326,9 @@ importers:
         specifier: ^8.11.0
         version: 8.20.0
     devDependencies:
+      '@clickup/test-helpers':
+        specifier: workspace:*
+        version: link:../../packages/test-helpers
       '@types/express':
         specifier: ^4.17.0
         version: 4.17.25
@@ -329,6 +338,12 @@ importers:
       '@types/pg':
         specifier: ^8.11.0
         version: 8.20.0
+      '@types/supertest':
+        specifier: ^6.0.0
+        version: 6.0.3
+      supertest:
+        specifier: ^6.3.0
+        version: 6.3.4
       tsx:
         specifier: ^4.7.0
         version: 4.21.0
@@ -702,7 +717,6 @@ packages:
   '@pact-foundation/pact-core@14.3.8':
     resolution: {integrity: sha512-CG1DhuA/ROEgmAaj9DaFnSZ8fpLNoiSgK5QyM9WkFsx5gFoRHBS2g4Gw+s7ZDp9NkoxbMuZ3HCCicXoVPCGUwg==}
     engines: {node: '>=16'}
-    cpu: [x64, ia32, arm64]
     os: [darwin, linux, win32]
     hasBin: true
 
