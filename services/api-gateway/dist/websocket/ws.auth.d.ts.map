@@ -1,0 +1,1 @@
+{"version":3,"file":"ws.auth.d.ts","sourceRoot":"","sources":["../../src/websocket/ws.auth.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,MAAM,CAAA;AAGtC,MAAM,WAAW,aAAa;IAC5B,MAAM,EAAE,MAAM,CAAA;IACd,WAAW,EAAE,MAAM,CAAA;IACnB,SAAS,EAAE,MAAM,CAAA;IACjB,IAAI,EAAE,MAAM,CAAA;CACb;AAED,wBAAgB,YAAY,CAAC,GAAG,EAAE,eAAe,GAAG,aAAa,GAAG,IAAI,CA6BvE"}

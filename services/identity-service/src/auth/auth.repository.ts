@@ -50,6 +50,9 @@ export class AuthRepository {
        VALUES ($1, $2, $3, $4) RETURNING id, email, name, avatar_url, timezone, password_hash, created_at`,
       [input.email, input.name, input.passwordHash, input.timezone ?? 'UTC'],
     )
+    if (!result.rows[0]) {
+      throw new Error('Failed to create user')
+    }
     return result.rows[0]
   }
 

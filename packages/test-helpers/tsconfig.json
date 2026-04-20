@@ -6,9 +6,5 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../contracts" },
-    { "path": "../sdk" }
-  ]
+  "include": ["src/**/*"]
 }

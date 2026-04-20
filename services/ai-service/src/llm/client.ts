@@ -73,7 +73,7 @@ async function callWithRetry(
       model: DEFAULT_MODEL,
       max_tokens: options.maxTokens ?? 1024,
       temperature: options.temperature ?? 0,
-      system: options.systemPrompt,
+      ...(options.systemPrompt && { system: options.systemPrompt }),
       messages: messages.map(m => ({ role: m.role, content: m.content })),
     })
 

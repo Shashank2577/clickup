@@ -57,6 +57,12 @@ export function buildServiceRoutes(): ServiceRoute[] {
       target: requireEnv('AI_SERVICE_URL'),
       isMutation: true,
     },
+    // File service
+    {
+      prefix: '/api/v1/files',
+      target: requireEnv('FILE_SERVICE_URL'),
+      isMutation: true,
+    },
     // Search service
     {
       prefix: '/api/v1/search',

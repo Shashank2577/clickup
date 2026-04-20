@@ -3,7 +3,7 @@ import { ErrorCode } from '@clickup/contracts'
 import { AppError, tier2Get, tier2Set, tier2Del, CacheKeys } from '@clickup/sdk'
 import type { UsersRepository, UserRow } from './users.repository.js'
 
-function toUserDto(user: UserRow) {
+function toUserDto(user: Omit<UserRow, 'password_hash'>) {
   return {
     id: user.id,
     email: user.email,
@@ -30,7 +30,7 @@ export class UsersService {
     return dto
   }
 
-  async updateProfile(userId: string, input: { name?: string; avatarUrl?: string; timezone?: string }) {
+  async updateProfile(userId: string, input: { name?: string; avatarUrl?: string | null; timezone?: string }) {
     const user = await this.repository.updateUser(userId, input)
     await tier2Del(CacheKeys.userProfile(userId))
     return toUserDto(user)
@@ -63,6 +63,6 @@ export class UsersService {
   async batchGetUsers(ids: string[]) {
     if (ids.length > 100) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Max 100 IDs per batch request')
     const rows = await this.repository.batchGetUsers(ids)
-    return rows.map((r) => ({ id: r.id, name: r.name, email: r.email, avatarUrl: r.avatar_url }))
+    return rows.map((r) => toUserDto(r))
   }
 }

@@ -22,7 +22,7 @@ const DEFAULT_STATUSES = [
 export class ListsRepository {
   constructor(private readonly db: Pool) {}
 
-  async createList(input: { spaceId: string; name: string; color?: string; createdBy: string; position: number }): Promise<ListRow> {
+  async createList(input: { spaceId: string; name: string; color?: string | null; createdBy: string; position: number }): Promise<ListRow> {
     const r = await this.db.query<ListRow>(
       `INSERT INTO lists (space_id, name, color, position, created_by)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -59,7 +59,7 @@ export class ListsRepository {
     return r.rows
   }
 
-  async updateList(id: string, input: { name?: string; color?: string; isArchived?: boolean }): Promise<ListRow> {
+  async updateList(id: string, input: { name?: string; color?: string | null; isArchived?: boolean }): Promise<ListRow> {
     const r = await this.db.query<ListRow>(
       `UPDATE lists
        SET name = COALESCE($2, name),

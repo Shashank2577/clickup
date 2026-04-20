@@ -15,7 +15,7 @@ export function buildProxy(route: ServiceRoute): RequestHandler {
     // don't need to know they're behind a gateway
     pathRewrite: { [`^${route.prefix}`]: '' },
     on: {
-      error: (err: Error, _req: Request, res: Response) => {
+      error: (err: Error, _req: Request, res: any) => {
         // Upstream service unavailable — return 503
         const response = res as Response
         if (!response.headersSent) {
