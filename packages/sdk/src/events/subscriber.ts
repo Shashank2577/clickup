@@ -24,8 +24,8 @@ export async function subscribe<T>(
 
   const sub = await js.subscribe(subject, {
     config: {
-      durable_name: options.durable,
-      deliver_subject: options.queue,
+      ...(options.durable && { durable_name: options.durable }),
+      ...(options.queue && { deliver_subject: options.queue }),
     },
   })
 

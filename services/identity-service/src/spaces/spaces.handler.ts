@@ -37,6 +37,7 @@ export function workspaceSpacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
       const member = await repository.getWorkspaceMember(workspaceId, req.auth.userId)
       if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
       if (!['owner', 'admin'].includes(member.role)) throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
@@ -63,6 +64,7 @@ export function workspaceSpacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
       const member = await repository.getWorkspaceMember(workspaceId, req.auth.userId)
       if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
 
@@ -85,6 +87,7 @@ export function spacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { spaceId } = req.params
+      if (!spaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'spaceId is required')
       const space = await repository.getSpace(spaceId)
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
@@ -99,6 +102,7 @@ export function spacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { spaceId } = req.params
+      if (!spaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'spaceId is required')
       const space = await repository.getSpace(spaceId)
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
@@ -117,6 +121,7 @@ export function spacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { spaceId } = req.params
+      if (!spaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'spaceId is required')
       const space = await repository.getSpace(spaceId)
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)

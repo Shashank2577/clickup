@@ -25,7 +25,7 @@ export class UsersRepository {
 
   async updateUser(
     id: string,
-    input: { name?: string; avatarUrl?: string; timezone?: string },
+    input: { name?: string; avatarUrl?: string | null; timezone?: string },
   ): Promise<Omit<UserRow, 'password_hash'>> {
     const result = await this.db.query<Omit<UserRow, 'password_hash'>>(
       `UPDATE users
@@ -55,10 +55,10 @@ export class UsersRepository {
     )
   }
 
-  async batchGetUsers(ids: string[]): Promise<Pick<UserRow, 'id' | 'email' | 'name' | 'avatar_url'>[]> {
+  async batchGetUsers(ids: string[]): Promise<UserRow[]> {
     if (ids.length === 0) return []
-    const result = await this.db.query<Pick<UserRow, 'id' | 'email' | 'name' | 'avatar_url'>>(
-      `SELECT id, name, email, avatar_url FROM users
+    const result = await this.db.query<UserRow>(
+      `SELECT id, name, email, avatar_url, timezone, password_hash, created_at, updated_at FROM users
        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL`,
       [ids],
     )

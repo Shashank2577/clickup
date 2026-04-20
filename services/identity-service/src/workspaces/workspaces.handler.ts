@@ -69,6 +69,7 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
       const member = await repository.getMember(workspaceId, req.auth.userId)
       if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
       const workspace = await repository.getWorkspace(workspaceId)
@@ -83,6 +84,7 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
       const member = await repository.getMember(workspaceId, req.auth.userId)
       if (!member || !['owner', 'admin'].includes(member.role)) throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
       const input = validate(UpdateWorkspaceSchema, req.body)
@@ -97,6 +99,7 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
       const requester = await repository.getMember(workspaceId, req.auth.userId)
       if (!requester || !['owner', 'admin'].includes(requester.role)) throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
 
@@ -129,6 +132,7 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId, userId } = req.params
+      if (!workspaceId || !userId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'IDs are required')
       const requester = await repository.getMember(workspaceId, req.auth.userId)
       if (!requester || !['owner', 'admin'].includes(requester.role)) throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
 
@@ -156,6 +160,7 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId, userId } = req.params
+      if (!workspaceId || !userId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'IDs are required')
       const requester = await repository.getMember(workspaceId, req.auth.userId)
       if (!requester || requester.role !== 'owner') throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
 
@@ -177,12 +182,16 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId } = req.params
+      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
       const self = await repository.getMember(workspaceId, req.auth.userId)
       if (!self) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
 
       const cacheKey = CacheKeys.workspaceMembers(workspaceId)
       const cached = await tier2Get<ReturnType<typeof toMemberDto>[]>(cacheKey)
-      if (cached) return res.json({ data: cached })
+      if (cached) {
+        res.json({ data: cached })
+        return
+      }
 
       const members = await repository.getMembers(workspaceId)
       const dtos = members.map(toMemberDto)
@@ -197,6 +206,7 @@ export function workspacesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { workspaceId, userId } = req.params
+      if (!workspaceId || !userId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'IDs are required')
       const self = await repository.getMember(workspaceId, req.auth.userId)
       if (!self) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
       const member = await repository.getMember(workspaceId, userId)

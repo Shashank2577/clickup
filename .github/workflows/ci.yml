@@ -49,11 +49,11 @@ jobs:
           - identity-service
           - task-service
           - comment-service
-          - docs-service
           - ai-service
           - notification-service
           - search-service
           - file-service
+          # docs-service: add when wave3/docs-service is merged
 
     services:
       postgres:

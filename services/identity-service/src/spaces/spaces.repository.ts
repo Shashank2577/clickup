@@ -18,8 +18,8 @@ export class SpacesRepository {
   async createSpace(input: {
     workspaceId: string
     name: string
-    color?: string
-    icon?: string
+    color?: string | null
+    icon?: string | null
     isPrivate?: boolean
     createdBy: string
     position: number
@@ -53,7 +53,7 @@ export class SpacesRepository {
     return r.rows
   }
 
-  async updateSpace(id: string, input: { name?: string; color?: string; icon?: string }): Promise<SpaceRow> {
+  async updateSpace(id: string, input: { name?: string; color?: string | null; icon?: string | null }): Promise<SpaceRow> {
     const r = await this.db.query<SpaceRow>(
       `UPDATE spaces
        SET name = COALESCE($2, name),

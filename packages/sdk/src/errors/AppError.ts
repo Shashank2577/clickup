@@ -20,7 +20,9 @@ export class AppError extends Error {
     this.name = 'AppError'
     this.code = code
     this.status = ERROR_STATUS_MAP[code]
-    this.details = details
+    if (details) {
+      this.details = details
+    }
     Error.captureStackTrace(this, this.constructor)
   }
 

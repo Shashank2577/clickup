@@ -72,7 +72,7 @@ export class WorkspacesRepository {
     return r.rows
   }
 
-  async updateWorkspace(id: string, input: { name?: string; logoUrl?: string }): Promise<WorkspaceRow> {
+  async updateWorkspace(id: string, input: { name?: string; logoUrl?: string | null }): Promise<WorkspaceRow> {
     const r = await this.db.query<WorkspaceRow>(
       `UPDATE workspaces
        SET name = COALESCE($2, name), logo_url = COALESCE($3, logo_url)

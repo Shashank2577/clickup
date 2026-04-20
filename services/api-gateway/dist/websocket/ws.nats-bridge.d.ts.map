@@ -1,0 +1,1 @@
+{"version":3,"file":"ws.nats-bridge.d.ts","sourceRoot":"","sources":["../../src/websocket/ws.nats-bridge.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,eAAe,CAAA;AAEhD,wBAAsB,eAAe,CAAC,KAAK,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC,CAkBvE"}

@@ -39,6 +39,7 @@ export function spaceListsRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { spaceId } = req.params
+      if (!spaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'spaceId is required')
       const space = await repository.getSpaceWithWorkspace(spaceId)
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
@@ -65,6 +66,7 @@ export function spaceListsRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { spaceId } = req.params
+      if (!spaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'spaceId is required')
       const space = await repository.getSpaceWithWorkspace(spaceId)
       if (!space) throw new AppError(ErrorCode.SPACE_NOT_FOUND)
       const member = await repository.getWorkspaceMember(space.workspace_id, req.auth.userId)
@@ -89,6 +91,7 @@ export function listsRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { listId } = req.params
+      if (!listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'listId is required')
       const list = await repository.getList(listId)
       if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
       const member = await repository.getWorkspaceMember(list.workspace_id, req.auth.userId)
@@ -103,6 +106,7 @@ export function listsRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { listId } = req.params
+      if (!listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'listId is required')
       const list = await repository.getList(listId)
       if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
       const member = await repository.getWorkspaceMember(list.workspace_id, req.auth.userId)
@@ -120,6 +124,7 @@ export function listsRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const { listId } = req.params
+      if (!listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'listId is required')
       const list = await repository.getList(listId)
       if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
       const member = await repository.getWorkspaceMember(list.workspace_id, req.auth.userId)
