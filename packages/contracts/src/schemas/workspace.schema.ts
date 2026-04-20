@@ -20,11 +20,11 @@ export const UpdateWorkspaceSchema = z.object({
 
 export const InviteMemberSchema = z.object({
   email: z.string().email().toLowerCase(),
-  role: z.nativeEnum(UserRole).exclude([UserRole.Owner]),
+  role: z.nativeEnum(UserRole),
 })
 
 export const UpdateMemberRoleSchema = z.object({
-  role: z.nativeEnum(UserRole).exclude([UserRole.Owner]),
+  role: z.nativeEnum(UserRole),
 })
 
 export const CreateSpaceSchema = z.object({

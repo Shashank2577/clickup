@@ -18,10 +18,14 @@
   },
   "dependencies": {
     "@clickup/contracts": "workspace:*",
+    "@types/express": "^4.17.25",
+    "@types/pg": "^8.20.0",
     "axios": "^1.6.0",
+    "express": "^4.22.1",
     "ioredis": "^5.3.0",
     "jsonwebtoken": "^9.0.0",
     "nats": "^2.18.0",
+    "pg": "^8.20.0",
     "pino": "^8.19.0",
     "pino-http": "^9.0.0",
     "zod": "^3.22.0"
