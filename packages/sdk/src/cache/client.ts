@@ -123,4 +123,6 @@ export const CacheKeys = {
   taskSubtreeCount: (taskId: string) => `task:subtree:${taskId}`,
   listTaskCount: (listId: string) => `list:count:${listId}`,
   goalProgress: (goalId: string) => `goal:progress:${goalId}`,
+  doc: (docId: string) => `doc:${docId}`,
+  docList: (workspaceId: string) => `doc:list:${workspaceId}`,
 }

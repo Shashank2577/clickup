@@ -149,14 +149,26 @@ export interface DocCreatedEvent {
   docId: string
   workspaceId: string
   title: string
+  parentId: string | null
   createdBy: string
+  isPublic: boolean
   occurredAt: string
 }
 
 export interface DocUpdatedEvent {
   docId: string
   workspaceId: string
+  title: string
+  isPublic: boolean
   updatedBy: string
+  occurredAt: string
+}
+
+export interface DocDeletedEvent {
+  docId: string
+  workspaceId: string
+  deletedIds: string[]
+  deletedBy: string
   occurredAt: string
 }
 
