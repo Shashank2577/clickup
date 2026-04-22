@@ -127,5 +127,7 @@ exports.CacheKeys = {
     taskSubtreeCount: (taskId) => `task:subtree:${taskId}`,
     listTaskCount: (listId) => `list:count:${listId}`,
     goalProgress: (goalId) => `goal:progress:${goalId}`,
+    doc: (docId) => `doc:${docId}`,
+    docList: (workspaceId) => `doc:list:${workspaceId}`,
 };
 //# sourceMappingURL=client.js.map

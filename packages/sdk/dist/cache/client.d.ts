@@ -16,5 +16,7 @@ export declare const CacheKeys: {
     taskSubtreeCount: (taskId: string) => string;
     listTaskCount: (listId: string) => string;
     goalProgress: (goalId: string) => string;
+    doc: (docId: string) => string;
+    docList: (workspaceId: string) => string;
 };
 //# sourceMappingURL=client.d.ts.map

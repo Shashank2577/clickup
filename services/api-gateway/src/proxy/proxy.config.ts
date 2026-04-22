@@ -69,5 +69,11 @@ export function buildServiceRoutes(): ServiceRoute[] {
       target: requireEnv('SEARCH_SERVICE_URL'),
       isMutation: false,
     },
+    // Goal service
+    {
+      prefix: '/api/v1/goals',
+      target: requireEnv('GOAL_SERVICE_URL'),
+      isMutation: false,
+    },
   ]
 }

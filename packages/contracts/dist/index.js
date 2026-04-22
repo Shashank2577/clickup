@@ -33,4 +33,6 @@ __exportStar(require("./schemas/workspace.schema.js"), exports);
 __exportStar(require("./schemas/comment.schema.js"), exports);
 __exportStar(require("./schemas/ai.schema.js"), exports);
 __exportStar(require("./schemas/view.schema.js"), exports);
+__exportStar(require("./schemas/docs.schema.js"), exports);
+__exportStar(require("./schemas/goal.schema.js"), exports);
 //# sourceMappingURL=index.js.map

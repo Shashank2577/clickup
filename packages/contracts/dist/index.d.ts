@@ -9,4 +9,6 @@ export * from './schemas/workspace.schema.js';
 export * from './schemas/comment.schema.js';
 export * from './schemas/ai.schema.js';
 export * from './schemas/view.schema.js';
+export * from './schemas/docs.schema.js';
+export * from './schemas/goal.schema.js';
 //# sourceMappingURL=index.d.ts.map
