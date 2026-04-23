@@ -6,6 +6,7 @@ interface UserRow {
     avatar_url: string | null;
     timezone: string;
     password_hash: string;
+    email_verified: boolean;
     created_at: Date;
 }
 interface SessionRow {
@@ -13,6 +14,22 @@ interface SessionRow {
     user_id: string;
     token_hash: string;
     expires_at: Date;
+    created_at: Date;
+}
+interface PasswordResetTokenRow {
+    id: string;
+    user_id: string;
+    token: string;
+    expires_at: Date;
+    used_at: Date | null;
+    created_at: Date;
+}
+interface EmailVerificationTokenRow {
+    id: string;
+    user_id: string;
+    token: string;
+    expires_at: Date;
+    verified_at: Date | null;
     created_at: Date;
 }
 export declare class AuthRepository {
@@ -26,6 +43,13 @@ export declare class AuthRepository {
         passwordHash: string;
         timezone?: string;
     }): Promise<UserRow>;
+    createPasswordResetToken(userId: string): Promise<PasswordResetTokenRow>;
+    getPasswordResetToken(token: string): Promise<PasswordResetTokenRow | null>;
+    markPasswordResetTokenUsed(id: string): Promise<void>;
+    updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
+    createEmailVerificationToken(userId: string): Promise<EmailVerificationTokenRow>;
+    getEmailVerificationToken(token: string): Promise<EmailVerificationTokenRow | null>;
+    markEmailVerified(userId: string, tokenId: string): Promise<void>;
     createSession(input: {
         id: string;
         userId: string;

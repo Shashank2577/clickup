@@ -35,4 +35,17 @@ __exportStar(require("./schemas/ai.schema.js"), exports);
 __exportStar(require("./schemas/view.schema.js"), exports);
 __exportStar(require("./schemas/docs.schema.js"), exports);
 __exportStar(require("./schemas/goal.schema.js"), exports);
+__exportStar(require("./schemas/automation.schema.js"), exports);
+__exportStar(require("./schemas/webhook.schema.js"), exports);
+__exportStar(require("./schemas/sprint.schema.js"), exports);
+__exportStar(require("./schemas/dashboard.schema.js"), exports);
+__exportStar(require("./schemas/status.schema.js"), exports);
+__exportStar(require("./schemas/template.schema.js"), exports);
+__exportStar(require("./schemas/form.schema.js"), exports);
+__exportStar(require("./schemas/recurring.schema.js"), exports);
+__exportStar(require("./schemas/preferences.schema.js"), exports);
+__exportStar(require("./schemas/favorites.schema.js"), exports);
+__exportStar(require("./schemas/apikey.schema.js"), exports);
+__exportStar(require("./schemas/savedsearch.schema.js"), exports);
+__exportStar(require("./schemas/invite.schema.js"), exports);
 //# sourceMappingURL=index.js.map

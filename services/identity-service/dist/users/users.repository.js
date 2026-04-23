@@ -4,7 +4,7 @@ export class UsersRepository {
         this.db = db;
     }
     async getUserById(id) {
-        const result = await this.db.query(`SELECT id, email, name, avatar_url, timezone, password_hash, created_at, updated_at
+        const result = await this.db.query(`SELECT id, email, name, avatar_url, timezone, password_hash, email_verified, created_at, updated_at
        FROM users WHERE id = $1 AND deleted_at IS NULL`, [id]);
         return result.rows[0] ?? null;
     }
@@ -15,7 +15,7 @@ export class UsersRepository {
            timezone = COALESCE($4, timezone),
            updated_at = NOW()
        WHERE id = $1 AND deleted_at IS NULL
-       RETURNING id, email, name, avatar_url, timezone, created_at, updated_at`, [id, input.name ?? null, input.avatarUrl ?? null, input.timezone ?? null]);
+       RETURNING id, email, name, avatar_url, timezone, email_verified, created_at, updated_at`, [id, input.name ?? null, input.avatarUrl ?? null, input.timezone ?? null]);
         if (!result.rows[0])
             throw new Error('User not found after update');
         return result.rows[0];
@@ -29,7 +29,7 @@ export class UsersRepository {
     async batchGetUsers(ids) {
         if (ids.length === 0)
             return [];
-        const result = await this.db.query(`SELECT id, name, email, avatar_url, timezone, password_hash, created_at, updated_at FROM users
+        const result = await this.db.query(`SELECT id, name, email, avatar_url, timezone, password_hash, email_verified, created_at, updated_at FROM users
        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL`, [ids]);
         return result.rows;
     }

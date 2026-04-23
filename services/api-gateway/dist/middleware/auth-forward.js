@@ -10,18 +10,23 @@ const PUBLIC_PREFIXES = [
     '/api/v1/auth/login',
     '/api/v1/auth/register',
     '/api/v1/auth/refresh',
+    '/api/v1/auth/forgot-password',
+    '/api/v1/auth/reset-password',
+    '/api/v1/auth/verify-email',
+    '/api/v1/auth/resend-verification',
     '/health',
 ];
 const INTERNAL_HEADERS = ['x-user-id', 'x-user-role', 'x-workspace-id', 'x-session-id'];
 function isPublic(path) {
-    return PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix));
+    return PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix)) || path.endsWith('/health');
 }
 export function authForward(req, res, next) {
     // Always strip client-supplied internal headers (prevents header injection)
     for (const header of INTERNAL_HEADERS) {
         delete req.headers[header];
     }
-    if (isPublic(req.path)) {
+    const path = req.originalUrl || req.url;
+    if (isPublic(path)) {
         next();
         return;
     }

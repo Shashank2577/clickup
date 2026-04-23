@@ -15,7 +15,7 @@ export function createPrioritizeRouter(): Router {
   const router = Router()
 
   router.post(
-    '/api/v1/ai/prioritize',
+    '/prioritize',
     requireAuth,
     asyncHandler(async (req, res, _next: NextFunction) => {
       const input = validate(PrioritizeInputSchema, req.body)

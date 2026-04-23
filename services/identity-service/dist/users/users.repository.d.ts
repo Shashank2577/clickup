@@ -6,6 +6,7 @@ export interface UserRow {
     avatar_url: string | null;
     timezone: string;
     password_hash: string;
+    email_verified: boolean;
     created_at: Date;
     updated_at: Date;
 }

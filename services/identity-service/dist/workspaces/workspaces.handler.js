@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth, asyncHandler, validate, AppError, tier2Get, tier2Set, tier2Del, CacheKeys, publish } from '@clickup/sdk';
 import { ErrorCode, CreateWorkspaceSchema, UpdateWorkspaceSchema, InviteMemberSchema, UpdateMemberRoleSchema, WORKSPACE_EVENTS } from '@clickup/contracts';
 import { WorkspacesRepository } from './workspaces.repository.js';
+import { AuditRepository } from '../audit/audit.repository.js';
 function toWorkspaceDto(row) {
     return { id: row.id, name: row.name, slug: row.slug, ownerId: row.owner_id, logoUrl: row.logo_url, createdAt: row.created_at.toISOString() };
 }
@@ -11,6 +12,7 @@ function toMemberDto(row) {
 export function workspacesRoutes(db) {
     const router = Router();
     const repository = new WorkspacesRepository(db);
+    const auditRepository = new AuditRepository(db);
     // POST /workspaces — create workspace
     router.post('/', requireAuth, asyncHandler(async (req, res) => {
         const input = validate(CreateWorkspaceSchema, req.body);
@@ -98,6 +100,16 @@ export function workspacesRoutes(db) {
             addedBy: req.auth.userId,
             occurredAt: new Date().toISOString(),
         });
+        // Audit log
+        await auditRepository.logEvent({
+            workspaceId,
+            actorId: req.auth.userId,
+            resourceType: 'workspace_member',
+            resourceId: user.id,
+            action: 'member.added',
+            metadata: { role: input.role },
+            ipAddress: req.ip ?? null,
+        }).catch(() => { });
         res.status(201).json({ data: { workspaceId, userId: user.id, role: input.role } });
     }));
     // DELETE /workspaces/:workspaceId/members/:userId — remove member
@@ -121,6 +133,15 @@ export function workspacesRoutes(db) {
             removedBy: req.auth.userId,
             occurredAt: new Date().toISOString(),
         });
+        // Audit log
+        await auditRepository.logEvent({
+            workspaceId,
+            actorId: req.auth.userId,
+            resourceType: 'workspace_member',
+            resourceId: userId,
+            action: 'member.removed',
+            ipAddress: req.ip ?? null,
+        }).catch(() => { });
         res.status(204).end();
     }));
     // PATCH /workspaces/:workspaceId/members/:userId — update role
@@ -139,6 +160,16 @@ export function workspacesRoutes(db) {
         const input = validate(UpdateMemberRoleSchema, req.body);
         await repository.updateMemberRole(workspaceId, userId, input.role);
         await tier2Del(CacheKeys.workspaceMembers(workspaceId));
+        // Audit log
+        await auditRepository.logEvent({
+            workspaceId,
+            actorId: req.auth.userId,
+            resourceType: 'workspace_member',
+            resourceId: userId,
+            action: 'member.role_changed',
+            metadata: { newRole: input.role, previousRole: member.role },
+            ipAddress: req.ip ?? null,
+        }).catch(() => { });
         res.json({ data: { workspaceId, userId, role: input.role } });
     }));
     // GET /workspaces/:workspaceId/members — list members (cached)

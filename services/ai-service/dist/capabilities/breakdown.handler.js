@@ -6,7 +6,7 @@ import { buildBreakdownPrompt } from '../prompts/breakdown.prompt.js';
 const SYSTEM_PROMPT = `You are a project management AI. Break down the following task description into smaller, actionable subtasks. Return JSON matching this schema: { tasks: [{ title: string, description?: string, estimatedMinutes?: number, subtasks?: [{ title: string, estimatedMinutes?: number }] }] }`;
 export function createBreakdownRouter() {
     const router = Router();
-    router.post('/api/v1/ai/task-breakdown', requireAuth, asyncHandler(async (req, res, _next) => {
+    router.post('/task-breakdown', requireAuth, asyncHandler(async (req, res, _next) => {
         const input = validate(TaskBreakdownInputSchema, req.body);
         const messages = [{ role: 'user', content: buildBreakdownPrompt(input) }];
         const response = await callClaude(messages, {

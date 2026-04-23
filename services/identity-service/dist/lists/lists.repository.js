@@ -15,6 +15,15 @@ export class ListsRepository {
        VALUES ($1, $2, $3, $4, $5) RETURNING *`, [input.spaceId, input.name, input.color ?? null, input.position, input.createdBy]);
         return r.rows[0];
     }
+    async createListInFolder(input) {
+        const r = await this.db.query(`INSERT INTO lists (space_id, folder_id, name, color, position, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, [input.spaceId, input.folderId, input.name, input.color ?? null, input.position, input.createdBy]);
+        return r.rows[0];
+    }
+    async getListsByFolder(folderId) {
+        const r = await this.db.query(`SELECT * FROM lists WHERE folder_id = $1 AND deleted_at IS NULL ORDER BY position ASC`, [folderId]);
+        return r.rows;
+    }
     async seedDefaultStatuses(listId) {
         for (const s of DEFAULT_STATUSES) {
             await this.db.query(`INSERT INTO task_statuses (id, list_id, name, color, status_group, position, is_default)

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth, asyncHandler, validate, AppError } from '@clickup/sdk';
 import { ErrorCode, CreateListSchema, UpdateListSchema } from '@clickup/contracts';
 import { ListsRepository } from './lists.repository.js';
+import { FoldersRepository } from '../folders/folders.repository.js';
 function toListDto(row) {
     return {
         id: row.id,
@@ -12,6 +13,7 @@ function toListDto(row) {
         isArchived: row.is_archived,
         createdBy: row.created_by,
         workspaceId: row.workspace_id ?? null,
+        folderId: row.folder_id ?? null,
     };
 }
 // Routes mounted at /spaces/:spaceId/lists
@@ -55,6 +57,53 @@ export function spaceListsRoutes(db) {
         if (!member)
             throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED);
         const lists = await repository.getListsBySpace(spaceId);
+        res.json({ data: lists.map(toListDto) });
+    }));
+    return router;
+}
+// Routes mounted at /folders/:folderId/lists
+export function folderListsRoutes(db) {
+    const router = Router({ mergeParams: true });
+    const listsRepository = new ListsRepository(db);
+    const foldersRepository = new FoldersRepository(db);
+    // POST /folders/:folderId/lists — create list inside a folder
+    router.post('/', requireAuth, asyncHandler(async (req, res) => {
+        const { folderId } = req.params;
+        if (!folderId)
+            throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'folderId is required');
+        const folderSpace = await foldersRepository.getFolderWithSpace(folderId);
+        if (!folderSpace)
+            throw new AppError(ErrorCode.FOLDER_NOT_FOUND);
+        const member = await listsRepository.getWorkspaceMember(folderSpace.workspace_id, req.auth.userId);
+        if (!member)
+            throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED);
+        if (!['owner', 'admin'].includes(member.role))
+            throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION);
+        const input = validate(CreateListSchema, req.body);
+        const maxPos = await listsRepository.getMaxPosition(folderSpace.space_id);
+        const list = await listsRepository.createListInFolder({
+            spaceId: folderSpace.space_id,
+            folderId,
+            name: input.name,
+            color: input.color ?? undefined,
+            createdBy: req.auth.userId,
+            position: maxPos + 1000,
+        });
+        await listsRepository.seedDefaultStatuses(list.id);
+        res.status(201).json({ data: toListDto(list) });
+    }));
+    // GET /folders/:folderId/lists — lists in a folder
+    router.get('/', requireAuth, asyncHandler(async (req, res) => {
+        const { folderId } = req.params;
+        if (!folderId)
+            throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'folderId is required');
+        const folderSpace = await foldersRepository.getFolderWithSpace(folderId);
+        if (!folderSpace)
+            throw new AppError(ErrorCode.FOLDER_NOT_FOUND);
+        const member = await listsRepository.getWorkspaceMember(folderSpace.workspace_id, req.auth.userId);
+        if (!member)
+            throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED);
+        const lists = await listsRepository.getListsByFolder(folderId);
         res.json({ data: lists.map(toListDto) });
     }));
     return router;

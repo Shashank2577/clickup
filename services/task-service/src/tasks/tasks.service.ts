@@ -1,125 +1,170 @@
+import { Pool } from 'pg'
 import { randomUUID } from 'crypto'
-import {
-  AppError, publish, createServiceClient,
-  logger
+import { 
+  AppError, 
+  createServiceClient, 
+  publish, 
+  logger 
 } from '@clickup/sdk'
-import {
-  Task, CreateTaskInput, UpdateTaskInput, TASK_EVENTS,
-  TaskCreatedEvent, TaskUpdatedEvent, TaskDeletedEvent, ErrorCode
+import { 
+  ErrorCode, 
+  TASK_EVENTS,
+  TaskCreatedEvent,
+  TaskUpdatedEvent,
+  TaskDeletedEvent,
+  TaskAssignedEvent,
+  TaskPriority
 } from '@clickup/contracts'
 import { TasksRepository } from './tasks.repository.js'
 
 export class TasksService {
-  private readonly identityClient = createServiceClient(
-    process.env['IDENTITY_SERVICE_URL'] ?? 'http://localhost:3001'
-  )
+  private identityUrl = process.env['IDENTITY_SERVICE_URL'] || 'http://localhost:3001'
 
-  constructor(private readonly repo: TasksRepository) {}
+  constructor(private readonly repository: TasksRepository) {}
 
-  async createTask(input: CreateTaskInput, userId: string): Promise<Task> {
-    const list = await this.getList(input.listId)
-    if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
-    
-    await this.assertWorkspaceMember(list.workspaceId, userId)
+  private getIdentityClient(traceId?: string) {
+    const options: { traceId?: string } = {}
+    if (traceId) options.traceId = traceId
+    return createServiceClient(this.identityUrl, options) as any
+  }
 
-    let path = ''
-    let parentPath = ''
+  private async verifyMembership(workspaceId: string, userId: string, traceId?: string) {
+    const client = this.getIdentityClient(traceId)
+    try {
+      const response = await client.get('/api/v1/workspaces/' + workspaceId + '/members/' + userId)
+      const member = response.data?.data || response.data
+      if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+      return member
+    } catch (err: any) {
+      if (err instanceof AppError) throw err
+      throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+    }
+  }
+
+  async createTask(userId: string, input: { title: string, listId: string, parentId?: string, priority?: TaskPriority, assigneeId?: string }, traceId?: string) {
+    const meta = await this.repository.getListMetadata(input.listId)
+    if (!meta) throw new AppError(ErrorCode.LIST_NOT_FOUND)
+
+    await this.verifyMembership(meta.workspace_id, userId, traceId)
+
+    let parentPath = '/' + input.listId + '/'
     if (input.parentId) {
-      const parent = await this.repo.findById(input.parentId)
-      if (!parent) throw new AppError(ErrorCode.TASK_INVALID_PARENT)
+      const parent = await this.repository.getTask(input.parentId)
+      if (!parent || parent.list_id !== input.listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Invalid parent task')
       parentPath = parent.path
     }
 
     const taskId = randomUUID()
-    path = input.parentId ? `${parentPath}${taskId}/` : `/${input.listId}/${taskId}/`
-    const position = (await this.repo.getMaxPosition(input.listId, input.parentId ?? null)) + 1000
+    const path = parentPath + taskId + '/'
 
-    const task = await this.repo.create({
-      ...input,
+    const task = await this.repository.createTask({
       id: taskId,
+      listId: input.listId,
+      title: input.title,
+      parentId: input.parentId || null,
       path,
-      position,
       createdBy: userId,
-      status: input.status ?? 'Todo',
-      priority: input.priority ?? 'normal'
-    })
+      priority: input.priority,
+      assigneeId: input.assigneeId
+    } as any)
 
     await publish(TASK_EVENTS.CREATED as any, {
       taskId: task.id,
-      workspaceId: list.workspaceId,
-      listId: task.listId,
+      listId: task.list_id,
+      spaceId: meta.space_id,
+      workspaceId: meta.workspace_id,
+      title: task.title,
       createdBy: userId,
-      occurredAt: new Date().toISOString()
-    } as TaskCreatedEvent)
+      assigneeId: task.assignee_id,
+      parentId: task.parent_id,
+      occurredAt: new Date().toISOString(),
+    } as any)
 
     return task
   }
 
-  async getTask(id: string, userId: string): Promise<Task> {
-    const task = await this.repo.findById(id)
+  async getTask(userId: string, taskId: string, traceId?: string) {
+    const task = await this.repository.getTask(taskId)
     if (!task) throw new AppError(ErrorCode.TASK_NOT_FOUND)
-    
-    const list = await this.getList(task.listId)
-    if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
-    await this.assertWorkspaceMember(list.workspaceId, userId)
+
+    const meta = await this.repository.getListMetadata(task.list_id)
+    await this.verifyMembership(meta.workspace_id, userId, traceId)
 
     return task
   }
 
-  async updateTask(id: string, input: UpdateTaskInput, userId: string): Promise<Task> {
-    const existing = await this.repo.findById(id)
-    if (!existing) throw new AppError(ErrorCode.TASK_NOT_FOUND)
+  async listTasks(userId: string, listId: string, page: number, pageSize: number, traceId?: string) {
+    const meta = await this.repository.getListMetadata(listId)
+    if (!meta) throw new AppError(ErrorCode.LIST_NOT_FOUND)
 
-    const list = await this.getList(existing.listId)
-    if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
-    await this.assertWorkspaceMember(list.workspaceId, userId)
+    await this.verifyMembership(meta.workspace_id, userId, traceId)
 
-    const updated = await this.repo.update(id, input)
-    if (!updated) throw new AppError(ErrorCode.TASK_NOT_FOUND)
+    const tasks = await this.repository.listTasks(listId, pageSize, (page - 1) * pageSize)
+    const total = await this.repository.countTasks(listId)
+
+    return {
+      data: tasks,
+      total,
+      page,
+      pageSize,
+      hasMore: total > page * pageSize
+    }
+  }
+
+  async updateTask(userId: string, taskId: string, updates: any, traceId?: string) {
+    const task = await this.repository.getTask(taskId)
+    if (!task) throw new AppError(ErrorCode.TASK_NOT_FOUND)
+
+    const meta = await this.repository.getListMetadata(task.list_id)
+    await this.verifyMembership(meta.workspace_id, userId, traceId)
+
+    const updated = await this.repository.updateTask(taskId, updates)
 
     await publish(TASK_EVENTS.UPDATED as any, {
-      taskId: id,
-      workspaceId: list.workspaceId,
+      taskId: updated.id,
+      listId: updated.list_id,
+      workspaceId: meta.workspace_id,
+      changes: updates,
       updatedBy: userId,
-      occurredAt: new Date().toISOString()
-    } as TaskUpdatedEvent)
+      occurredAt: new Date().toISOString(),
+    } as any)
+
+    if (updates.assigneeId && updates.assigneeId !== task.assignee_id) {
+      await publish(TASK_EVENTS.ASSIGNED as any, {
+        taskId: updated.id,
+        listId: updated.list_id,
+        workspaceId: meta.workspace_id,
+        assigneeId: updates.assigneeId,
+        previousAssigneeId: task.assignee_id,
+        assignedBy: userId,
+        occurredAt: new Date().toISOString(),
+      } as any)
+    }
 
     return updated
   }
 
-  async deleteTask(id: string, userId: string): Promise<void> {
-    const task = await this.repo.findById(id)
+  async deleteTask(userId: string, taskId: string, traceId?: string) {
+    const task = await this.repository.getTask(taskId)
     if (!task) throw new AppError(ErrorCode.TASK_NOT_FOUND)
 
-    const list = await this.getList(task.listId)
-    if (!list) throw new AppError(ErrorCode.LIST_NOT_FOUND)
-    await this.assertWorkspaceMember(list.workspaceId, userId)
+    const meta = await this.repository.getListMetadata(task.list_id)
+    const member = await this.verifyMembership(meta.workspace_id, userId, traceId)
+    
+    if (task.created_by !== userId && !['owner', 'admin'].includes(member.role || member.data?.role)) {
+      throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
+    }
 
-    const deletedIds = await this.repo.softDelete(id, task.path)
+    await this.repository.softDeleteWithPath(task.path)
 
     await publish(TASK_EVENTS.DELETED as any, {
-      taskId: id,
-      workspaceId: list.workspaceId,
-      deletedIds,
+      taskId: task.id,
+      listId: task.list_id,
+      workspaceId: meta.workspace_id,
       deletedBy: userId,
-      occurredAt: new Date().toISOString()
+      occurredAt: new Date().toISOString(),
     } as any)
   }
-
-  private async getList(listId: string) {
-    try {
-      const { data } = await this.identityClient.get(`/api/v1/lists/${listId}`)
-      return data
-    } catch {
-      return null
-    }
-  }
-
-  private async assertWorkspaceMember(workspaceId: string, userId: string) {
-    try {
-      await this.identityClient.get(`/api/v1/workspaces/${workspaceId}/members/${userId}`)
-    } catch {
-      throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
-    }
-  }
 }
+
+export const createTasksService = (db: Pool) => new TasksService(new TasksRepository(db))

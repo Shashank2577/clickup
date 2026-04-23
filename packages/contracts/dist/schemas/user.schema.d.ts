@@ -66,8 +66,43 @@ export declare const BatchGetUsersSchema: z.ZodObject<{
 }, {
     ids: string[];
 }>;
+export declare const ForgotPasswordSchema: z.ZodObject<{
+    email: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    email: string;
+}, {
+    email: string;
+}>;
+export declare const ResetPasswordSchema: z.ZodObject<{
+    token: z.ZodString;
+    newPassword: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    newPassword: string;
+    token: string;
+}, {
+    newPassword: string;
+    token: string;
+}>;
+export declare const VerifyEmailSchema: z.ZodObject<{
+    token: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    token: string;
+}, {
+    token: string;
+}>;
+export declare const ResendVerificationSchema: z.ZodObject<{
+    email: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    email: string;
+}, {
+    email: string;
+}>;
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;
 export type BatchGetUsersInput = z.infer<typeof BatchGetUsersSchema>;
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
+export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>;
+export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>;
 //# sourceMappingURL=user.schema.d.ts.map

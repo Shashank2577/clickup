@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BatchGetUsersSchema = exports.ChangePasswordSchema = exports.UpdateProfileSchema = exports.LoginSchema = exports.RegisterSchema = void 0;
+exports.ResendVerificationSchema = exports.VerifyEmailSchema = exports.ResetPasswordSchema = exports.ForgotPasswordSchema = exports.BatchGetUsersSchema = exports.ChangePasswordSchema = exports.UpdateProfileSchema = exports.LoginSchema = exports.RegisterSchema = void 0;
 const zod_1 = require("zod");
 exports.RegisterSchema = zod_1.z.object({
     email: zod_1.z.string().email('Invalid email address').toLowerCase(),
@@ -39,5 +39,23 @@ exports.ChangePasswordSchema = zod_1.z
 });
 exports.BatchGetUsersSchema = zod_1.z.object({
     ids: zod_1.z.array(zod_1.z.string().uuid()).min(1).max(100),
+});
+exports.ForgotPasswordSchema = zod_1.z.object({
+    email: zod_1.z.string().email('Invalid email address').toLowerCase(),
+});
+exports.ResetPasswordSchema = zod_1.z.object({
+    token: zod_1.z.string().min(1, 'Token is required'),
+    newPassword: zod_1.z
+        .string()
+        .min(8, 'Password must be at least 8 characters')
+        .max(128, 'Password too long')
+        .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+        .regex(/[0-9]/, 'Password must contain a number'),
+});
+exports.VerifyEmailSchema = zod_1.z.object({
+    token: zod_1.z.string().min(1, 'Token is required'),
+});
+exports.ResendVerificationSchema = zod_1.z.object({
+    email: zod_1.z.string().email('Invalid email address').toLowerCase(),
 });
 //# sourceMappingURL=user.schema.js.map

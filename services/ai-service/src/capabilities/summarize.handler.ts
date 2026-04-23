@@ -20,7 +20,7 @@ export function createSummarizeRouter(): Router {
   const router = Router()
 
   router.post(
-    '/api/v1/ai/summarize',
+    '/summarize',
     requireAuth,
     asyncHandler(async (req, res, _next: NextFunction) => {
       const input = validate(SummarizeInputSchema, req.body)

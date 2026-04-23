@@ -7,6 +7,7 @@ export interface UserRow {
   avatar_url: string | null
   timezone: string
   password_hash: string
+  email_verified: boolean
   created_at: Date
   updated_at: Date
 }
@@ -16,7 +17,7 @@ export class UsersRepository {
 
   async getUserById(id: string): Promise<UserRow | null> {
     const result = await this.db.query<UserRow>(
-      `SELECT id, email, name, avatar_url, timezone, password_hash, created_at, updated_at
+      `SELECT id, email, name, avatar_url, timezone, password_hash, email_verified, created_at, updated_at
        FROM users WHERE id = $1 AND deleted_at IS NULL`,
       [id],
     )
@@ -34,7 +35,7 @@ export class UsersRepository {
            timezone = COALESCE($4, timezone),
            updated_at = NOW()
        WHERE id = $1 AND deleted_at IS NULL
-       RETURNING id, email, name, avatar_url, timezone, created_at, updated_at`,
+       RETURNING id, email, name, avatar_url, timezone, email_verified, created_at, updated_at`,
       [id, input.name ?? null, input.avatarUrl ?? null, input.timezone ?? null],
     )
     if (!result.rows[0]) throw new Error('User not found after update')
@@ -58,7 +59,7 @@ export class UsersRepository {
   async batchGetUsers(ids: string[]): Promise<UserRow[]> {
     if (ids.length === 0) return []
     const result = await this.db.query<UserRow>(
-      `SELECT id, name, email, avatar_url, timezone, password_hash, created_at, updated_at FROM users
+      `SELECT id, name, email, avatar_url, timezone, password_hash, email_verified, created_at, updated_at FROM users
        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL`,
       [ids],
     )

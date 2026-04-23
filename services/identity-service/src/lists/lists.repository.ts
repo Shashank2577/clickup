@@ -3,6 +3,7 @@ import { Pool } from 'pg'
 export interface ListRow {
   id: string
   space_id: string
+  folder_id: string | null
   name: string
   color: string | null
   position: number
@@ -29,6 +30,23 @@ export class ListsRepository {
       [input.spaceId, input.name, input.color ?? null, input.position, input.createdBy],
     )
     return r.rows[0]!
+  }
+
+  async createListInFolder(input: { spaceId: string; folderId: string; name: string; color?: string | null; createdBy: string; position: number }): Promise<ListRow> {
+    const r = await this.db.query<ListRow>(
+      `INSERT INTO lists (space_id, folder_id, name, color, position, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [input.spaceId, input.folderId, input.name, input.color ?? null, input.position, input.createdBy],
+    )
+    return r.rows[0]!
+  }
+
+  async getListsByFolder(folderId: string): Promise<ListRow[]> {
+    const r = await this.db.query<ListRow>(
+      `SELECT * FROM lists WHERE folder_id = $1 AND deleted_at IS NULL ORDER BY position ASC`,
+      [folderId],
+    )
+    return r.rows
   }
 
   async seedDefaultStatuses(listId: string): Promise<void> {

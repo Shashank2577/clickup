@@ -1,7 +1,14 @@
 import { Router } from 'express'
 import type { Pool } from 'pg'
 import { asyncHandler, validate, requireAuth } from '@clickup/sdk'
-import { RegisterSchema, LoginSchema } from '@clickup/contracts'
+import {
+  RegisterSchema,
+  LoginSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+  VerifyEmailSchema,
+  ResendVerificationSchema,
+} from '@clickup/contracts'
 import { AuthRepository } from './auth.repository.js'
 import { AuthService } from './auth.service.js'
 
@@ -50,6 +57,50 @@ export function authRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const result = await service.refresh(req.auth)
+      res.json({ data: result })
+    }),
+  )
+
+  // ============================================================
+  // Password Reset
+  // ============================================================
+
+  router.post(
+    '/forgot-password',
+    asyncHandler(async (req, res) => {
+      const body = validate(ForgotPasswordSchema, req.body)
+      const result = await service.forgotPassword(body)
+      res.json({ data: result })
+    }),
+  )
+
+  router.post(
+    '/reset-password',
+    asyncHandler(async (req, res) => {
+      const body = validate(ResetPasswordSchema, req.body)
+      const result = await service.resetPassword(body)
+      res.json({ data: result })
+    }),
+  )
+
+  // ============================================================
+  // Email Verification
+  // ============================================================
+
+  router.post(
+    '/verify-email',
+    asyncHandler(async (req, res) => {
+      const body = validate(VerifyEmailSchema, req.body)
+      const result = await service.verifyEmail(body)
+      res.json({ data: result })
+    }),
+  )
+
+  router.post(
+    '/resend-verification',
+    asyncHandler(async (req, res) => {
+      const body = validate(ResendVerificationSchema, req.body)
+      const result = await service.resendVerification(body)
       res.json({ data: result })
     }),
   )

@@ -171,8 +171,112 @@ export declare const TaskListQuerySchema: z.ZodObject<{
     pageSize?: number | undefined;
     includeSubtasks?: boolean | undefined;
 }>;
+export declare const CreateTimeEntrySchema: z.ZodObject<{
+    startedAt: z.ZodString;
+    endedAt: z.ZodString;
+    note: z.ZodOptional<z.ZodString>;
+    billable: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+}, "strip", z.ZodTypeAny, {
+    startedAt: string;
+    endedAt: string;
+    billable: boolean;
+    note?: string | undefined;
+}, {
+    startedAt: string;
+    endedAt: string;
+    note?: string | undefined;
+    billable?: boolean | undefined;
+}>;
+export declare const UpdateTimeEntrySchema: z.ZodObject<{
+    startedAt: z.ZodOptional<z.ZodString>;
+    endedAt: z.ZodOptional<z.ZodString>;
+    note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    billable: z.ZodOptional<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    startedAt?: string | undefined;
+    endedAt?: string | undefined;
+    note?: string | null | undefined;
+    billable?: boolean | undefined;
+}, {
+    startedAt?: string | undefined;
+    endedAt?: string | undefined;
+    note?: string | null | undefined;
+    billable?: boolean | undefined;
+}>;
+export declare const BulkUpdateTasksSchema: z.ZodObject<{
+    taskIds: z.ZodArray<z.ZodString, "many">;
+    updates: z.ZodEffects<z.ZodObject<{
+        status: z.ZodOptional<z.ZodString>;
+        priority: z.ZodOptional<z.ZodNativeEnum<typeof TaskPriority>>;
+        assigneeId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        dueDate: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        status?: string | undefined;
+        priority?: TaskPriority | undefined;
+        assigneeId?: string | null | undefined;
+        dueDate?: string | null | undefined;
+    }, {
+        status?: string | undefined;
+        priority?: TaskPriority | undefined;
+        assigneeId?: string | null | undefined;
+        dueDate?: string | null | undefined;
+    }>, {
+        status?: string | undefined;
+        priority?: TaskPriority | undefined;
+        assigneeId?: string | null | undefined;
+        dueDate?: string | null | undefined;
+    }, {
+        status?: string | undefined;
+        priority?: TaskPriority | undefined;
+        assigneeId?: string | null | undefined;
+        dueDate?: string | null | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    taskIds: string[];
+    updates: {
+        status?: string | undefined;
+        priority?: TaskPriority | undefined;
+        assigneeId?: string | null | undefined;
+        dueDate?: string | null | undefined;
+    };
+}, {
+    taskIds: string[];
+    updates: {
+        status?: string | undefined;
+        priority?: TaskPriority | undefined;
+        assigneeId?: string | null | undefined;
+        dueDate?: string | null | undefined;
+    };
+}>;
+export declare const SetCustomFieldValueSchema: z.ZodObject<{
+    value: z.ZodUnknown;
+}, "strip", z.ZodTypeAny, {
+    value?: unknown;
+}, {
+    value?: unknown;
+}>;
+export declare const CreateCustomFieldSchema: z.ZodObject<{
+    workspaceId: z.ZodString;
+    name: z.ZodString;
+    type: z.ZodString;
+    config: z.ZodDefault<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    type: string;
+    workspaceId: string;
+    config: Record<string, unknown>;
+}, {
+    name: string;
+    type: string;
+    workspaceId: string;
+    config?: Record<string, unknown> | undefined;
+}>;
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
 export type MoveTaskInput = z.infer<typeof MoveTaskSchema>;
 export type TaskListQuery = z.infer<typeof TaskListQuerySchema>;
+export type CreateTimeEntryInput = z.infer<typeof CreateTimeEntrySchema>;
+export type UpdateTimeEntryInput = z.infer<typeof UpdateTimeEntrySchema>;
+export type BulkUpdateTasksInput = z.infer<typeof BulkUpdateTasksSchema>;
+export type CreateCustomFieldInput = z.infer<typeof CreateCustomFieldSchema>;
 //# sourceMappingURL=task.schema.d.ts.map

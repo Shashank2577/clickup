@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 export interface ListRow {
     id: string;
     space_id: string;
+    folder_id: string | null;
     name: string;
     color: string | null;
     position: number;
@@ -19,6 +20,15 @@ export declare class ListsRepository {
         createdBy: string;
         position: number;
     }): Promise<ListRow>;
+    createListInFolder(input: {
+        spaceId: string;
+        folderId: string;
+        name: string;
+        color?: string | null;
+        createdBy: string;
+        position: number;
+    }): Promise<ListRow>;
+    getListsByFolder(folderId: string): Promise<ListRow[]>;
     seedDefaultStatuses(listId: string): Promise<void>;
     getList(id: string): Promise<(ListRow & {
         workspace_id: string;

@@ -3,6 +3,7 @@ import type { Pool } from 'pg'
 import { requireAuth, asyncHandler, validate, AppError, tier2Get, tier2Set, tier2Del, CacheKeys, publish } from '@clickup/sdk'
 import { ErrorCode, CreateWorkspaceSchema, UpdateWorkspaceSchema, InviteMemberSchema, UpdateMemberRoleSchema, WORKSPACE_EVENTS } from '@clickup/contracts'
 import { WorkspacesRepository } from './workspaces.repository.js'
+import { AuditRepository } from '../audit/audit.repository.js'
 
 function toWorkspaceDto(row: { id: string; name: string; slug: string; owner_id: string; logo_url: string | null; created_at: Date }) {
   return { id: row.id, name: row.name, slug: row.slug, ownerId: row.owner_id, logoUrl: row.logo_url, createdAt: row.created_at.toISOString() }
@@ -15,6 +16,7 @@ function toMemberDto(row: { workspace_id: string; user_id: string; role: string;
 export function workspacesRoutes(db: Pool): Router {
   const router = Router()
   const repository = new WorkspacesRepository(db)
+  const auditRepository = new AuditRepository(db)
 
   // POST /workspaces — create workspace
   router.post(
@@ -122,6 +124,17 @@ export function workspacesRoutes(db: Pool): Router {
         occurredAt: new Date().toISOString(),
       })
 
+      // Audit log
+      await auditRepository.logEvent({
+        workspaceId,
+        actorId: req.auth.userId,
+        resourceType: 'workspace_member',
+        resourceId: user.id,
+        action: 'member.added',
+        metadata: { role: input.role },
+        ipAddress: req.ip ?? null,
+      }).catch(() => {/* non-fatal */})
+
       res.status(201).json({ data: { workspaceId, userId: user.id, role: input.role } })
     }),
   )
@@ -150,6 +163,16 @@ export function workspacesRoutes(db: Pool): Router {
         occurredAt: new Date().toISOString(),
       })
 
+      // Audit log
+      await auditRepository.logEvent({
+        workspaceId,
+        actorId: req.auth.userId,
+        resourceType: 'workspace_member',
+        resourceId: userId,
+        action: 'member.removed',
+        ipAddress: req.ip ?? null,
+      }).catch(() => {/* non-fatal */})
+
       res.status(204).end()
     }),
   )
@@ -171,6 +194,17 @@ export function workspacesRoutes(db: Pool): Router {
       const input = validate(UpdateMemberRoleSchema, req.body)
       await repository.updateMemberRole(workspaceId, userId, input.role)
       await tier2Del(CacheKeys.workspaceMembers(workspaceId))
+
+      // Audit log
+      await auditRepository.logEvent({
+        workspaceId,
+        actorId: req.auth.userId,
+        resourceType: 'workspace_member',
+        resourceId: userId,
+        action: 'member.role_changed',
+        metadata: { newRole: input.role, previousRole: member.role },
+        ipAddress: req.ip ?? null,
+      }).catch(() => {/* non-fatal */})
 
       res.json({ data: { workspaceId, userId, role: input.role } })
     }),

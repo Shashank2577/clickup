@@ -15,7 +15,7 @@ export function createBreakdownRouter(): Router {
   const router = Router()
 
   router.post(
-    '/api/v1/ai/task-breakdown',
+    '/task-breakdown',
     requireAuth,
     asyncHandler(async (req, res, _next: NextFunction) => {
       const input = validate(TaskBreakdownInputSchema, req.body)

@@ -7,6 +7,7 @@ interface UserRow {
   avatar_url: string | null
   timezone: string
   password_hash: string
+  email_verified: boolean
   created_at: Date
 }
 
@@ -18,12 +19,30 @@ interface SessionRow {
   created_at: Date
 }
 
+interface PasswordResetTokenRow {
+  id: string
+  user_id: string
+  token: string
+  expires_at: Date
+  used_at: Date | null
+  created_at: Date
+}
+
+interface EmailVerificationTokenRow {
+  id: string
+  user_id: string
+  token: string
+  expires_at: Date
+  verified_at: Date | null
+  created_at: Date
+}
+
 export class AuthRepository {
   constructor(private readonly db: Pool) {}
 
   async getUserByEmail(email: string): Promise<UserRow | null> {
     const result = await this.db.query<UserRow>(
-      `SELECT id, email, name, avatar_url, timezone, password_hash, created_at
+      `SELECT id, email, name, avatar_url, timezone, password_hash, email_verified, created_at
        FROM users WHERE email = $1 AND deleted_at IS NULL`,
       [email],
     )
@@ -32,7 +51,7 @@ export class AuthRepository {
 
   async getUserById(id: string): Promise<UserRow | null> {
     const result = await this.db.query<UserRow>(
-      `SELECT id, email, name, avatar_url, timezone, password_hash, created_at
+      `SELECT id, email, name, avatar_url, timezone, password_hash, email_verified, created_at
        FROM users WHERE id = $1 AND deleted_at IS NULL`,
       [id],
     )
@@ -47,13 +66,86 @@ export class AuthRepository {
   }): Promise<UserRow> {
     const result = await this.db.query<UserRow>(
       `INSERT INTO users (email, name, password_hash, timezone)
-       VALUES ($1, $2, $3, $4) RETURNING id, email, name, avatar_url, timezone, password_hash, created_at`,
+       VALUES ($1, $2, $3, $4) RETURNING id, email, name, avatar_url, timezone, password_hash, email_verified, created_at`,
       [input.email, input.name, input.passwordHash, input.timezone ?? 'UTC'],
     )
     if (!result.rows[0]) {
       throw new Error('Failed to create user')
     }
     return result.rows[0]
+  }
+
+  // ============================================================
+  // Password Reset Tokens
+  // ============================================================
+
+  async createPasswordResetToken(userId: string): Promise<PasswordResetTokenRow> {
+    const result = await this.db.query<PasswordResetTokenRow>(
+      `INSERT INTO password_reset_tokens (user_id)
+       VALUES ($1)
+       RETURNING id, user_id, token, expires_at, used_at, created_at`,
+      [userId],
+    )
+    if (!result.rows[0]) throw new Error('Failed to create password reset token')
+    return result.rows[0]
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetTokenRow | null> {
+    const result = await this.db.query<PasswordResetTokenRow>(
+      `SELECT id, user_id, token, expires_at, used_at, created_at
+       FROM password_reset_tokens WHERE token = $1`,
+      [token],
+    )
+    return result.rows[0] ?? null
+  }
+
+  async markPasswordResetTokenUsed(id: string): Promise<void> {
+    await this.db.query(
+      `UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1`,
+      [id],
+    )
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.db.query(
+      `UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1`,
+      [userId, passwordHash],
+    )
+  }
+
+  // ============================================================
+  // Email Verification Tokens
+  // ============================================================
+
+  async createEmailVerificationToken(userId: string): Promise<EmailVerificationTokenRow> {
+    const result = await this.db.query<EmailVerificationTokenRow>(
+      `INSERT INTO email_verification_tokens (user_id)
+       VALUES ($1)
+       RETURNING id, user_id, token, expires_at, verified_at, created_at`,
+      [userId],
+    )
+    if (!result.rows[0]) throw new Error('Failed to create email verification token')
+    return result.rows[0]
+  }
+
+  async getEmailVerificationToken(token: string): Promise<EmailVerificationTokenRow | null> {
+    const result = await this.db.query<EmailVerificationTokenRow>(
+      `SELECT id, user_id, token, expires_at, verified_at, created_at
+       FROM email_verification_tokens WHERE token = $1`,
+      [token],
+    )
+    return result.rows[0] ?? null
+  }
+
+  async markEmailVerified(userId: string, tokenId: string): Promise<void> {
+    await this.db.query(
+      `UPDATE users SET email_verified = TRUE, updated_at = NOW() WHERE id = $1`,
+      [userId],
+    )
+    await this.db.query(
+      `UPDATE email_verification_tokens SET verified_at = NOW() WHERE id = $1`,
+      [tokenId],
+    )
   }
 
   async createSession(input: {

@@ -30,6 +30,7 @@ exports.COMMENT_EVENTS = {
     DELETED: 'comment.deleted',
     RESOLVED: 'comment.resolved',
     REACTION_ADDED: 'comment.reaction_added',
+    MENTIONED: 'clickup.comment.mentioned',
 };
 // ============================================================
 // DOC EVENTS

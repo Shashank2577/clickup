@@ -6,6 +6,7 @@ const zod_1 = require("zod");
 // Doc Validation Schemas
 // ============================================================
 exports.CreateDocSchema = zod_1.z.object({
+    workspaceId: zod_1.z.string().uuid(),
     title: zod_1.z.string().max(500).optional(),
     content: zod_1.z.record(zod_1.z.unknown()).optional(),
     parent_id: zod_1.z.string().uuid().optional(),

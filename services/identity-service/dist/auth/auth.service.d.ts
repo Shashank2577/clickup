@@ -13,9 +13,11 @@ export declare class AuthService {
             id: string;
             email: string;
             name: string;
+            emailVerified: boolean;
             createdAt: string;
         };
         token: string;
+        emailVerificationToken: string;
     }>;
     login(input: {
         email: string;
@@ -25,6 +27,7 @@ export declare class AuthService {
             id: string;
             email: string;
             name: string;
+            emailVerified: boolean;
             createdAt: string;
         };
         token: string;
@@ -32,6 +35,35 @@ export declare class AuthService {
     logout(sessionId: string): Promise<void>;
     refresh(auth: AuthContext): Promise<{
         token: string;
+    }>;
+    forgotPassword(input: {
+        email: string;
+    }): Promise<{
+        message: string;
+        resetToken?: undefined;
+    } | {
+        message: string;
+        resetToken: string;
+    }>;
+    resetPassword(input: {
+        token: string;
+        newPassword: string;
+    }): Promise<{
+        message: string;
+    }>;
+    verifyEmail(input: {
+        token: string;
+    }): Promise<{
+        message: string;
+    }>;
+    resendVerification(input: {
+        email: string;
+    }): Promise<{
+        message: string;
+        emailVerificationToken?: undefined;
+    } | {
+        message: string;
+        emailVerificationToken: string;
     }>;
 }
 //# sourceMappingURL=auth.service.d.ts.map

@@ -1,14 +1,22 @@
 import { Router } from 'express';
-import { requireAuth, asyncHandler } from '@clickup/sdk';
+import { createBreakdownRouter } from './capabilities/breakdown.handler.js';
+import { createSummarizeRouter } from './capabilities/summarize.handler.js';
+import { createPrioritizeRouter } from './capabilities/prioritize.handler.js';
+import { createDailyPlanRouter } from './capabilities/daily-plan.handler.js';
+import { createWritingAssistantRouter } from './capabilities/writing-assistant.handler.js';
+import { createDocGenerationRouter } from './capabilities/doc-generation.handler.js';
+import { createMeetingNotesRouter } from './capabilities/meeting-notes.handler.js';
+import { createSmartTasksRouter } from './capabilities/smart-tasks.handler.js';
 export function routes() {
     const router = Router();
-    const notImplemented = asyncHandler(async (_req, res) => {
-        res.status(501).json({ error: { code: 'NOT_IMPLEMENTED', message: 'AI capability not yet implemented', status: 501 } });
-    });
-    router.post('/api/v1/ai/task-breakdown', requireAuth, notImplemented);
-    router.post('/api/v1/ai/summarize', requireAuth, notImplemented);
-    router.post('/api/v1/ai/prioritize', requireAuth, notImplemented);
-    router.post('/api/v1/ai/daily-plan', requireAuth, notImplemented);
+    router.use(createBreakdownRouter());
+    router.use(createSummarizeRouter());
+    router.use(createPrioritizeRouter());
+    router.use(createDailyPlanRouter());
+    router.use(createWritingAssistantRouter());
+    router.use(createDocGenerationRouter());
+    router.use(createMeetingNotesRouter());
+    router.use(createSmartTasksRouter());
     return router;
 }
 //# sourceMappingURL=routes.js.map

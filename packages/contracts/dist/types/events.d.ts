@@ -83,6 +83,7 @@ export declare const COMMENT_EVENTS: {
     readonly DELETED: "comment.deleted";
     readonly RESOLVED: "comment.resolved";
     readonly REACTION_ADDED: "comment.reaction_added";
+    readonly MENTIONED: "clickup.comment.mentioned";
 };
 export interface CommentCreatedEvent {
     commentId: string;
@@ -92,6 +93,15 @@ export interface CommentCreatedEvent {
     userId: string;
     content: string;
     mentionedUserIds: string[];
+    occurredAt: string;
+}
+export interface CommentMentionedEvent {
+    commentId: string;
+    taskId: string;
+    workspaceId: string;
+    authorId: string;
+    mentionedUserIds: string[];
+    content: string;
     occurredAt: string;
 }
 export interface CommentDeletedEvent {
@@ -222,6 +232,7 @@ export declare const ALL_EVENTS: {
     readonly MEMBER_ROLE_CHANGED: "workspace.member_role_changed";
     readonly RESOLVED: "comment.resolved";
     readonly REACTION_ADDED: "comment.reaction_added";
+    readonly MENTIONED: "clickup.comment.mentioned";
     readonly MOVED: "task.moved";
     readonly ASSIGNED: "task.assigned";
     readonly STATUS_CHANGED: "task.status_changed";

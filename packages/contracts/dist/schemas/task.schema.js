@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TaskListQuerySchema = exports.UpdateChecklistItemSchema = exports.CreateChecklistItemSchema = exports.CreateChecklistSchema = exports.AddTaskRelationSchema = exports.AddTaskTagSchema = exports.MoveTaskSchema = exports.UpdateTaskSchema = exports.CreateTaskSchema = void 0;
+exports.CreateCustomFieldSchema = exports.SetCustomFieldValueSchema = exports.BulkUpdateTasksSchema = exports.UpdateTimeEntrySchema = exports.CreateTimeEntrySchema = exports.TaskListQuerySchema = exports.UpdateChecklistItemSchema = exports.CreateChecklistItemSchema = exports.CreateChecklistSchema = exports.AddTaskRelationSchema = exports.AddTaskTagSchema = exports.MoveTaskSchema = exports.UpdateTaskSchema = exports.CreateTaskSchema = void 0;
 const zod_1 = require("zod");
 const enums_js_1 = require("../types/enums.js");
 const uuid = zod_1.z.string().uuid();
@@ -67,5 +67,35 @@ exports.TaskListQuerySchema = zod_1.z.object({
     page: zod_1.z.coerce.number().int().positive().optional().default(1),
     pageSize: zod_1.z.coerce.number().int().positive().max(100).optional().default(50),
     includeSubtasks: zod_1.z.coerce.boolean().optional().default(false),
+});
+exports.CreateTimeEntrySchema = zod_1.z.object({
+    startedAt: isoDate,
+    endedAt: isoDate,
+    note: zod_1.z.string().max(1000).optional(),
+    billable: zod_1.z.boolean().optional().default(false),
+});
+exports.UpdateTimeEntrySchema = zod_1.z.object({
+    startedAt: isoDate.optional(),
+    endedAt: isoDate.optional(),
+    note: zod_1.z.string().max(1000).nullable().optional(),
+    billable: zod_1.z.boolean().optional(),
+});
+exports.BulkUpdateTasksSchema = zod_1.z.object({
+    taskIds: zod_1.z.array(uuid).min(1).max(100),
+    updates: zod_1.z.object({
+        status: zod_1.z.string().max(100).optional(),
+        priority: zod_1.z.nativeEnum(enums_js_1.TaskPriority).optional(),
+        assigneeId: uuid.nullable().optional(),
+        dueDate: isoDate.nullable().optional(),
+    }).refine((u) => Object.values(u).some((v) => v !== undefined), { message: 'At least one field must be provided' }),
+});
+exports.SetCustomFieldValueSchema = zod_1.z.object({
+    value: zod_1.z.unknown(),
+});
+exports.CreateCustomFieldSchema = zod_1.z.object({
+    workspaceId: uuid,
+    name: zod_1.z.string().min(1).max(200),
+    type: zod_1.z.string().min(1),
+    config: zod_1.z.record(zod_1.z.unknown()).optional().default({}),
 });
 //# sourceMappingURL=task.schema.js.map

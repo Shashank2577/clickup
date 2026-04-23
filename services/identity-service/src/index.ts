@@ -38,7 +38,9 @@ async function bootstrap(): Promise<void> {
   app.get('/health', createHealthHandler(db))
 
   // Service routes
-  app.use('/api/v1', routes(db))
+  // Routes are mounted at / because the gateway strips /api/v1 before forwarding.
+  // Upstream receives /auth/..., /users/..., /workspaces/..., etc.
+  app.use('/', routes(db))
 
   // Error handler — MUST be last
   app.use(errorHandler)

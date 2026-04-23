@@ -10,7 +10,7 @@ const SYSTEM_PROMPTS = {
 };
 export function createSummarizeRouter() {
     const router = Router();
-    router.post('/api/v1/ai/summarize', requireAuth, asyncHandler(async (req, res, _next) => {
+    router.post('/summarize', requireAuth, asyncHandler(async (req, res, _next) => {
         const input = validate(SummarizeInputSchema, req.body);
         const messages = [{ role: 'user', content: buildSummarizePrompt(input) }];
         const response = await callClaude(messages, {

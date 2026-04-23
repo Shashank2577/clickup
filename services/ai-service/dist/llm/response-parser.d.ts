@@ -24,19 +24,19 @@ export declare const TaskBreakdownOutputSchema: z.ZodObject<{
     }>, "many">;
     summary: z.ZodString;
 }, "strip", ZodTypeAny, {
+    summary: string;
     subtasks: {
         title: string;
         description?: string | undefined;
         estimatedHours?: number | undefined;
     }[];
-    summary: string;
 }, {
+    summary: string;
     subtasks: {
         title: string;
         description?: string | undefined;
         estimatedHours?: number | undefined;
     }[];
-    summary: string;
 }>;
 export declare const SummarizeOutputSchema: z.ZodObject<{
     summary: z.ZodString;

@@ -21,6 +21,25 @@ async function bootstrap(): Promise<void> {
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', service: SERVICE_NAME })
   })
+  // Aggregate health — lists all upstream services
+  app.get('/health/services', (_req, res) => {
+    res.json({
+      status: 'ok',
+      service: SERVICE_NAME,
+      upstreams: {
+        identity:      process.env['IDENTITY_SERVICE_URL'],
+        task:          process.env['TASK_SERVICE_URL'],
+        comment:       process.env['COMMENT_SERVICE_URL'],
+        notification:  process.env['NOTIFICATION_SERVICE_URL'],
+        ai:            process.env['AI_SERVICE_URL'],
+        file:          process.env['FILE_SERVICE_URL'],
+        search:        process.env['SEARCH_SERVICE_URL'],
+        docs:          process.env['DOCS_SERVICE_URL'],
+        automations:   process.env['AUTOMATIONS_SERVICE_URL'],
+        goals:         process.env['GOAL_SERVICE_URL'],
+      },
+    })
+  })
 
   // All proxied routes
   app.use(buildRouter())

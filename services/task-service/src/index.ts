@@ -1,16 +1,19 @@
-// ============================================================
-// Service Bootstrap Template
-// Copy this entire _template directory to create a new service.
-// Replace SERVICE_NAME with the actual service name.
-// ============================================================
-
 import express from 'express'
 import { Pool } from 'pg'
 import { httpLogger, correlationId, errorHandler, createHealthHandler } from '@clickup/sdk'
-import { routes } from './routes.js'
+import {
+  routes,
+  workspaceCustomFieldsRouter,
+  statusesRouter,
+  taskTemplatesRouter,
+  formsRouter,
+  standaloneFormsRouter,
+  taskTypesRouter,
+} from './routes.js'
+import { startRecurringTaskRunner } from './tasks/recurring.handler.js'
 
-const SERVICE_NAME = process.env['SERVICE_NAME'] ?? 'unknown-service'
-const PORT = parseInt(process.env['PORT'] ?? '3000', 10)
+const SERVICE_NAME = process.env['SERVICE_NAME'] ?? 'task-service'
+const PORT = parseInt(process.env['PORT'] ?? '3002', 10)
 
 const db = new Pool({
   host: process.env['POSTGRES_HOST'] ?? 'localhost',
@@ -24,21 +27,43 @@ const db = new Pool({
 })
 
 async function bootstrap(): Promise<void> {
-  // Verify DB connection on startup
   await db.query('SELECT 1')
 
   const app = express()
 
-  // Middleware — ORDER MATTERS, do not reorder
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '1mb' }))
 
-  // Health check — no auth required
+  // Health check
   app.get('/health', createHealthHandler(db))
 
-  // Service routes
-  app.use('/api/v1', routes(db))
+  // ── Core task routes ─────────────────────────────────────────────────────────
+  // Gateway strips /api/v1/tasks — upstream receives /:taskId, /list/:listId, etc.
+  app.use('/', routes(db))
+
+  // ── Custom field definitions ──────────────────────────────────────────────────
+  // Gateway strips /api/v1/custom-fields — upstream receives /:workspaceId
+  app.use('/custom-fields', workspaceCustomFieldsRouter(db))
+
+  // ── Per-list statuses ─────────────────────────────────────────────────────────
+  // Gateway /api/v1/list-statuses → strips only /api/v1 → upstream sees /list-statuses/:listId
+  // taskTemplatesRouter uses mergeParams, listId param available
+  app.use('/list-statuses/:listId', statusesRouter(db))
+
+  // ── Task templates ────────────────────────────────────────────────────────────
+  // Gateway /api/v1/task-templates → strips /api/v1 → upstream sees /task-templates/:workspaceId
+  app.use('/task-templates/:workspaceId', taskTemplatesRouter(db))
+
+  // ── Task types (custom task types) ───────────────────────────────────────────
+  // Gateway /api/v1/task-types → strips /api/v1 → upstream sees /task-types/:workspaceId
+  app.use('/task-types/:workspaceId', taskTypesRouter(db))
+
+  // ── Forms ─────────────────────────────────────────────────────────────────────
+  // Gateway /api/v1/task-forms → strips /api/v1 → upstream sees /task-forms/:listId
+  app.use('/task-forms/:listId', formsRouter(db))
+  // Gateway /api/v1/forms → strips /api/v1 → upstream sees /forms/...
+  app.use('/forms', standaloneFormsRouter(db))
 
   // Error handler — MUST be last
   app.use(errorHandler)
@@ -46,6 +71,9 @@ async function bootstrap(): Promise<void> {
   app.listen(PORT, () => {
     console.warn(`${SERVICE_NAME} listening on :${PORT}`)
   })
+
+  // Start recurring task cron runner
+  startRecurringTaskRunner(db)
 }
 
 bootstrap().catch((err) => {

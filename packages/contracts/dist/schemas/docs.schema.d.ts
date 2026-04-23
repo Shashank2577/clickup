@@ -1,15 +1,18 @@
 import { z } from 'zod';
 export declare const CreateDocSchema: z.ZodObject<{
+    workspaceId: z.ZodString;
     title: z.ZodOptional<z.ZodString>;
     content: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
     parent_id: z.ZodOptional<z.ZodString>;
     is_public: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    workspaceId: string;
     title?: string | undefined;
     content?: Record<string, unknown> | undefined;
     parent_id?: string | undefined;
     is_public?: boolean | undefined;
 }, {
+    workspaceId: string;
     title?: string | undefined;
     content?: Record<string, unknown> | undefined;
     parent_id?: string | undefined;

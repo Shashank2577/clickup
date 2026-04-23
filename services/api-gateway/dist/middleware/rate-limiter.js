@@ -5,12 +5,18 @@ let redisClient = null;
 export async function initRedis() {
     const host = process.env['REDIS_HOST'] ?? 'localhost';
     const port = parseInt(process.env['REDIS_PORT'] ?? '6379', 10);
-    redisClient = createClient({ socket: { host, port } });
+    redisClient = createClient({ socket: { host, port, reconnectStrategy: false } });
     redisClient.on('error', (err) => {
         // Log but don't crash — degrade gracefully if Redis is unavailable
         console.warn('Redis client error:', err);
     });
-    await redisClient.connect();
+    try {
+        await redisClient.connect();
+    }
+    catch (err) {
+        console.warn('Redis connection failed — rate limiting disabled:', err);
+        redisClient = null;
+    }
 }
 const MUTATIONS_MAX = parseInt(process.env['RATE_LIMIT_MUTATIONS_MAX'] ?? '250', 10);
 const MUTATIONS_WINDOW = parseInt(process.env['RATE_LIMIT_MUTATIONS_WINDOW_SECONDS'] ?? '30', 10);
