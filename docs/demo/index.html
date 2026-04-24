@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickUp OSS Architecture Demo</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --card-bg: #1e293b;
+            --primary: #3b82f6;
+            --secondary: #10b981;
+            --accent: #8b5cf6;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 3rem;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .architecture-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .layer {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .node {
+            background-color: var(--card-bg);
+            border: 2px solid #334155;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .node:hover {
+            transform: translateY(-5px) scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+            z-index: 10;
+        }
+
+        .node.active {
+            border-color: var(--secondary);
+            background-color: rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .node h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+
+        .node p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .gateway {
+            width: 300px;
+            border-color: var(--accent);
+        }
+
+        .gateway:hover {
+            border-color: var(--accent);
+            box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.3);
+        }
+
+        .client-layer { margin-bottom: 2rem; }
+        .gateway-layer { margin-bottom: 2rem; }
+        .services-layer { margin-bottom: 2rem; }
+        .data-layer { margin-top: 1rem; }
+
+        /* Animation Data Flow */
+        .data-packet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 50;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Description Panel */
+        .info-panel {
+            margin-top: 3rem;
+            background-color: var(--card-bg);
+            border: 1px solid #334155;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+            min-height: 150px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease-out;
+        }
+
+        .info-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .info-panel h2 {
+            margin-top: 0;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+        
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ClickUp OSS Architecture</h1>
+    <p class="subtitle">Interactive Microservices Demonstration. Click any component to see how data flows and learn about its role in the system.</p>
+
+    <div class="architecture-container" id="arch-container">
+        
+        <!-- Clients -->
+        <div class="layer client-layer">
+            <div class="node pulse" id="node-client" data-info="Client Applications">
+                <div class="icon">💻</div>
+                <h3>Web / Mobile Client</h3>
+                <p>React/Flutter frontend sending REST & WebSocket requests.</p>
+            </div>
+        </div>
+
+        <!-- API Gateway -->
+        <div class="layer gateway-layer">
+            <div class="node gateway" id="node-gateway" data-info="API Gateway">
+                <div class="icon">🚪</div>
+                <h3>API Gateway</h3>
+                <p>Port 3000. Routes traffic, manages auth, handles WebSockets & Rate Limiting.</p>
+            </div>
+        </div>
+
+        <!-- Microservices -->
+        <div class="layer services-layer">
+            <div class="node" id="node-identity" data-info="Identity Service">
+                <div class="icon">👤</div>
+                <h3>Identity Service</h3>
+                <p>Port 3001. Auth, Users, Workspaces, Preferences.</p>
+            </div>
+            <div class="node" id="node-task" data-info="Task Service">
+                <div class="icon">✅</div>
+                <h3>Task Service</h3>
+                <p>Port 3002. Tasks, Custom Fields, Time Tracking.</p>
+            </div>
+            <div class="node" id="node-docs" data-info="Docs Service">
+                <div class="icon">📄</div>
+                <h3>Docs Service</h3>
+                <p>Port 3010. Real-time Yjs CRDT Collaboration.</p>
+            </div>
+            <div class="node" id="node-ai" data-info="AI Service">
+                <div class="icon">🧠</div>
+                <h3>AI Service</h3>
+                <p>Port 3006. LLM Task Breakdown, Summarization.</p>
+            </div>
+        </div>
+
+        <!-- Infrastructure / Data -->
+        <div class="layer data-layer">
+            <div class="node" id="node-pg" data-info="PostgreSQL">
+                <div class="icon">🐘</div>
+                <h3>PostgreSQL</h3>
+                <p>Primary Database. Isolated schemas per service.</p>
+            </div>
+            <div class="node" id="node-nats" data-info="NATS JetStream">
+                <div class="icon">📨</div>
+                <h3>NATS Message Bus</h3>
+                <p>Event-driven async communication.</p>
+            </div>
+            <div class="node" id="node-redis" data-info="Redis">
+                <div class="icon">⚡</div>
+                <h3>Redis Cache</h3>
+                <p>Rate limiting, session state, rapid lookups.</p>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="info-panel" id="info-panel">
+        <h2 id="info-title">System Overview</h2>
+        <p id="info-text">Select a component above to explore its responsibilities and see simulated data flow.</p>
+    </div>
+
+    <script>
+        const details = {
+            'node-client': {
+                title: '💻 Client Applications',
+                text: 'The frontend interacts with the system via RESTful APIs for standard CRUD operations and WebSockets for real-time updates (like typing in a Doc or seeing someone complete a task instantly). All requests go to the API Gateway.'
+            },
+            'node-gateway': {
+                title: '🚪 API Gateway (Express + http-proxy)',
+                text: 'The single entry point. It intercepts the request, validates the JWT, strips the /api/v1 prefix, and injects <code>x-user-id</code> headers before forwarding to the upstream service. It also holds the WebSocket connection open and subscribes to NATS to push live events to clients.'
+            },
+            'node-identity': {
+                title: '👤 Identity Service',
+                text: 'The source of truth for organizational hierarchy (Workspaces -> Spaces -> Folders -> Lists) and user access. Provides token issuance and validates permissions.'
+            },
+            'node-task': {
+                title: '✅ Task Service',
+                text: 'The core engine. Uses Materialized Paths in PostgreSQL for ultra-fast hierarchy queries. Emits <code>task.created</code> or <code>task.updated</code> events to NATS when changes occur.'
+            },
+            'node-docs': {
+                title: '📄 Docs Service',
+                text: 'Handles real-time collaborative editing using Yjs (a CRDT). Changes are synced instantly via WebSockets through the Gateway, while periodic snapshots are saved to PostgreSQL.'
+            },
+            'node-ai': {
+                title: '🧠 AI Service',
+                text: 'A stateless processing engine that securely fetches context from Tasks or Docs, builds a prompt, and streams LLM (Anthropic/OpenAI) responses back to the user.'
+            },
+            'node-pg': {
+                title: '🐘 PostgreSQL',
+                text: 'The primary persistence layer. We use a shared cluster but enforce logical isolation (Schema-per-service). Direct cross-schema queries are forbidden to maintain loose coupling.'
+            },
+            'node-nats': {
+                title: '📨 NATS JetStream',
+                text: 'The nervous system of ClickUp OSS. Provides Pub/Sub for eventual consistency (e.g., Search Indexing, Notifications) and real-time broadcasting to WebSocket clients.'
+            },
+            'node-redis': {
+                title: '⚡ Redis Cache',
+                text: 'Used extensively by the API Gateway for rate limiting, and by services for caching permissions or rapid-access data.'
+            }
+        };
+
+        const nodes = document.querySelectorAll('.node');
+        const infoPanel = document.getElementById('info-panel');
+        const infoTitle = document.getElementById('info-title');
+        const infoText = document.getElementById('info-text');
+
+        // Simple animation function to simulate data flow
+        function animateDataFlow(startNodeId, endNodeId, color = 'var(--primary)') {
+            const startNode = document.getElementById(startNodeId);
+            const endNode = document.getElementById(endNodeId);
+            
+            if(!startNode || !endNode) return;
+
+            const startRect = startNode.getBoundingClientRect();
+            const endRect = endNode.getBoundingClientRect();
+            
+            // Adjust for scrolling
+            const startX = startRect.left + startRect.width / 2 + window.scrollX;
+            const startY = startRect.top + startRect.height / 2 + window.scrollY;
+            const endX = endRect.left + endRect.width / 2 + window.scrollX;
+            const endY = endRect.top + endRect.height / 2 + window.scrollY;
+
+            const packet = document.createElement('div');
+            packet.className = 'data-packet';
+            packet.style.backgroundColor = color;
+            packet.style.boxShadow = `0 0 10px ${color}`;
+            document.body.appendChild(packet);
+
+            packet.animate([
+                { transform: `translate(${startX}px, ${startY}px)`, opacity: 0 },
+                { opacity: 1, offset: 0.1 },
+                { transform: `translate(${endX}px, ${endY}px)`, opacity: 1, offset: 0.9 },
+                { transform: `translate(${endX}px, ${endY}px)`, opacity: 0 }
+            ], {
+                duration: 800,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+            }).onfinish = () => packet.remove();
+        }
+
+        function triggerScenario(nodeId) {
+            if (nodeId === 'node-client') {
+                animateDataFlow('node-client', 'node-gateway', 'var(--primary)');
+                setTimeout(() => animateDataFlow('node-gateway', 'node-task', 'var(--primary)'), 400);
+                setTimeout(() => animateDataFlow('node-task', 'node-pg', 'var(--primary)'), 800);
+                setTimeout(() => animateDataFlow('node-task', 'node-nats', 'var(--secondary)'), 1000);
+                setTimeout(() => animateDataFlow('node-nats', 'node-gateway', 'var(--secondary)'), 1400);
+                setTimeout(() => animateDataFlow('node-gateway', 'node-client', 'var(--secondary)'), 1800);
+            } else if (['node-identity', 'node-task', 'node-docs', 'node-ai'].includes(nodeId)) {
+                animateDataFlow('node-gateway', nodeId, 'var(--primary)');
+                setTimeout(() => animateDataFlow(nodeId, 'node-pg', 'var(--primary)'), 400);
+                setTimeout(() => animateDataFlow(nodeId, 'node-nats', 'var(--secondary)'), 600);
+            } else if (nodeId === 'node-gateway') {
+                animateDataFlow('node-client', 'node-gateway', 'var(--primary)');
+                setTimeout(() => animateDataFlow('node-gateway', 'node-redis', 'var(--accent)'), 400);
+                setTimeout(() => animateDataFlow('node-gateway', 'node-identity', 'var(--primary)'), 600);
+            }
+        }
+
+        nodes.forEach(node => {
+            node.addEventListener('click', (e) => {
+                // UI Updates
+                nodes.forEach(n => n.classList.remove('active'));
+                node.classList.add('active');
+                
+                const id = node.id;
+                const info = details[id];
+                
+                infoPanel.classList.remove('visible');
+                
+                setTimeout(() => {
+                    infoTitle.innerHTML = info.title;
+                    infoText.innerHTML = info.text;
+                    infoPanel.classList.add('visible');
+                }, 150);
+
+                // Trigger data flow animation based on node clicked
+                triggerScenario(id);
+            });
+        });
+
+        // Initialize visible panel
+        setTimeout(() => infoPanel.classList.add('visible'), 500);
+
+    </script>
+</body>
+</html>
