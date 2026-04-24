@@ -1,7 +1,8 @@
 import { Pool } from 'pg'
 
 export interface CreateCommentInput {
-  taskId: string
+  taskId: string | null
+  docId: string | null
   userId: string
   content: string
   parentId: string | null
@@ -15,10 +16,30 @@ async function getTaskWithWorkspace(db: Pool, taskId: string): Promise<{ taskId:
   return rows[0] || null
 }
 
+async function getDocWithWorkspace(db: Pool, docId: string): Promise<{ docId: string, workspaceId: string } | null> {
+  const { rows } = await db.query(
+    'SELECT id AS doc_id, workspace_id FROM docs WHERE id = $1 AND deleted_at IS NULL',
+    [docId]
+  )
+  return rows[0] || null
+}
+
+async function listRootDocComments(db: Pool, docId: string): Promise<any[]> {
+  const query = 'SELECT c.*, u.id AS user_id, u.name AS user_name, u.avatar_url AS user_avatar, ' +
+    'json_agg(DISTINCT jsonb_build_object(\'commentId\', cr.comment_id, \'userId\', cr.user_id, \'emoji\', cr.emoji)) ' +
+    'FILTER (WHERE cr.comment_id IS NOT NULL) AS reactions ' +
+    'FROM comments c JOIN users u ON u.id = c.user_id LEFT JOIN comment_reactions cr ON cr.comment_id = c.id ' +
+    'WHERE c.doc_id = $1 AND c.parent_id IS NULL AND c.deleted_at IS NULL ' +
+    'GROUP BY c.id, u.id, u.name, u.avatar_url ORDER BY c.created_at ASC'
+
+  const { rows } = await db.query(query, [docId])
+  return rows
+}
+
 async function createComment(db: Pool, input: CreateCommentInput): Promise<any> {
   const { rows } = await db.query(
-    'INSERT INTO comments (task_id, user_id, content, parent_id) VALUES ($1, $2, $3, $4) RETURNING *',
-    [input.taskId, input.userId, input.content, input.parentId]
+    'INSERT INTO comments (task_id, doc_id, user_id, content, parent_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [input.taskId, input.docId, input.userId, input.content, input.parentId]
   )
   return rows[0]
 }
@@ -92,7 +113,8 @@ async function getReplies(db: Pool, parentId: string): Promise<any[]> {
 
 export interface CreateReplyInput {
   parentId: string
-  taskId: string
+  taskId: string | null
+  docId: string | null
   userId: string
   content: string
 }
@@ -100,6 +122,7 @@ export interface CreateReplyInput {
 async function createReply(db: Pool, input: CreateReplyInput): Promise<any> {
   return createComment(db, {
     taskId: input.taskId,
+    docId: input.docId,
     userId: input.userId,
     content: input.content,
     parentId: input.parentId,
@@ -109,9 +132,11 @@ async function createReply(db: Pool, input: CreateReplyInput): Promise<any> {
 export function createCommentRepository(db: Pool) {
   return {
     getTaskWithWorkspace: (taskId: string) => getTaskWithWorkspace(db, taskId),
+    getDocWithWorkspace: (docId: string) => getDocWithWorkspace(db, docId),
     createComment: (input: CreateCommentInput) => createComment(db, input),
     getComment: (id: string) => getComment(db, id),
     listRootComments: (taskId: string) => listRootComments(db, taskId),
+    listRootDocComments: (docId: string) => listRootDocComments(db, docId),
     listReplies: (parentIds: string[]) => listReplies(db, parentIds),
     getReplies: (parentId: string) => getReplies(db, parentId),
     createReply: (input: CreateReplyInput) => createReply(db, input),

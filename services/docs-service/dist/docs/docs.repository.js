@@ -1,69 +1,135 @@
-import * as Q from './docs.queries.js';
-// ============================================================
-// DocsRepository — thin layer over SQL, no business logic
-// ============================================================
+import { randomUUID } from 'crypto';
 export class DocsRepository {
     db;
     constructor(db) {
         this.db = db;
     }
-    async findById(id, client) {
-        const executor = client ?? this.db;
-        const result = await executor.query(Q.FIND_BY_ID, [id]);
-        return result.rows[0] ?? null;
+    async createDoc(record) {
+        const { rows } = await this.db.query('INSERT INTO docs (id, workspace_id, title, content, parent_id, path, is_public, created_by) ' +
+            'VALUES ($1, $2, $3, \'{}\', $4, $5, FALSE, $6) RETURNING *', [record.id, record.workspaceId, record.title, record.parentId, record.path, record.createdBy]);
+        return rows[0];
     }
-    async listTopLevel(workspaceId) {
-        const result = await this.db.query(Q.LIST_TOP_LEVEL, [workspaceId]);
-        return result.rows;
+    async getDoc(id) {
+        const query = 'SELECT d.*, u.id AS creator_user_id, u.name AS creator_name, u.avatar_url AS creator_avatar ' +
+            'FROM docs d JOIN users u ON u.id = d.created_by ' +
+            'WHERE d.id = $1 AND d.deleted_at IS NULL';
+        const { rows } = await this.db.query(query, [id]);
+        return rows[0] || null;
     }
-    async listChildren(parentId) {
-        const result = await this.db.query(Q.LIST_CHILDREN, [parentId]);
-        return result.rows;
+    async updateDocMeta(id, input) {
+        const { rows } = await this.db.query('UPDATE docs SET title = COALESCE($2, title), is_public = COALESCE($3, is_public), updated_at = NOW() ' +
+            'WHERE id = $1 AND deleted_at IS NULL RETURNING *', [id, input.title ?? null, input.isPublic ?? null]);
+        return rows[0];
     }
-    async listDescendants(path, docId) {
-        const result = await this.db.query(Q.LIST_DESCENDANTS, [path, docId]);
-        return result.rows;
+    async softDeleteWithPath(path) {
+        await this.db.query('UPDATE docs SET deleted_at = NOW() WHERE path LIKE $1 || \'%\' AND deleted_at IS NULL', [path]);
     }
-    async create(input, client) {
-        const executor = client ?? this.db;
-        const result = await executor.query(Q.INSERT, [
-            input.id,
-            input.workspaceId,
-            input.title,
-            JSON.stringify(input.content),
-            input.parentId,
-            input.path,
-            input.isPublic,
-            input.createdBy,
-        ]);
-        if (!result.rows[0]) {
-            throw new Error('Failed to insert doc');
-        }
-        return result.rows[0];
+    async getLatestSnapshot(docId) {
+        const { rows } = await this.db.query('SELECT state_vector, update_data FROM doc_snapshots WHERE doc_id = $1 ORDER BY created_at DESC LIMIT 1', [docId]);
+        if (!rows[0])
+            return null;
+        return {
+            stateVector: rows[0].state_vector,
+            updateData: rows[0].update_data,
+        };
     }
-    async update(id, input) {
-        const result = await this.db.query(Q.UPDATE, [
-            id,
-            input.title ?? null,
-            input.content !== undefined ? JSON.stringify(input.content) : null,
-            input.isPublic ?? null,
-        ]);
-        return result.rows[0] ?? null;
+    async saveSnapshot(docId, stateVector, updateData) {
+        await this.db.query('INSERT INTO doc_snapshots (doc_id, state_vector, update_data) VALUES ($1, $2, $3)', [docId, Buffer.from(stateVector), Buffer.from(updateData)]);
     }
-    async softDeleteWithDescendants(id, path) {
+    async isWorkspaceMember(workspaceId, userId) {
+        const { rowCount } = await this.db.query('SELECT 1 FROM workspace_members WHERE workspace_id = $1 AND user_id = $2', [workspaceId, userId]);
+        return (rowCount ?? 0) > 0;
+    }
+    // ============================================================
+    // Doc Content Update (stores content in JSONB column)
+    // ============================================================
+    async updateDocContent(id, content) {
+        const { rows } = await this.db.query('UPDATE docs SET content = $2, updated_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING *', [id, JSON.stringify(content)]);
+        return rows[0];
+    }
+    // ============================================================
+    // Doc Permissions
+    // ============================================================
+    async listDocPermissions(docId) {
+        const { rows } = await this.db.query(`SELECT dp.id, dp.doc_id AS "docId", dp.user_id AS "userId", dp.role,
+              dp.created_at AS "createdAt",
+              u.name AS "userName", u.email AS "userEmail", u.avatar_url AS "userAvatarUrl"
+       FROM doc_permissions dp
+       LEFT JOIN users u ON u.id = dp.user_id
+       WHERE dp.doc_id = $1
+       ORDER BY dp.created_at ASC`, [docId]);
+        return rows;
+    }
+    async getDocPermissionForUser(docId, userId) {
+        const { rows } = await this.db.query(`SELECT id, doc_id AS "docId", user_id AS "userId", role, created_at AS "createdAt"
+       FROM doc_permissions
+       WHERE doc_id = $1 AND user_id = $2`, [docId, userId]);
+        return rows[0] ?? null;
+    }
+    async grantDocPermission(docId, userId, role) {
+        const { rows } = await this.db.query(`INSERT INTO doc_permissions (doc_id, user_id, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (doc_id, user_id) DO UPDATE SET role = EXCLUDED.role
+       RETURNING id, doc_id AS "docId", user_id AS "userId", role, created_at AS "createdAt"`, [docId, userId, role]);
+        return rows[0];
+    }
+    async revokeDocPermission(docId, userId) {
+        const { rowCount } = await this.db.query('DELETE FROM doc_permissions WHERE doc_id = $1 AND user_id = $2', [docId, userId]);
+        return (rowCount ?? 0) > 0;
+    }
+    // ============================================================
+    // Doc Share Links
+    // ============================================================
+    async getShareLink(docId) {
+        const { rows } = await this.db.query(`SELECT id, doc_id AS "docId", token, role,
+              expires_at AS "expiresAt", created_at AS "createdAt"
+       FROM doc_share_links
+       WHERE doc_id = $1`, [docId]);
+        return rows[0] ?? null;
+    }
+    async getShareLinkByToken(token) {
+        const { rows } = await this.db.query(`SELECT sl.id, sl.doc_id AS "docId", sl.token, sl.role,
+              sl.expires_at AS "expiresAt", sl.created_at AS "createdAt"
+       FROM doc_share_links sl
+       WHERE sl.token = $1`, [token]);
+        return rows[0] ?? null;
+    }
+    async upsertShareLink(docId, role, expiresAt) {
+        const token = randomUUID();
+        const { rows } = await this.db.query(`INSERT INTO doc_share_links (doc_id, token, role, expires_at)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (doc_id) DO UPDATE
+         SET token = EXCLUDED.token, role = EXCLUDED.role, expires_at = EXCLUDED.expires_at
+       RETURNING id, doc_id AS "docId", token, role, expires_at AS "expiresAt", created_at AS "createdAt"`, [docId, token, role, expiresAt ?? null]);
+        return rows[0];
+    }
+    async deleteShareLink(docId) {
+        const { rowCount } = await this.db.query('DELETE FROM doc_share_links WHERE doc_id = $1', [docId]);
+        return (rowCount ?? 0) > 0;
+    }
+    // ============================================================
+    // Doc Version History
+    // ============================================================
+    async createDocVersion(docId, content, createdBy) {
         const client = await this.db.connect();
         try {
             await client.query('BEGIN');
-            // Delete the doc itself
-            const rootResult = await client.query(Q.SOFT_DELETE, [id]);
-            // Delete descendants by path prefix
-            const descResult = await client.query(Q.SOFT_DELETE_DESCENDANTS, [path, id]);
+            // Insert new version
+            const { rows } = await client.query(`INSERT INTO doc_versions (doc_id, content, created_by)
+         VALUES ($1, $2, $3)
+         RETURNING id, doc_id AS "docId", created_by AS "createdBy", created_at AS "createdAt",
+                   length(content::text) AS "sizeBytes"`, [docId, JSON.stringify(content), createdBy]);
+            // Prune oldest versions beyond 50 per doc
+            await client.query(`DELETE FROM doc_versions
+         WHERE doc_id = $1
+           AND id NOT IN (
+             SELECT id FROM doc_versions
+             WHERE doc_id = $1
+             ORDER BY created_at DESC
+             LIMIT 50
+           )`, [docId]);
             await client.query('COMMIT');
-            const deletedIds = [
-                ...rootResult.rows.map((r) => r.id),
-                ...descResult.rows.map((r) => r.id),
-            ];
-            return deletedIds;
+            return rows[0];
         }
         catch (err) {
             await client.query('ROLLBACK');
@@ -73,5 +139,39 @@ export class DocsRepository {
             client.release();
         }
     }
+    async listDocVersions(docId) {
+        const { rows } = await this.db.query(`SELECT v.id, v.doc_id AS "docId", v.created_by AS "createdBy",
+              v.created_at AS "createdAt",
+              length(v.content::text) AS "sizeBytes",
+              u.name AS "creatorName"
+       FROM doc_versions v
+       LEFT JOIN users u ON u.id = v.created_by
+       WHERE v.doc_id = $1
+       ORDER BY v.created_at DESC`, [docId]);
+        return rows;
+    }
+    async getDocVersion(docId, versionId) {
+        const { rows } = await this.db.query(`SELECT v.id, v.doc_id AS "docId", v.content,
+              v.created_by AS "createdBy", v.created_at AS "createdAt",
+              u.name AS "creatorName"
+       FROM doc_versions v
+       LEFT JOIN users u ON u.id = v.created_by
+       WHERE v.doc_id = $1 AND v.id = $2`, [docId, versionId]);
+        return rows[0] ?? null;
+    }
+    async restoreDocVersion(docId, versionId, restoredBy) {
+        const version = await this.getDocVersion(docId, versionId);
+        if (!version)
+            return null;
+        // Snapshot current content before restoring
+        const current = await this.getDoc(docId);
+        if (current) {
+            await this.createDocVersion(docId, current.content ?? {}, restoredBy);
+        }
+        // Restore
+        const { rows } = await this.db.query('UPDATE docs SET content = $2, updated_at = NOW() WHERE id = $1 RETURNING *', [docId, JSON.stringify(version.content)]);
+        return rows[0] ?? null;
+    }
 }
+export const createDocsRepository = (db) => new DocsRepository(db);
 //# sourceMappingURL=docs.repository.js.map

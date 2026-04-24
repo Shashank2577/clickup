@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomUUID } from 'crypto';
 import { requireAuth, asyncHandler, validate, AppError, createServiceClient } from '@clickup/sdk';
 import { ErrorCode, CreateTimeEntrySchema, UpdateTimeEntrySchema } from '@clickup/contracts';
 import { TasksRepository } from './tasks.repository.js';
@@ -53,6 +54,38 @@ export function taskTimeEntriesRouter(db) {
             endedAt: ended,
         });
         res.status(201).json({ data: toEntryDto(entry) });
+    }));
+    // POST /:taskId/time-entries/timer/start — start a running timer
+    router.post('/timer/start', requireAuth, asyncHandler(async (req, res) => {
+        const { taskId } = req.params;
+        const task = await repository.getTask(taskId);
+        if (!task)
+            throw new AppError(ErrorCode.TASK_NOT_FOUND);
+        // Check for existing active timer on this task for this user
+        const { rows: active } = await db.query('SELECT id FROM time_entries WHERE task_id = $1 AND user_id = $2 AND ended_at IS NULL', [taskId, req.auth.userId]);
+        if (active.length > 0) {
+            throw new AppError(ErrorCode.TIME_ENTRY_INVALID_RANGE, 'A timer is already running for this task');
+        }
+        const isBillable = req.body?.billable ?? false;
+        const id = randomUUID();
+        const { rows } = await db.query('INSERT INTO time_entries (id, task_id, user_id, started_at, billable) VALUES ($1, $2, $3, NOW(), $4) RETURNING *', [id, taskId, req.auth.userId, isBillable]);
+        res.status(201).json({ data: toEntryDto(rows[0]) });
+    }));
+    // POST /:taskId/time-entries/timer/stop — stop the running timer
+    router.post('/timer/stop', requireAuth, asyncHandler(async (req, res) => {
+        const { taskId } = req.params;
+        const task = await repository.getTask(taskId);
+        if (!task)
+            throw new AppError(ErrorCode.TASK_NOT_FOUND);
+        // Find active timer
+        const { rows: timers } = await db.query('SELECT * FROM time_entries WHERE task_id = $1 AND user_id = $2 AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1', [taskId, req.auth.userId]);
+        if (timers.length === 0) {
+            throw new AppError(ErrorCode.TIME_ENTRY_NOT_FOUND, 'No active timer found for this task');
+        }
+        const timer = timers[0];
+        const durationMinutes = Math.round((Date.now() - new Date(timer.started_at).getTime()) / 60000);
+        const { rows } = await db.query('UPDATE time_entries SET ended_at = NOW(), minutes = $1 WHERE id = $2 RETURNING *', [durationMinutes, timer.id]);
+        res.json({ data: toEntryDto(rows[0]) });
     }));
     return router;
 }

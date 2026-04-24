@@ -43,7 +43,33 @@ export const BatchGetUsersSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(100),
 })
 
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address').toLowerCase(),
+})
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password too long')
+    .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+    .regex(/[0-9]/, 'Password must contain a number'),
+})
+
+export const VerifyEmailSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+})
+
+export const ResendVerificationSchema = z.object({
+  email: z.string().email('Invalid email address').toLowerCase(),
+})
+
 export type RegisterInput = z.infer<typeof RegisterSchema>
 export type LoginInput = z.infer<typeof LoginSchema>
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>
 export type BatchGetUsersInput = z.infer<typeof BatchGetUsersSchema>
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>
+export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>
+export type ResendVerificationInput = z.infer<typeof ResendVerificationSchema>

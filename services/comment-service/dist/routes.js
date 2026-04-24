@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { requireAuth } from '@clickup/sdk';
-import { createCommentHandler, listCommentsHandler, updateCommentHandler, deleteCommentHandler, resolveCommentHandler, addReactionHandler, removeReactionHandler, createReplyHandler, getRepliesHandler, } from './comments/comments.handler.js';
+import { createCommentHandler, listCommentsHandler, createDocCommentHandler, listDocCommentsHandler, updateCommentHandler, deleteCommentHandler, resolveCommentHandler, addReactionHandler, removeReactionHandler, createReplyHandler, getRepliesHandler, } from './comments/comments.handler.js';
 import { commentAssignmentsRouter, myAssignedCommentsHandler } from './comments/assignments.handler.js';
 export function createRouter(db) {
     const router = Router();
     router.post('/tasks/:taskId/comments', requireAuth, createCommentHandler(db));
     router.get('/tasks/:taskId/comments', requireAuth, listCommentsHandler(db));
+    // Doc comments
+    router.post('/docs/:docId/comments', requireAuth, createDocCommentHandler(db));
+    router.get('/docs/:docId/comments', requireAuth, listDocCommentsHandler(db));
     // My assigned comments — must come before /:commentId routes to avoid conflict
     router.get('/me/assigned-comments', requireAuth, myAssignedCommentsHandler(db));
     router.patch('/:commentId', requireAuth, updateCommentHandler(db));

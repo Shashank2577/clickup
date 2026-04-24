@@ -31,7 +31,9 @@ export declare enum CustomFieldType {
     Formula = "formula",
     Rating = "rating",
     Relationship = "relationship",
-    Rollup = "rollup"
+    Rollup = "rollup",
+    Location = "location",
+    Voting = "voting"
 }
 export declare enum GoalTargetType {
     Number = "number",
@@ -90,7 +92,10 @@ export declare enum ViewType {
     Timeline = "timeline",
     Table = "table",
     Workload = "workload",
-    Gantt = "gantt"
+    Gantt = "gantt",
+    Activity = "activity",
+    Box = "box",
+    Doc = "doc"
 }
 export declare enum StatusGroup {
     Backlog = "backlog",

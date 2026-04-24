@@ -10,6 +10,7 @@ import {
   getPreferences,
   updatePreferences,
 } from './notifications/notifications.handler.js'
+import { pushRouter } from './notifications/push.handler.js'
 
 export function createRouter(db: Pool): Router {
   const router = Router()
@@ -23,6 +24,9 @@ export function createRouter(db: Pool): Router {
   // Notification preferences
   router.get('/preferences', requireAuth, asyncHandler(getPreferences(db)))
   router.put('/preferences', requireAuth, asyncHandler(updatePreferences(db)))
+
+  // Web push subscriptions — mounted before /:notificationId wildcard
+  router.use('/push', pushRouter(db))
 
   return router
 }

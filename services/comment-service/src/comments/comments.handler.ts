@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
 import { Pool } from 'pg'
-import { 
+import {
   validate,
   asyncHandler
 } from '@clickup/sdk'
-import { 
-  CreateCommentSchema, 
-  UpdateCommentSchema, 
-  AddReactionSchema 
+import {
+  CreateCommentSchema,
+  UpdateCommentSchema,
+  AddReactionSchema
 } from '@clickup/contracts'
 import { createCommentService } from './comments.service.js'
 
@@ -26,6 +26,25 @@ export function listCommentsHandler(db: Pool) {
   return asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params
     const comments = await service.listComments(taskId!, req.auth!.userId, req.headers['x-trace-id'] as string)
+    res.json({ data: comments })
+  })
+}
+
+export function createDocCommentHandler(db: Pool) {
+  const service = createCommentService(db)
+  return asyncHandler(async (req: Request, res: Response) => {
+    const { docId } = req.params
+    const { content, parentId } = validate(CreateCommentSchema, req.body)
+    const comment = await service.createDocComment(docId!, req.auth!.userId, content, parentId || null, req.headers['x-trace-id'] as string)
+    res.status(201).json({ data: comment })
+  })
+}
+
+export function listDocCommentsHandler(db: Pool) {
+  const service = createCommentService(db)
+  return asyncHandler(async (req: Request, res: Response) => {
+    const { docId } = req.params
+    const comments = await service.listDocComments(docId!, req.auth!.userId, req.headers['x-trace-id'] as string)
     res.json({ data: comments })
   })
 }

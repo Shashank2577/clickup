@@ -11,6 +11,7 @@ import { statusesRouter } from './tasks/statuses.handler.js';
 import { activityRouter } from './tasks/activity.handler.js';
 import { taskTemplatesRouter } from './tasks/templates.handler.js';
 import { formsRouter, standaloneFormsRouter } from './tasks/forms.handler.js';
+import { fieldPermissionsRouter } from './tasks/field-permissions.handler.js';
 import { recurringRouter } from './tasks/recurring.handler.js';
 import { importExportRouter } from './tasks/import-export.handler.js';
 import { duplicateRouter } from './tasks/duplicate.handler.js';
@@ -19,11 +20,20 @@ import { reorderRouter } from './tasks/reorder.handler.js';
 import { shareLinksRouter, publicShareHandler } from './tasks/share-links.handler.js';
 import { pinnedRouter, listPinnedHandler } from './tasks/pinned.handler.js';
 import { taskTypesRouter } from './tasks/task-types.handler.js';
+import { mirrorsRouter } from './tasks/mirrors.handler.js';
+import { ganttRouter } from './tasks/gantt.handler.js';
+import { mergeRouter } from './tasks/merge.handler.js';
+import { taskPermissionsRouter } from './tasks/task-permissions.handler.js';
+import { quickCreateHandler } from './tasks/quick-create.handler.js';
+import { emailInboundHandler, emailRouter } from './tasks/email.handler.js';
 export function routes(db) {
     const router = Router();
     // ── Import / Export ────────────────────────────────────────────────────────
     // Must be before /:taskId wildcard routes
     router.use('/', importExportRouter(db));
+    // ── Gantt Chart Data ───────────────────────────────────────────────────────
+    // Must be before /:taskId wildcard routes
+    router.use('/gantt', requireAuth, ganttRouter(db));
     // ── Reorder (lists/:listId/tasks|statuses/reorder) ─────────────────────────
     // Must be before /:taskId wildcard routes
     router.use('/lists', reorderRouter(db));
@@ -32,6 +42,10 @@ export function routes(db) {
     // ── Pinned Tasks — list-level ──────────────────────────────────────────────
     // Must be before /:taskId wildcard routes
     router.get('/lists/:listId/pinned', requireAuth, listPinnedHandler(db));
+    // ── Email-to-task inbound webhook (no auth) — must be before /:taskId ─────
+    router.post('/email/inbound', emailInboundHandler(db));
+    // ── Quick Create — lightweight task creation (before /:taskId wildcard) ────
+    router.post('/quick', requireAuth, quickCreateHandler(db));
     // ── Task CRUD ──────────────────────────────────────────────────────────────
     router.post('/', requireAuth, createTaskHandler(db));
     router.get('/list/:listId', requireAuth, listTasksHandler(db));
@@ -68,6 +82,14 @@ export function routes(db) {
     router.use('/:taskId/activity', activityRouter(db));
     // ── Recurring Tasks ────────────────────────────────────────────────────────
     router.use('/:taskId/recurring', recurringRouter(db));
+    // ── Task Merge ──────────────────────────────────────────────────────────────
+    router.use('/:taskId/merge', mergeRouter(db));
+    // ── Task Permissions ───────────────────────────────────────────────────────
+    router.use('/:taskId/permissions', taskPermissionsRouter(db));
+    // ── Send Email from Task ────────────────────────────────────────────────────
+    router.use('/:taskId/email', emailRouter(db));
+    // ── Task Mirrors (multi-home) ──────────────────────────────────────────────
+    router.use('/:taskId/mirrors', mirrorsRouter(db));
     return router;
 }
 // ── Routes mounted outside /tasks prefix in index.ts ─────────────────────────
@@ -81,4 +103,6 @@ export { taskTemplatesRouter };
 export { formsRouter, standaloneFormsRouter };
 // Task types: /workspaces/:workspaceId/task-types
 export { taskTypesRouter };
+// Field permissions: /custom-fields/:fieldId/permissions
+export { fieldPermissionsRouter };
 //# sourceMappingURL=routes.js.map

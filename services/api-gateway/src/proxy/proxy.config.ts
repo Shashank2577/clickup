@@ -77,5 +77,11 @@ export function buildServiceRoutes(): ServiceRoute[] {
     { prefix: '/api/v1/dashboards',       target: requireEnv('DASHBOARD_SERVICE_URL'),     isMutation: false },
     // Sprint service
     { prefix: '/api/v1/sprints',          target: requireEnv('SPRINT_SERVICE_URL'),        isMutation: false },
+    // Slack integration service
+    { prefix: '/api/v1/slack',            target: requireEnv('SLACK_SERVICE_URL'),         isMutation: true  },
+    // GitHub integration service
+    { prefix: '/api/v1/github',           target: requireEnv('GITHUB_SERVICE_URL'),        isMutation: true  },
+    // GitLab integration service
+    { prefix: '/api/v1/gitlab',           target: requireEnv('GITLAB_SERVICE_URL'),        isMutation: true  },
   ]
 }

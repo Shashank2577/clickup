@@ -1,5 +1,9 @@
 import { Router } from 'express';
 import { authRoutes } from './auth/auth.handler.js';
+import { oauthRouter } from './auth/oauth.handler.js';
+import { totpRouter } from './auth/totp.handler.js';
+import { ssoRouter } from './auth/sso.handler.js';
+import { guestRouter } from './auth/guest.handler.js';
 import { usersRoutes } from './users/users.handler.js';
 import { workspacesRoutes } from './workspaces/workspaces.handler.js';
 import { workspaceSpacesRoutes, spacesRoutes } from './spaces/spaces.handler.js';
@@ -13,6 +17,7 @@ import { apiKeysRouter } from './api-keys/api-keys.handler.js';
 import { savedSearchesRouter } from './saved-searches/saved-searches.handler.js';
 import { workspaceInvitesRouter, inviteAcceptRouter } from './invites/invites.handler.js';
 import { commandPaletteRouter } from './search/command-palette.handler.js';
+import { listTemplatesRouter, folderTemplatesRouter, spaceTemplatesRouter } from './templates/templates.handler.js';
 /**
  * Main router for identity-service.
  * Base prefix /api/v1 handled by Express app, sub-prefixes here.
@@ -21,10 +26,17 @@ import { commandPaletteRouter } from './search/command-palette.handler.js';
 export function routes(db) {
     const router = Router();
     router.use('/auth', authRoutes(db));
+    router.use('/auth', oauthRouter(db));
+    router.use('/auth', totpRouter(db));
+    router.use('/auth', ssoRouter(db));
+    router.use('/auth', guestRouter(db));
     // User preferences — must come before /users generic routes
     router.use('/users/preferences', userPreferencesRouter(db));
     router.use('/users', usersRoutes(db));
     // Workspace sub-resources — most specific first
+    router.use('/workspaces/:workspaceId/list-templates', listTemplatesRouter(db));
+    router.use('/workspaces/:workspaceId/folder-templates', folderTemplatesRouter(db));
+    router.use('/workspaces/:workspaceId/space-templates', spaceTemplatesRouter(db));
     router.use('/workspaces/:workspaceId/clickapps', workspaceClickAppsRouter(db));
     router.use('/workspaces/:workspaceId/favorites', favoritesRouter(db));
     router.use('/workspaces/:workspaceId/recently-viewed', recentlyViewedRouter(db));
@@ -44,6 +56,10 @@ export function routes(db) {
     router.use('/folders/:folderId/lists', folderListsRoutes(db));
     router.use('/folders', foldersRoutes(db));
     router.use('/lists', listsRoutes(db));
+    // Standalone template routes (without workspace prefix)
+    router.use('/list-templates', listTemplatesRouter(db));
+    router.use('/folder-templates', folderTemplatesRouter(db));
+    router.use('/space-templates', spaceTemplatesRouter(db));
     return router;
 }
 //# sourceMappingURL=routes.js.map

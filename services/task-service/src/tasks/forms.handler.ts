@@ -11,6 +11,7 @@ function toFormDto(row: any) {
     name: row.name,
     description: row.description,
     fields: row.fields,
+    fieldConditions: row.field_conditions,
     isActive: row.is_active,
     slug: row.slug,
     createdBy: row.created_by,
@@ -47,10 +48,12 @@ export function formsRouter(db: Pool): Router {
     const input = validate(CreateTaskFormSchema, req.body)
     const slug = input.slug ?? generateSlug(input.name)
 
+    const fieldConditions = (input as any).fieldConditions ?? null
+
     try {
       const { rows } = await db.query(
-        'INSERT INTO task_forms (list_id, name, description, fields, slug, created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-        [listId, input.name, input.description ?? null, JSON.stringify(input.fields), slug, req.auth.userId],
+        'INSERT INTO task_forms (list_id, name, description, fields, field_conditions, slug, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+        [listId, input.name, input.description ?? null, JSON.stringify(input.fields), fieldConditions ? JSON.stringify(fieldConditions) : null, slug, req.auth.userId],
       )
       res.status(201).json({ data: toFormDto(rows[0]) })
     } catch (err: any) {
@@ -86,6 +89,7 @@ export function standaloneFormsRouter(db: Pool): Router {
     if (input.description !== undefined) updates['description'] = input.description
     if (input.fields !== undefined) updates['fields'] = JSON.stringify(input.fields)
     if (input.isActive !== undefined) updates['is_active'] = input.isActive
+    if ((input as any).fieldConditions !== undefined) updates['field_conditions'] = JSON.stringify((input as any).fieldConditions)
 
     const fields = Object.keys(updates)
     if (!fields.length) { res.json({ data: toFormDto(existing[0]) }); return }
@@ -135,6 +139,84 @@ export function standaloneFormsRouter(db: Pool): Router {
     )
 
     res.status(201).json({ data: { submissionId: taskId, taskId: taskRows[0].id } })
+  }))
+
+  // POST /forms/:formId/validate-conditions — evaluate field conditions
+  router.post('/:formId/validate-conditions', asyncHandler(async (req, res) => {
+    const { formId } = req.params as { formId: string }
+    const { rows } = await db.query('SELECT * FROM task_forms WHERE id = $1', [formId])
+    if (!rows.length) throw new AppError(ErrorCode.TASK_FORM_NOT_FOUND)
+
+    const form = rows[0]
+    const { fieldValues } = req.body as { fieldValues: Record<string, any> }
+    if (!fieldValues || typeof fieldValues !== 'object') {
+      throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'fieldValues is required and must be an object')
+    }
+
+    const conditions = form.field_conditions as any[] | null
+    if (!conditions || !Array.isArray(conditions) || conditions.length === 0) {
+      // No conditions — all fields visible
+      res.json({ data: { visibleFields: Object.keys(fieldValues) } })
+      return
+    }
+
+    const visibleFields = new Set<string>()
+
+    // Start with all form field names as visible
+    const formFields = form.fields as any[] | null
+    if (formFields && Array.isArray(formFields)) {
+      for (const f of formFields) {
+        if (f.name) visibleFields.add(f.name)
+      }
+    }
+
+    // Evaluate conditions
+    for (const condition of conditions) {
+      const { fieldName, operator, value, showFields } = condition as {
+        fieldName: string
+        operator: string
+        value: any
+        showFields: string[]
+      }
+
+      const fieldValue = fieldValues[fieldName]
+      let conditionMet = false
+
+      switch (operator) {
+        case 'equals':
+          conditionMet = fieldValue === value
+          break
+        case 'not_equals':
+          conditionMet = fieldValue !== value
+          break
+        case 'contains':
+          conditionMet = typeof fieldValue === 'string' && fieldValue.includes(value)
+          break
+        case 'greater_than':
+          conditionMet = typeof fieldValue === 'number' && fieldValue > value
+          break
+        case 'less_than':
+          conditionMet = typeof fieldValue === 'number' && fieldValue < value
+          break
+        case 'is_set':
+          conditionMet = fieldValue !== null && fieldValue !== undefined && fieldValue !== ''
+          break
+        case 'is_not_set':
+          conditionMet = fieldValue === null || fieldValue === undefined || fieldValue === ''
+          break
+        default:
+          conditionMet = false
+      }
+
+      if (!conditionMet && showFields && Array.isArray(showFields)) {
+        // Hide fields that are conditionally shown
+        for (const sf of showFields) {
+          visibleFields.delete(sf)
+        }
+      }
+    }
+
+    res.json({ data: { visibleFields: Array.from(visibleFields) } })
   }))
 
   // GET /forms/:formId/submissions — view submissions (auth required)

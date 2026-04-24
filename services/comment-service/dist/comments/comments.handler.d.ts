@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { Pool } from 'pg';
 export declare function createCommentHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;
 export declare function listCommentsHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare function createDocCommentHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare function listDocCommentsHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;
 export declare function updateCommentHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;
 export declare function deleteCommentHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;
 export declare function resolveCommentHandler(db: Pool): (req: Request, res: Response, next: import("express").NextFunction) => void;

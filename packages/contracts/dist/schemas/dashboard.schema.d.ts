@@ -1,5 +1,5 @@
 import { z } from 'zod';
-export declare const WIDGET_TYPES: readonly ["task_count", "task_by_status", "task_by_assignee", "task_by_priority", "completion_rate", "time_tracked", "time_by_user", "billable_time", "velocity", "burndown", "cumulative_flow", "overdue_tasks", "recent_activity", "goals_progress", "custom_text", "embed"];
+export declare const WIDGET_TYPES: readonly ["task_count", "task_by_status", "task_by_assignee", "task_by_priority", "completion_rate", "time_tracked", "time_by_user", "billable_time", "velocity", "burndown", "cumulative_flow", "overdue_tasks", "recent_activity", "goals_progress", "custom_text", "embed", "burnup"];
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 export declare const CreateDashboardSchema: z.ZodObject<{
     name: z.ZodString;
@@ -53,7 +53,7 @@ export declare const WidgetConfigSchema: z.ZodObject<{
 }, z.ZodTypeAny, "passthrough">>;
 export type WidgetConfigType = z.infer<typeof WidgetConfigSchema>;
 export declare const CreateWidgetSchema: z.ZodObject<{
-    type: z.ZodEnum<["task_count", "task_by_status", "task_by_assignee", "task_by_priority", "completion_rate", "time_tracked", "time_by_user", "billable_time", "velocity", "burndown", "cumulative_flow", "overdue_tasks", "recent_activity", "goals_progress", "custom_text", "embed"]>;
+    type: z.ZodEnum<["task_count", "task_by_status", "task_by_assignee", "task_by_priority", "completion_rate", "time_tracked", "time_by_user", "billable_time", "velocity", "burndown", "cumulative_flow", "overdue_tasks", "recent_activity", "goals_progress", "custom_text", "embed", "burnup"]>;
     title: z.ZodString;
     config: z.ZodDefault<z.ZodOptional<z.ZodObject<{
         listId: z.ZodOptional<z.ZodString>;
@@ -88,7 +88,7 @@ export declare const CreateWidgetSchema: z.ZodObject<{
     width: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     height: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    type: "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "embed";
+    type: "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "embed" | "burnup";
     config: {
         text?: string | undefined;
         url?: string | undefined;
@@ -107,7 +107,7 @@ export declare const CreateWidgetSchema: z.ZodObject<{
     width: number;
     height: number;
 }, {
-    type: "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "embed";
+    type: "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "embed" | "burnup";
     title: string;
     config?: z.objectInputType<{
         listId: z.ZodOptional<z.ZodString>;

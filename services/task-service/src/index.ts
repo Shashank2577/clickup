@@ -9,6 +9,7 @@ import {
   formsRouter,
   standaloneFormsRouter,
   taskTypesRouter,
+  fieldPermissionsRouter,
 } from './routes.js'
 import { startRecurringTaskRunner } from './tasks/recurring.handler.js'
 
@@ -64,6 +65,10 @@ async function bootstrap(): Promise<void> {
   app.use('/task-forms/:listId', formsRouter(db))
   // Gateway /api/v1/forms → strips /api/v1 → upstream sees /forms/...
   app.use('/forms', standaloneFormsRouter(db))
+
+  // ── Field Permissions ────────────────────────────────────────────────────────
+  // Gateway /api/v1/custom-fields/:fieldId/permissions
+  app.use('/custom-fields/:fieldId/permissions', fieldPermissionsRouter(db))
 
   // Error handler — MUST be last
   app.use(errorHandler)

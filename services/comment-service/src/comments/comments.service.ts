@@ -58,7 +58,7 @@ export function createCommentService(db: Pool) {
         }
       }
 
-      const comment = await repository.createComment({ taskId, userId, content, parentId })
+      const comment = await repository.createComment({ taskId, docId: null, userId, content, parentId })
       const mentionedUserIds = extractMentions(content)
 
       await publish(COMMENT_EVENTS.CREATED as any, {
@@ -88,6 +88,95 @@ export function createCommentService(db: Pool) {
       return comment
     },
 
+    createDocComment: async (docId: string, userId: string, content: string, parentId: string | null, traceId?: string) => {
+      const doc = await repository.getDocWithWorkspace(docId)
+      if (!doc) throw new AppError(ErrorCode.DOC_NOT_FOUND)
+
+      await verifyMembership(doc.workspaceId, userId, traceId)
+
+      if (parentId) {
+        const parent = await repository.getComment(parentId)
+        if (!parent || parent.doc_id !== docId) throw new AppError(ErrorCode.COMMENT_NOT_FOUND)
+        if (parent.parent_id !== null) {
+          throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Replies cannot be nested beyond one level')
+        }
+      }
+
+      const comment = await repository.createComment({ taskId: null, docId, userId, content, parentId })
+      const mentionedUserIds = extractMentions(content)
+
+      await publish(COMMENT_EVENTS.CREATED as any, {
+        commentId: comment.id,
+        docId: comment.doc_id,
+        workspaceId: doc.workspaceId,
+        content: comment.content,
+        parentId: comment.parent_id,
+        userId: userId,
+        mentionedUserIds,
+        occurredAt: new Date().toISOString(),
+      } as any)
+
+      if (mentionedUserIds.length > 0) {
+        await publish(COMMENT_EVENTS.MENTIONED as any, {
+          commentId: comment.id,
+          docId: comment.doc_id,
+          workspaceId: doc.workspaceId,
+          authorId: userId,
+          mentionedUserIds,
+          content: comment.content,
+          occurredAt: new Date().toISOString(),
+        } as any)
+        logger.info({ commentId: comment.id, mentionedUserIds }, 'doc comment.mentioned event published')
+      }
+
+      return comment
+    },
+
+    listDocComments: async (docId: string, userId: string, traceId?: string) => {
+      const doc = await repository.getDocWithWorkspace(docId)
+      if (!doc) throw new AppError(ErrorCode.DOC_NOT_FOUND)
+
+      await verifyMembership(doc.workspaceId, userId, traceId)
+
+      const roots = await repository.listRootDocComments(docId)
+      if (roots.length === 0) return []
+
+      const rootIds = roots.map((r: any) => r.id)
+      const replies = await repository.listReplies(rootIds)
+
+      const rootMap = new Map(roots.map((r: any) => [r.id, {
+        id: r.id,
+        docId: r.doc_id,
+        parentId: r.parent_id,
+        content: r.content,
+        isResolved: r.is_resolved,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+        user: { id: r.user_id, name: r.user_name, avatarUrl: r.user_avatar },
+        reactions: r.reactions || [],
+        replies: [] as any[]
+      }]))
+
+      for (const reply of replies) {
+        const parent = rootMap.get(reply.parent_id)
+        if (parent) {
+          parent.replies.push({
+            id: reply.id,
+            docId: reply.doc_id,
+            parentId: reply.parent_id,
+            content: reply.content,
+            isResolved: reply.is_resolved,
+            createdAt: reply.created_at,
+            updatedAt: reply.updated_at,
+            user: { id: reply.user_id, name: reply.user_name, avatarUrl: reply.user_avatar },
+            reactions: reply.reactions || []
+          })
+        }
+      }
+
+      return Array.from(rootMap.values())
+    },
+
     listComments: async (taskId: string, userId: string, traceId?: string) => {
       const task = await repository.getTaskWithWorkspace(taskId)
       if (!task) throw new AppError(ErrorCode.TASK_NOT_FOUND)
@@ -100,7 +189,7 @@ export function createCommentService(db: Pool) {
       const rootIds = roots.map((r: any) => r.id)
       const replies = await repository.listReplies(rootIds)
 
-      const rootMap = new Map(roots.map((r: any) => [r.id, { 
+      const rootMap = new Map(roots.map((r: any) => [r.id, {
         id: r.id,
         taskId: r.task_id,
         parentId: r.parent_id,
@@ -261,7 +350,8 @@ export function createCommentService(db: Pool) {
 
       const reply = await repository.createReply({
         parentId: commentId,
-        taskId: parent.task_id,
+        taskId: parent.task_id ?? null,
+        docId: parent.doc_id ?? null,
         userId,
         content,
       })

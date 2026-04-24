@@ -1,56 +1,23 @@
-import type { Doc } from '@clickup/contracts';
-import type { DocsRepository, DocWithChildCount } from './docs.repository.js';
+import { Pool } from 'pg';
+import { DocsRepository } from './docs.repository.js';
 export declare class DocsService {
     private readonly repository;
+    private identityUrl;
     constructor(repository: DocsRepository);
-    private assertWorkspaceMember;
-    createDoc(input: {
-        workspaceId: string;
+    private getIdentityClient;
+    private verifyMembership;
+    createDoc(userId: string, input: {
         title?: string;
-        content?: Record<string, unknown>;
+        workspaceId: string;
         parentId?: string;
-        isPublic?: boolean;
-        userId: string;
-        token: string;
-    }): Promise<Doc>;
-    listDocs(input: {
-        workspaceId: string;
-        userId: string;
-        token: string;
-    }): Promise<DocWithChildCount[]>;
-    getDoc(input: {
-        docId: string;
-        userId: string;
-        token: string;
-    }): Promise<{
-        doc: Doc;
-        children: DocWithChildCount[];
-    }>;
-    updateDoc(input: {
-        docId: string;
+    }, traceId?: string): Promise<any>;
+    getDoc(userId: string, docId: string, traceId?: string): Promise<any>;
+    updateDocMeta(userId: string, docId: string, input: {
         title?: string;
-        content?: Record<string, unknown>;
         isPublic?: boolean;
-        userId: string;
-        token: string;
-    }): Promise<Doc>;
-    deleteDoc(input: {
-        docId: string;
-        userId: string;
-        token: string;
-    }): Promise<void>;
-    listPages(input: {
-        docId: string;
-        userId: string;
-        token: string;
-    }): Promise<DocWithChildCount[]>;
-    createPage(input: {
-        parentDocId: string;
-        title?: string;
         content?: Record<string, unknown>;
-        isPublic?: boolean;
-        userId: string;
-        token: string;
-    }): Promise<Doc>;
+    }, traceId?: string): Promise<any>;
+    deleteDoc(userId: string, docId: string, traceId?: string): Promise<void>;
 }
+export declare const createDocsService: (db: Pool) => DocsService;
 //# sourceMappingURL=docs.service.d.ts.map

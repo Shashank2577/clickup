@@ -40,6 +40,8 @@ export enum CustomFieldType {
   Rating = 'rating',
   Relationship = 'relationship',
   Rollup = 'rollup',
+  Location = 'location',
+  Voting = 'voting',
 }
 
 export enum GoalTargetType {
@@ -111,6 +113,9 @@ export enum ViewType {
   Table = 'table',
   Workload = 'workload',
   Gantt = 'gantt',
+  Activity = 'activity',
+  Box = 'box',
+  Doc = 'doc',
 }
 
 // Task status semantic groups (mirrors status_group DB enum)

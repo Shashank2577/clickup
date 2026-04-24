@@ -32,6 +32,12 @@ async function bootstrap() {
                 docs: process.env['DOCS_SERVICE_URL'],
                 automations: process.env['AUTOMATIONS_SERVICE_URL'],
                 goals: process.env['GOAL_SERVICE_URL'],
+                views: process.env['VIEWS_SERVICE_URL'],
+                webhooks: process.env['WEBHOOKS_SERVICE_URL'],
+                dashboards: process.env['DASHBOARD_SERVICE_URL'],
+                sprints: process.env['SPRINT_SERVICE_URL'],
+                slack: process.env['SLACK_SERVICE_URL'],
+                github: process.env['GITHUB_SERVICE_URL'],
             },
         });
     });

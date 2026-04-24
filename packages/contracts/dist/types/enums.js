@@ -43,6 +43,8 @@ var CustomFieldType;
     CustomFieldType["Rating"] = "rating";
     CustomFieldType["Relationship"] = "relationship";
     CustomFieldType["Rollup"] = "rollup";
+    CustomFieldType["Location"] = "location";
+    CustomFieldType["Voting"] = "voting";
 })(CustomFieldType || (exports.CustomFieldType = CustomFieldType = {}));
 var GoalTargetType;
 (function (GoalTargetType) {
@@ -114,6 +116,9 @@ var ViewType;
     ViewType["Table"] = "table";
     ViewType["Workload"] = "workload";
     ViewType["Gantt"] = "gantt";
+    ViewType["Activity"] = "activity";
+    ViewType["Box"] = "box";
+    ViewType["Doc"] = "doc";
 })(ViewType || (exports.ViewType = ViewType = {}));
 // Task status semantic groups (mirrors status_group DB enum)
 var StatusGroup;

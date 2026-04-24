@@ -22,6 +22,7 @@ exports.WIDGET_TYPES = [
     'goals_progress',
     'custom_text',
     'embed',
+    'burnup',
 ];
 // ============================================================
 // Dashboard schemas

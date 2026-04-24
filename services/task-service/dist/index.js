@@ -1,7 +1,7 @@
 import express from 'express';
 import { Pool } from 'pg';
 import { httpLogger, correlationId, errorHandler, createHealthHandler } from '@clickup/sdk';
-import { routes, workspaceCustomFieldsRouter, statusesRouter, taskTemplatesRouter, formsRouter, standaloneFormsRouter, taskTypesRouter, } from './routes.js';
+import { routes, workspaceCustomFieldsRouter, statusesRouter, taskTemplatesRouter, formsRouter, standaloneFormsRouter, taskTypesRouter, fieldPermissionsRouter, } from './routes.js';
 import { startRecurringTaskRunner } from './tasks/recurring.handler.js';
 const SERVICE_NAME = process.env['SERVICE_NAME'] ?? 'task-service';
 const PORT = parseInt(process.env['PORT'] ?? '3002', 10);
@@ -44,6 +44,9 @@ async function bootstrap() {
     app.use('/task-forms/:listId', formsRouter(db));
     // Gateway /api/v1/forms → strips /api/v1 → upstream sees /forms/...
     app.use('/forms', standaloneFormsRouter(db));
+    // ── Field Permissions ────────────────────────────────────────────────────────
+    // Gateway /api/v1/custom-fields/:fieldId/permissions
+    app.use('/custom-fields/:fieldId/permissions', fieldPermissionsRouter(db));
     // Error handler — MUST be last
     app.use(errorHandler);
     app.listen(PORT, () => {

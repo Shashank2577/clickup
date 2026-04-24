@@ -5,6 +5,7 @@ import { z } from 'zod'
 // ============================================================
 
 export const CreateDocSchema = z.object({
+  workspaceId: z.string().uuid(),
   title: z.string().max(500).optional(),
   content: z.record(z.unknown()).optional(),
   parent_id: z.string().uuid().optional(),

@@ -349,5 +349,254 @@ export function importExportRouter(db: Pool): Router {
     }),
   )
 
+  // ── Jira JSON Import ────────────────────────────────────────────────────────
+  // POST /import/jira
+  // Accepts multipart/form-data: Jira JSON export file + listId field
+  router.post(
+    '/import/jira',
+    requireAuth,
+    asyncHandler(async (req: Request, res: Response) => {
+      const { fields, file } = await readMultipart(req)
+
+      const listId = fields['listId']
+      if (!listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'listId field is required')
+      if (!file) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Jira JSON file is required')
+
+      const meta = await repository.getListMetadata(listId)
+      if (!meta) throw new AppError(ErrorCode.LIST_NOT_FOUND)
+
+      const memberResult = await db.query<{ role: string }>(
+        `SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2`,
+        [meta.workspace_id, req.auth!.userId],
+      )
+      if (!memberResult.rows[0]) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+
+      let jiraData: any
+      try {
+        jiraData = JSON.parse(file)
+      } catch {
+        throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Invalid JSON file')
+      }
+
+      const projects: any[] = Array.isArray(jiraData?.projects) ? jiraData.projects : []
+
+      const mapJiraPriority = (name: string | undefined): string => {
+        const n = name ?? ''
+        if (n === 'Highest' || n === 'High') return 'high'
+        if (n === 'Medium') return 'normal'
+        if (n === 'Low' || n === 'Lowest') return 'low'
+        return 'none'
+      }
+
+      let imported = 0
+      const createdTaskIds: string[] = []
+      const basePath = '/' + listId + '/'
+
+      for (const project of projects) {
+        const issues: any[] = Array.isArray(project?.issues) ? project.issues : []
+        for (const issue of issues) {
+          const taskId = randomUUID()
+          const path = basePath + taskId + '/'
+          const title = String(issue?.summary ?? 'Untitled').trim() || 'Untitled'
+          const description = issue?.description ? String(issue.description) : null
+          const priority = mapJiraPriority(issue?.priority?.name)
+          const status = issue?.status?.name ? String(issue.status.name) : 'todo'
+          const dueDate = issue?.dueDate ? String(issue.dueDate) : null
+
+          await db.query(
+            `INSERT INTO tasks (id, list_id, title, description, status, priority, due_date, path, created_by, version)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)`,
+            [taskId, listId, title, description, status, priority, dueDate, path, req.auth!.userId],
+          )
+          createdTaskIds.push(taskId)
+          imported++
+
+          // Create subtasks
+          const subtasks: any[] = Array.isArray(issue?.subtasks) ? issue.subtasks : []
+          for (const sub of subtasks) {
+            const subId = randomUUID()
+            const subPath = path + subId + '/'
+            const subTitle = String(sub?.summary ?? 'Untitled').trim() || 'Untitled'
+            await db.query(
+              `INSERT INTO tasks (id, list_id, title, status, priority, path, parent_id, created_by, version)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)`,
+              [subId, listId, subTitle, 'todo', 'none', subPath, taskId, req.auth!.userId],
+            )
+            createdTaskIds.push(subId)
+            imported++
+          }
+        }
+      }
+
+      res.status(201).json({ data: { imported, tasks: createdTaskIds } })
+    }),
+  )
+
+  // ── Trello JSON Import ──────────────────────────────────────────────────────
+  // POST /import/trello
+  // Accepts multipart/form-data: Trello JSON export file + listId field
+  router.post(
+    '/import/trello',
+    requireAuth,
+    asyncHandler(async (req: Request, res: Response) => {
+      const { fields, file } = await readMultipart(req)
+
+      const listId = fields['listId']
+      if (!listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'listId field is required')
+      if (!file) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Trello JSON file is required')
+
+      const meta = await repository.getListMetadata(listId)
+      if (!meta) throw new AppError(ErrorCode.LIST_NOT_FOUND)
+
+      const memberResult = await db.query<{ role: string }>(
+        `SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2`,
+        [meta.workspace_id, req.auth!.userId],
+      )
+      if (!memberResult.rows[0]) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+
+      let trelloData: any
+      try {
+        trelloData = JSON.parse(file)
+      } catch {
+        throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Invalid JSON file')
+      }
+
+      // Build a map of Trello list ID → list name for status mapping
+      const trelloLists: any[] = Array.isArray(trelloData?.lists) ? trelloData.lists : []
+      const listNameById = new Map<string, string>()
+      for (const tl of trelloLists) {
+        if (tl?.id && tl?.name) {
+          listNameById.set(String(tl.id), String(tl.name))
+        }
+      }
+
+      const cards: any[] = Array.isArray(trelloData?.cards) ? trelloData.cards : []
+      const basePath = '/' + listId + '/'
+
+      let imported = 0
+      const createdTaskIds: string[] = []
+
+      for (const card of cards) {
+        const taskId = randomUUID()
+        const path = basePath + taskId + '/'
+        const title = String(card?.name ?? 'Untitled').trim() || 'Untitled'
+        const description = card?.desc ? String(card.desc) : null
+        const isClosed = card?.closed === true
+        const status = isClosed
+          ? 'archived'
+          : (card?.idList ? (listNameById.get(String(card.idList)) ?? 'todo') : 'todo')
+        const dueDate = card?.due ? String(card.due) : null
+
+        await db.query(
+          `INSERT INTO tasks (id, list_id, title, description, status, priority, due_date, path, created_by, version)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)`,
+          [taskId, listId, title, description, status, 'none', dueDate, path, req.auth!.userId],
+        )
+        createdTaskIds.push(taskId)
+        imported++
+      }
+
+      res.status(201).json({ data: { imported, tasks: createdTaskIds } })
+    }),
+  )
+
+  // ── Asana JSON Import ───────────────────────────────────────────────────────
+  // POST /import/asana
+  // Accepts multipart/form-data: Asana JSON export file + listId field
+  router.post(
+    '/import/asana',
+    requireAuth,
+    asyncHandler(async (req: Request, res: Response) => {
+      const { fields, file } = await readMultipart(req)
+
+      const listId = fields['listId']
+      if (!listId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'listId field is required')
+      if (!file) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Asana JSON file is required')
+
+      const meta = await repository.getListMetadata(listId)
+      if (!meta) throw new AppError(ErrorCode.LIST_NOT_FOUND)
+
+      const memberResult = await db.query<{ role: string }>(
+        `SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2`,
+        [meta.workspace_id, req.auth!.userId],
+      )
+      if (!memberResult.rows[0]) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+
+      let asanaData: any
+      try {
+        asanaData = JSON.parse(file)
+      } catch {
+        throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'Invalid JSON file')
+      }
+
+      const tasks: any[] = Array.isArray(asanaData?.data) ? asanaData.data : []
+
+      const mapAsanaPriority = (customFields: any[] | undefined): string => {
+        if (!Array.isArray(customFields)) return 'none'
+        const priorityField = customFields.find(
+          (f: any) => typeof f?.name === 'string' && f.name.toLowerCase() === 'priority',
+        )
+        if (!priorityField || !priorityField.display_value) return 'none'
+        const val = String(priorityField.display_value).toLowerCase()
+        if (val === 'high') return 'high'
+        if (val === 'medium') return 'normal'
+        if (val === 'low') return 'low'
+        return 'none'
+      }
+
+      let imported = 0
+      const createdTaskIds: string[] = []
+      const basePath = '/' + listId + '/'
+
+      for (const item of tasks) {
+        const taskId = randomUUID()
+        const path = basePath + taskId + '/'
+        const title = String(item?.name ?? 'Untitled').trim() || 'Untitled'
+        const description = item?.notes ? String(item.notes) : null
+        const isCompleted = item?.completed === true
+        const status = isCompleted ? 'completed' : 'open'
+        const priority = mapAsanaPriority(item?.custom_fields)
+        const dueDate = item?.due_on ? String(item.due_on) : null
+
+        await db.query(
+          `INSERT INTO tasks (id, list_id, title, description, status, priority, due_date, path, created_by, version)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)`,
+          [taskId, listId, title, description, status, priority, dueDate, path, req.auth!.userId],
+        )
+        createdTaskIds.push(taskId)
+        imported++
+
+        // Tags from tags[].name
+        const tags: any[] = Array.isArray(item?.tags) ? item.tags : []
+        for (const tag of tags) {
+          const tagName = typeof tag?.name === 'string' ? tag.name.trim() : null
+          if (tagName) {
+            await repository.addTag(taskId, tagName)
+          }
+        }
+
+        // Subtasks from subtasks[]
+        const subtasks: any[] = Array.isArray(item?.subtasks) ? item.subtasks : []
+        for (const sub of subtasks) {
+          const subId = randomUUID()
+          const subPath = path + subId + '/'
+          const subTitle = String(sub?.name ?? 'Untitled').trim() || 'Untitled'
+          const subCompleted = sub?.completed === true
+          const subStatus = subCompleted ? 'completed' : 'open'
+
+          await db.query(
+            `INSERT INTO tasks (id, list_id, title, status, priority, path, parent_id, created_by, version)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)`,
+            [subId, listId, subTitle, subStatus, 'none', subPath, taskId, req.auth!.userId],
+          )
+          createdTaskIds.push(subId)
+          imported++
+        }
+      }
+
+      res.status(201).json({ data: { imported, tasks: createdTaskIds } })
+    }),
+  )
+
   return router
 }

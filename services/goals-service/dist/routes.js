@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { createGoalHandler, getGoalHandler, getGoalsForWorkspaceHandler, updateGoalHandler, deleteGoalHandler, addTargetHandler, updateTargetHandler, } from './goals/goals.handler.js';
 import { goalFoldersRouter } from './goal-folders/goal-folders.handler.js';
+import { goalPermissionsRouter } from './goals/permissions.handler.js';
 import { requireAuth } from '@clickup/sdk';
 export function routes(db) {
     const router = Router();
     router.post('/', requireAuth, createGoalHandler);
     router.get('/workspace/:workspaceId', requireAuth, getGoalsForWorkspaceHandler);
+    // Goal permissions (sharing) — mounted before /:goalId wildcard routes
+    router.use('/:goalId/permissions', goalPermissionsRouter(db));
     router.get('/:goalId', requireAuth, getGoalHandler);
     router.patch('/:goalId', requireAuth, updateGoalHandler);
     router.delete('/:goalId', requireAuth, deleteGoalHandler);

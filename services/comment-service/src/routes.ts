@@ -4,6 +4,8 @@ import { requireAuth } from '@clickup/sdk'
 import {
   createCommentHandler,
   listCommentsHandler,
+  createDocCommentHandler,
+  listDocCommentsHandler,
   updateCommentHandler,
   deleteCommentHandler,
   resolveCommentHandler,
@@ -19,6 +21,10 @@ export function createRouter(db: Pool): Router {
 
   router.post('/tasks/:taskId/comments', requireAuth, createCommentHandler(db))
   router.get('/tasks/:taskId/comments', requireAuth, listCommentsHandler(db))
+
+  // Doc comments
+  router.post('/docs/:docId/comments', requireAuth, createDocCommentHandler(db))
+  router.get('/docs/:docId/comments', requireAuth, listDocCommentsHandler(db))
 
   // My assigned comments — must come before /:commentId routes to avoid conflict
   router.get('/me/assigned-comments', requireAuth, myAssignedCommentsHandler(db))

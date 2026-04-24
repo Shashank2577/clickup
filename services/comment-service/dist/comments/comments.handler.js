@@ -18,6 +18,23 @@ export function listCommentsHandler(db) {
         res.json({ data: comments });
     });
 }
+export function createDocCommentHandler(db) {
+    const service = createCommentService(db);
+    return asyncHandler(async (req, res) => {
+        const { docId } = req.params;
+        const { content, parentId } = validate(CreateCommentSchema, req.body);
+        const comment = await service.createDocComment(docId, req.auth.userId, content, parentId || null, req.headers['x-trace-id']);
+        res.status(201).json({ data: comment });
+    });
+}
+export function listDocCommentsHandler(db) {
+    const service = createCommentService(db);
+    return asyncHandler(async (req, res) => {
+        const { docId } = req.params;
+        const comments = await service.listDocComments(docId, req.auth.userId, req.headers['x-trace-id']);
+        res.json({ data: comments });
+    });
+}
 export function updateCommentHandler(db) {
     const service = createCommentService(db);
     return asyncHandler(async (req, res) => {

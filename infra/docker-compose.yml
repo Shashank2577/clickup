@@ -17,6 +17,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+      - ./migrations/002_research_improvements.sql:/docker-entrypoint-initdb.d/002_research_improvements.sql
+      - ./migrations/003_add_password_hash.sql:/docker-entrypoint-initdb.d/003_add_password_hash.sql
+      - ./migrations/004_doc_snapshots.sql:/docker-entrypoint-initdb.d/004_doc_snapshots.sql
+      - ./migrations/005_automation_runs.sql:/docker-entrypoint-initdb.d/005_automation_runs.sql
+      - ./migrations/006_views.sql:/docker-entrypoint-initdb.d/006_views.sql
+      - ./migrations/007_webhooks.sql:/docker-entrypoint-initdb.d/007_webhooks.sql
+      - ./migrations/008_wave3_features.sql:/docker-entrypoint-initdb.d/008_wave3_features.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U clickup']
       interval: 5s

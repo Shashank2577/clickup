@@ -106,6 +106,7 @@ export const COMMENT_EVENTS = {
   DELETED: 'comment.deleted',
   RESOLVED: 'comment.resolved',
   REACTION_ADDED: 'comment.reaction_added',
+  MENTIONED: 'clickup.comment.mentioned',
 } as const
 
 export interface CommentCreatedEvent {
@@ -116,6 +117,16 @@ export interface CommentCreatedEvent {
   userId: string
   content: string
   mentionedUserIds: string[]
+  occurredAt: string
+}
+
+export interface CommentMentionedEvent {
+  commentId: string
+  taskId: string
+  workspaceId: string
+  authorId: string
+  mentionedUserIds: string[]
+  content: string
   occurredAt: string
 }
 

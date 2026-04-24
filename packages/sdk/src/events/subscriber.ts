@@ -1,4 +1,4 @@
-import { StringCodec } from 'nats'
+import { StringCodec, AckPolicy } from 'nats'
 import type { EventSubject } from '@clickup/contracts'
 import { getNats } from './publisher.js'
 import { logger } from '../logging/logger.js'
@@ -18,28 +18,39 @@ export async function subscribe<T>(
 ): Promise<void> {
   const nats = await getNats()
   const js = nats.jetstream()
+  const jsm = await nats.jetstreamManager()
 
-  const consumerOptions = js.consumers.get
-  void consumerOptions // suppress unused warning
+  // Pull consumer implementation
+  const stream = 'clickup'
+  const durable = options.durable || options.queue || 'consumer-' + subject.replace('.', '-')
+  
+  // Ensure consumer exists
+  try {
+    await jsm.consumers.add(stream, {
+      durable_name: durable,
+      ack_policy: AckPolicy.Explicit,
+      filter_subject: subject,
+    })
+  } catch (err: any) {
+    if (!err.message.includes('already exists')) {
+      throw err
+    }
+  }
 
-  const sub = await js.subscribe(subject, {
-    config: {
-      ...(options.durable && { durable_name: options.durable }),
-      ...(options.queue && { deliver_subject: options.queue }),
-    },
-  })
+  const consumer = await js.consumers.get(stream, durable)
+  const messages = await consumer.consume()
 
-  logger.info({ subject }, 'Subscribed to event')
+  logger.info({ subject, durable }, 'Subscribed to event (pull consumer)')
 
   void (async () => {
-    for await (const msg of sub) {
+    for await (const msg of messages) {
       try {
         const raw = sc.decode(msg.data)
         const payload = JSON.parse(raw) as T
         await handler(payload)
         msg.ack()
       } catch (err) {
-        logger.error({ err, subject }, 'Event handler failed — nacking')
+        logger.error({ err, subject, durable }, 'Event handler failed — nacking')
         msg.nak()
       }
     }
