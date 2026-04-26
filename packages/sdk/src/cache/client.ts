@@ -125,4 +125,10 @@ export const CacheKeys = {
   goalProgress: (goalId: string) => `goal:progress:${goalId}`,
   doc: (docId: string) => `doc:${docId}`,
   docList: (workspaceId: string) => `doc:list:${workspaceId}`,
+  userFavorites: (userId: string) => `user:favorites:${userId}`,
+  team: (teamId: string) => `team:${teamId}`,
+  teamList: (workspaceId: string) => `team:list:${workspaceId}`,
+  sidebarConfig: (userId: string, workspaceId: string) => `user:sidebar:${userId}:${workspaceId}`,
+  userPresence: (userId: string) => `user:presence:${userId}`,
+  userPreferences: (userId: string) => `user:prefs:${userId}`,
 }

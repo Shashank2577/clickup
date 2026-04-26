@@ -1,153 +1,90 @@
 import { Router } from 'express'
 import type { Pool } from 'pg'
-import { requireAuth, asyncHandler, validate, AppError } from '@clickup/sdk'
-import { ErrorCode, CreateFavoriteSchema, ReorderFavoritesSchema } from '@clickup/contracts'
+import { requireAuth, asyncHandler, validate, AppError, tier2Del, CacheKeys } from '@clickup/sdk'
+import { ErrorCode, AddFavoriteSchema, ReorderFavoritesSchema } from '@clickup/contracts'
+import { FavoritesRepository } from './favorites.repository.js'
 
-interface FavoriteRow {
+function toFavoriteDto(row: {
   id: string
   user_id: string
-  workspace_id: string
-  item_type: string
-  item_id: string
-  item_name: string
+  entity_type: string
+  entity_id: string
   position: number
   created_at: Date
-}
-
-function toFavoriteDto(row: FavoriteRow) {
+}) {
   return {
     id: row.id,
     userId: row.user_id,
-    workspaceId: row.workspace_id,
-    itemType: row.item_type,
-    itemId: row.item_id,
-    itemName: row.item_name,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
     position: row.position,
     createdAt: row.created_at.toISOString(),
   }
 }
 
-// Mounted at: /workspaces/:workspaceId/favorites
-export function favoritesRouter(db: Pool): Router {
-  const router = Router({ mergeParams: true })
+export function favoritesRoutes(db: Pool): Router {
+  const router = Router()
+  const repository = new FavoritesRepository(db)
 
-  // GET /workspaces/:workspaceId/favorites
-  router.get(
-    '/',
-    requireAuth,
-    asyncHandler(async (req, res) => {
-      const { workspaceId } = req.params
-      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
-
-      const memberR = await db.query(
-        `SELECT 1 FROM workspace_members WHERE workspace_id = $1 AND user_id = $2`,
-        [workspaceId, req.auth.userId],
-      )
-      if (!memberR.rows[0]) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
-
-      const r = await db.query<FavoriteRow>(
-        `SELECT id, user_id, workspace_id, item_type, item_id, item_name, position, created_at
-         FROM favorites
-         WHERE user_id = $1 AND workspace_id = $2
-         ORDER BY position ASC, created_at ASC`,
-        [req.auth.userId, workspaceId],
-      )
-      res.json({ data: r.rows.map(toFavoriteDto) })
-    }),
-  )
-
-  // POST /workspaces/:workspaceId/favorites
+  // POST /favorites — add a favorite
   router.post(
     '/',
     requireAuth,
     asyncHandler(async (req, res) => {
-      const { workspaceId } = req.params
-      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
+      const input = validate(AddFavoriteSchema, req.body)
 
-      const memberR = await db.query(
-        `SELECT 1 FROM workspace_members WHERE workspace_id = $1 AND user_id = $2`,
-        [workspaceId, req.auth.userId],
-      )
-      if (!memberR.rows[0]) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+      const exists = await repository.existsFavorite(req.auth.userId, input.entityType, input.entityId)
+      if (exists) throw new AppError(ErrorCode.FAVORITE_ALREADY_EXISTS)
 
-      const input = validate(CreateFavoriteSchema, req.body)
-
-      // Get next position
-      const posR = await db.query<{ max: number | null }>(
-        `SELECT MAX(position) AS max FROM favorites WHERE user_id = $1 AND workspace_id = $2`,
-        [req.auth.userId, workspaceId],
-      )
-      const nextPos = (posR.rows[0]?.max ?? -1) + 1
-
-      try {
-        const r = await db.query<FavoriteRow>(
-          `INSERT INTO favorites (user_id, workspace_id, item_type, item_id, item_name, position)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id, user_id, workspace_id, item_type, item_id, item_name, position, created_at`,
-          [req.auth.userId, workspaceId, input.itemType, input.itemId, input.itemName, nextPos],
-        )
-        res.status(201).json({ data: toFavoriteDto(r.rows[0]!) })
-      } catch (err: unknown) {
-        if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === '23505') {
-          throw new AppError(ErrorCode.FAVORITE_ALREADY_EXISTS)
-        }
-        throw err
-      }
+      const maxPos = await repository.getMaxPosition(req.auth.userId)
+      const favorite = await repository.addFavorite({
+        userId: req.auth.userId,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        position: maxPos + 1000,
+      })
+      await tier2Del(CacheKeys.userFavorites(req.auth.userId))
+      res.status(201).json({ data: toFavoriteDto(favorite) })
     }),
   )
 
-  // DELETE /workspaces/:workspaceId/favorites/:id
+  // GET /favorites — list user's favorites
+  router.get(
+    '/',
+    requireAuth,
+    asyncHandler(async (req, res) => {
+      const favorites = await repository.getFavoritesByUser(req.auth.userId)
+      res.json({ data: favorites.map(toFavoriteDto) })
+    }),
+  )
+
+  // DELETE /favorites/:id — remove favorite
   router.delete(
     '/:id',
     requireAuth,
     asyncHandler(async (req, res) => {
-      const { workspaceId, id } = req.params
-      if (!workspaceId || !id) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'IDs are required')
+      const { id } = req.params
+      if (!id) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'id is required')
+      const favorite = await repository.getFavoriteById(id)
+      if (!favorite) throw new AppError(ErrorCode.FAVORITE_NOT_FOUND)
+      if (favorite.user_id !== req.auth.userId) throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
 
-      const r = await db.query(
-        `DELETE FROM favorites WHERE id = $1 AND user_id = $2 AND workspace_id = $3`,
-        [id, req.auth.userId, workspaceId],
-      )
-      if (r.rowCount === 0) throw new AppError(ErrorCode.FAVORITE_NOT_FOUND)
+      await repository.deleteFavorite(id)
+      await tier2Del(CacheKeys.userFavorites(req.auth.userId))
       res.status(204).end()
     }),
   )
 
-  // PATCH /workspaces/:workspaceId/favorites/reorder
+  // PATCH /favorites/reorder — reorder favorites
   router.patch(
     '/reorder',
     requireAuth,
     asyncHandler(async (req, res) => {
-      const { workspaceId } = req.params
-      if (!workspaceId) throw new AppError(ErrorCode.VALIDATION_INVALID_INPUT, 'workspaceId is required')
-
-      const memberR = await db.query(
-        `SELECT 1 FROM workspace_members WHERE workspace_id = $1 AND user_id = $2`,
-        [workspaceId, req.auth.userId],
-      )
-      if (!memberR.rows[0]) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
-
       const input = validate(ReorderFavoritesSchema, req.body)
-
-      // Update positions in order using a series of UPDATE statements in a transaction
-      const client = await db.connect()
-      try {
-        await client.query('BEGIN')
-        for (let i = 0; i < input.favoriteIds.length; i++) {
-          await client.query(
-            `UPDATE favorites SET position = $1 WHERE id = $2 AND user_id = $3 AND workspace_id = $4`,
-            [i, input.favoriteIds[i], req.auth.userId, workspaceId],
-          )
-        }
-        await client.query('COMMIT')
-      } catch (err) {
-        await client.query('ROLLBACK')
-        throw err
-      } finally {
-        client.release()
-      }
-
-      res.json({ data: { reordered: input.favoriteIds.length } })
+      await repository.reorderFavorites(req.auth.userId, input.orderedIds)
+      await tier2Del(CacheKeys.userFavorites(req.auth.userId))
+      const favorites = await repository.getFavoritesByUser(req.auth.userId)
+      res.json({ data: favorites.map(toFavoriteDto) })
     }),
   )
 
