@@ -13,9 +13,23 @@ import {
   deleteWidgetHandler,
   getWidgetDataHandler,
 } from './widgets/widgets.handler.js'
+import {
+  listTemplatesHandler,
+  createFromTemplateHandler,
+} from './templates/templates.handler.js'
 
 export function routes(): Router {
   const router = Router()
+
+  // --------------------------------------------------------
+  // Dashboard template endpoints
+  // --------------------------------------------------------
+  router.get('/dashboard-templates', listTemplatesHandler)
+  router.post(
+    '/workspaces/:workspaceId/dashboards/from-template/:templateId',
+    requireAuth,
+    createFromTemplateHandler,
+  )
 
   // --------------------------------------------------------
   // Dashboard endpoints

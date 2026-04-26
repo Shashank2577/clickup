@@ -113,6 +113,7 @@ export const updateDashboardHandler = asyncHandler(
       dashboardId,
       input.name,
       input.isPrivate,
+      (input as any).reportSchedule as Record<string, unknown> | undefined,
     )
 
     res.status(200).json({ data: updated })

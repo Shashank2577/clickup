@@ -231,6 +231,37 @@ export async function executeViewQuery(
       break
     }
 
+    case 'team': {
+      // Team view: tasks grouped by assignee — ensure assignee is set
+      whereClauses.push(`t.assignee_id IS NOT NULL`)
+      break
+    }
+
+    case 'activity': {
+      // Activity view: just order by updated_at DESC for recent changes
+      break
+    }
+
+    case 'map': {
+      // Map view: only tasks with location custom field (filtered client-side)
+      break
+    }
+
+    case 'mindmap': {
+      // Mind map: hierarchy view — no extra filter, client renders tree
+      break
+    }
+
+    case 'embed': {
+      // Embed view: no task query needed — returns embed config only
+      return {
+        grouped: false,
+        tasks: [],
+        embed: (view.config as Record<string, unknown>)['embed'] ?? null,
+        meta: { page: 1, pageSize: 0, total: 0, totalPages: 0 },
+      }
+    }
+
     // list, board, table, gantt — just apply filters
     default:
       break
@@ -260,7 +291,7 @@ export async function executeViewQuery(
   const tasks = dataResult.rows
 
   // If groupBy, bucket results client-side (already fetched with limit)
-  if (groupByField && (view.type === 'board' || view.type === 'table' || view.type === 'list')) {
+  if (groupByField && (view.type === 'board' || view.type === 'table' || view.type === 'list' || view.type === 'team')) {
     const groups: Record<string, typeof tasks> = {}
     for (const task of tasks) {
       const key = String(task[groupByField] ?? '__none__')

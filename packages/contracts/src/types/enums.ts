@@ -116,6 +116,30 @@ export enum ViewType {
   Activity = 'activity',
   Box = 'box',
   Doc = 'doc',
+  Team = 'team',
+  Map = 'map',
+  Mindmap = 'mindmap',
+  Embed = 'embed',
+}
+
+// Notification category for inbox filtering
+export enum NotificationCategory {
+  Primary = 'primary',
+  Other = 'other',
+}
+
+// Form field types for form-service
+export enum FormFieldType {
+  Text = 'text',
+  Number = 'number',
+  Dropdown = 'dropdown',
+  Checkbox = 'checkbox',
+  Date = 'date',
+  Email = 'email',
+  Phone = 'phone',
+  Url = 'url',
+  Rating = 'rating',
+  FileUpload = 'file_upload',
 }
 
 // Task status semantic groups (mirrors status_group DB enum)
@@ -125,30 +149,6 @@ export enum StatusGroup {
   Started = 'started',
   Completed = 'completed',
   Cancelled = 'cancelled',
-}
-
-// Favorite entity types
-export enum FavoriteEntity {
-  Task = 'task',
-  Space = 'space',
-  Doc = 'doc',
-  Dashboard = 'dashboard',
-  View = 'view',
-}
-
-// User presence status
-export enum PresenceStatusEnum {
-  Online = 'online',
-  Away = 'away',
-  Offline = 'offline',
-  Dnd = 'dnd',
-}
-
-// Appearance modes
-export enum AppearanceMode {
-  Light = 'light',
-  Dark = 'dark',
-  Auto = 'auto',
 }
 
 // Filter conditions for view filter trees

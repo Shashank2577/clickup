@@ -6,6 +6,7 @@ import {
   CreateViewSchema,
   UpdateViewSchema,
   UpdateViewUserStateSchema,
+  UpdateViewSharingSchema,
 } from '@clickup/contracts'
 import { Pool } from 'pg'
 import { ViewsRepository } from './views.repository.js'
@@ -257,6 +258,34 @@ export function createViewHandlers(repo: ViewsRepository, db?: Pool) {
     res.status(200).json({ data: result })
   })
 
+  // ============================================================
+  // PUT /:viewId/sharing — update view visibility and pinned state
+  // ============================================================
+
+  const updateViewSharing = asyncHandler(async (req: Request, res: Response) => {
+    const userId = (req as any).auth!.userId as string
+    const { viewId } = req.params as { viewId: string }
+
+    const existing = await repo.getView(viewId)
+    if (!existing) {
+      throw new AppError(ErrorCode.VIEW_NOT_FOUND)
+    }
+
+    // Only the owner can update sharing settings
+    if (existing.createdBy !== userId) {
+      throw new AppError(ErrorCode.VIEW_ACCESS_DENIED)
+    }
+
+    const input = validate(UpdateViewSharingSchema, req.body) as {
+      visibility: 'private' | 'shared'
+      pinned?: boolean
+    }
+
+    const updated = await repo.updateViewSharing(viewId, input.visibility, input.pinned)
+
+    res.status(200).json({ data: updated })
+  })
+
   return {
     createView,
     listViewsByList,
@@ -268,5 +297,6 @@ export function createViewHandlers(repo: ViewsRepository, db?: Pool) {
     upsertUserState,
     getViewTasks,
     getViewWorkload,
+    updateViewSharing,
   }
 }

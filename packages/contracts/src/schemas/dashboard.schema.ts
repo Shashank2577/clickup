@@ -39,6 +39,12 @@ export type CreateDashboardSchemaType = z.infer<typeof CreateDashboardSchema>
 export const UpdateDashboardSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   isPrivate: z.boolean().optional(),
+  reportSchedule: z.object({
+    enabled: z.boolean(),
+    cronExpression: z.string().optional(),
+    recipientEmails: z.array(z.string().email()).optional(),
+    format: z.enum(['pdf', 'email']).optional().default('email'),
+  }).optional(),
 })
 export type UpdateDashboardSchemaType = z.infer<typeof UpdateDashboardSchema>
 

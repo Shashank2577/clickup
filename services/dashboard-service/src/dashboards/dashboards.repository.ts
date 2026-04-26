@@ -90,17 +90,19 @@ export const dashboardsRepository = {
     dashboardId: string,
     name?: string,
     isPrivate?: boolean,
+    reportSchedule?: Record<string, unknown>,
   ) {
     const result = await db.query(
       `
       UPDATE dashboards
-      SET name       = COALESCE($2, name),
-          is_private = COALESCE($3, is_private),
-          updated_at = NOW()
+      SET name            = COALESCE($2, name),
+          is_private      = COALESCE($3, is_private),
+          report_schedule = COALESCE($4, report_schedule),
+          updated_at      = NOW()
       WHERE id = $1
       RETURNING *
       `,
-      [dashboardId, name ?? null, isPrivate ?? null],
+      [dashboardId, name ?? null, isPrivate ?? null, reportSchedule ? JSON.stringify(reportSchedule) : null],
     )
     return result.rows[0] ?? null
   },

@@ -26,6 +26,59 @@ const SortOptionSchema = z.object({
   direction: z.enum(['asc', 'desc']),
 })
 
+// ============================================================
+// Per-view-type config schemas
+// ============================================================
+
+const TableConfigSchema = z.object({
+  inlineEditing: z.boolean().optional().default(true),
+  rowHeight: z.enum(['compact', 'normal', 'tall']).optional().default('normal'),
+  frozenColumns: z.number().int().min(0).max(5).optional().default(1),
+})
+
+const TimelineConfigSchema = z.object({
+  startField: z.string().optional().default('start_date'),
+  endField: z.string().optional().default('due_date'),
+  zoom: z.enum(['day', 'week', 'month', 'quarter']).optional().default('week'),
+})
+
+const WorkloadConfigSchema = z.object({
+  capacityField: z.enum(['hours', 'points']).optional().default('hours'),
+  maxCapacity: z.number().optional().default(40),
+  showOverallocated: z.boolean().optional().default(true),
+})
+
+const TeamConfigSchema = z.object({
+  groupByUser: z.boolean().optional().default(true),
+  showAvatar: z.boolean().optional().default(true),
+  showTaskCount: z.boolean().optional().default(true),
+})
+
+const ActivityConfigSchema = z.object({
+  showSystem: z.boolean().optional().default(false),
+  limit: z.number().int().min(10).max(200).optional().default(50),
+})
+
+const MapConfigSchema = z.object({
+  locationFieldId: z.string().optional(),
+  defaultZoom: z.number().optional().default(10),
+  defaultCenter: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }).optional(),
+})
+
+const MindmapConfigSchema = z.object({
+  rootTaskId: uuid.optional(),
+  layout: z.enum(['tree', 'radial']).optional().default('tree'),
+})
+
+const EmbedConfigSchema = z.object({
+  url: z.string().url(),
+  embedType: z.enum(['website', 'google_sheets', 'figma', 'miro', 'youtube', 'other']).optional().default('website'),
+  height: z.number().int().min(200).max(2000).optional().default(600),
+})
+
 const ViewConfigSchema = z.object({
   groupById: z.string().optional(),
   datePropertyId: z.string().optional(),
@@ -34,6 +87,15 @@ const ViewConfigSchema = z.object({
   filter: FilterGroupSchema.optional().default({ operation: 'and', filters: [] }),
   columnWidths: z.record(z.string(), z.number()).optional().default({}),
   collapsedGroups: z.array(z.string()).optional().default([]),
+  // Per-view-type config (only one should be set based on type)
+  table: TableConfigSchema.optional(),
+  timeline: TimelineConfigSchema.optional(),
+  workload: WorkloadConfigSchema.optional(),
+  team: TeamConfigSchema.optional(),
+  activity: ActivityConfigSchema.optional(),
+  map: MapConfigSchema.optional(),
+  mindmap: MindmapConfigSchema.optional(),
+  embed: EmbedConfigSchema.optional(),
 })
 
 export const CreateViewSchema = z.object({
@@ -69,6 +131,12 @@ export const UpdateTaskStatusSchema = z.object({
   isDefault: z.boolean().optional(),
 })
 
+export const UpdateViewSharingSchema = z.object({
+  visibility: z.enum(['private', 'shared']),
+  pinned: z.boolean().optional(),
+})
+
 export type CreateViewInput = z.infer<typeof CreateViewSchema>
 export type UpdateViewInput = z.infer<typeof UpdateViewSchema>
+export type UpdateViewSharingInput = z.infer<typeof UpdateViewSharingSchema>
 export type CreateTaskStatusInput = z.infer<typeof CreateTaskStatusSchema>

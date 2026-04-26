@@ -155,6 +155,36 @@ export function createViewsRepository(db: Pool) {
       await db.query(`DELETE FROM views WHERE id = $1`, [id])
     },
 
+    async updateViewSharing(
+      id: string,
+      visibility: 'private' | 'shared',
+      pinned?: boolean,
+    ) {
+      const result = await db.query(
+        `UPDATE views
+         SET visibility = $2,
+             pinned     = COALESCE($3, pinned),
+             updated_at = NOW()
+         WHERE id = $1
+         RETURNING
+           id,
+           list_id       AS "listId",
+           workspace_id  AS "workspaceId",
+           name,
+           type,
+           config,
+           created_by    AS "createdBy",
+           is_private    AS "isPrivate",
+           visibility,
+           pinned,
+           position,
+           created_at    AS "createdAt",
+           updated_at    AS "updatedAt"`,
+        [id, visibility, pinned ?? null],
+      )
+      return result.rows[0] ?? null
+    },
+
     async getUserState(viewId: string, userId: string) {
       const result = await db.query(
         `SELECT

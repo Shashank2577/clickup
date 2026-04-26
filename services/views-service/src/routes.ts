@@ -22,6 +22,9 @@ export function createRouter(db: Pool): Router {
   router.get('/:viewId/state', requireAuth, handlers.getUserState)
   router.patch('/:viewId/state', requireAuth, handlers.upsertUserState)
 
+  // View sharing
+  router.put('/:viewId/sharing', requireAuth, handlers.updateViewSharing)
+
   // View query execution endpoints — must come before /:viewId to avoid conflicts
   router.get('/:viewId/tasks', requireAuth, handlers.getViewTasks)
   router.get('/:viewId/workload', requireAuth, handlers.getViewWorkload)
