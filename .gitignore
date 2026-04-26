@@ -42,3 +42,4 @@ pact/logs/
 # Temporary files
 tmp/
 .temp/
+apps/web/.next
