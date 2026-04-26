@@ -122,6 +122,30 @@ export enum StatusGroup {
   Cancelled = 'cancelled',
 }
 
+// Favorite entity types
+export enum FavoriteEntity {
+  Task = 'task',
+  Space = 'space',
+  Doc = 'doc',
+  Dashboard = 'dashboard',
+  View = 'view',
+}
+
+// User presence status
+export enum PresenceStatusEnum {
+  Online = 'online',
+  Away = 'away',
+  Offline = 'offline',
+  Dnd = 'dnd',
+}
+
+// Appearance modes
+export enum AppearanceMode {
+  Light = 'light',
+  Dark = 'dark',
+  Auto = 'auto',
+}
+
 // Filter conditions for view filter trees
 export enum FilterCondition {
   Is = 'is',
