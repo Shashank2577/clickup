@@ -24,4 +24,5 @@ export * from './schemas/favorites.schema.js';
 export * from './schemas/apikey.schema.js';
 export * from './schemas/savedsearch.schema.js';
 export * from './schemas/invite.schema.js';
+export * from './schemas/chat.schema.js';
 //# sourceMappingURL=index.d.ts.map

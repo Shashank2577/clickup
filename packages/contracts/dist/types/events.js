@@ -6,7 +6,7 @@
 // All agents import event types from here.
 // ============================================================
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ALL_EVENTS = exports.VIEW_EVENTS = exports.GOAL_EVENTS = exports.FILE_EVENTS = exports.NOTIFICATION_EVENTS = exports.WORKSPACE_EVENTS = exports.DOC_EVENTS = exports.COMMENT_EVENTS = exports.TASK_EVENTS = void 0;
+exports.ALL_EVENTS = exports.CHAT_EVENTS = exports.VIEW_EVENTS = exports.GOAL_EVENTS = exports.FILE_EVENTS = exports.NOTIFICATION_EVENTS = exports.WORKSPACE_EVENTS = exports.DOC_EVENTS = exports.COMMENT_EVENTS = exports.TASK_EVENTS = void 0;
 // ============================================================
 // TASK EVENTS
 // ============================================================
@@ -78,6 +78,22 @@ exports.VIEW_EVENTS = {
     DELETED: 'view.deleted',
 };
 // ============================================================
+// CHAT EVENTS
+// ============================================================
+exports.CHAT_EVENTS = {
+    MESSAGE_CREATED: 'chat.message_created',
+    MESSAGE_UPDATED: 'chat.message_updated',
+    MESSAGE_DELETED: 'chat.message_deleted',
+    CHANNEL_CREATED: 'chat.channel_created',
+    CHANNEL_UPDATED: 'chat.channel_updated',
+    CHANNEL_DELETED: 'chat.channel_deleted',
+    MEMBER_JOINED: 'chat.member_joined',
+    MEMBER_LEFT: 'chat.member_left',
+    REACTION_ADDED: 'chat.reaction_added',
+    REACTION_REMOVED: 'chat.reaction_removed',
+    MENTIONED: 'chat.mentioned',
+};
+// ============================================================
 // All event subjects — use these constants when publishing
 // ============================================================
 exports.ALL_EVENTS = {
@@ -89,5 +105,6 @@ exports.ALL_EVENTS = {
     ...exports.FILE_EVENTS,
     ...exports.GOAL_EVENTS,
     ...exports.VIEW_EVENTS,
+    ...exports.CHAT_EVENTS,
 };
 //# sourceMappingURL=events.js.map

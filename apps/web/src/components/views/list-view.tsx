@@ -192,6 +192,7 @@ function TaskRow({ task, depth = 0 }: { task: Task; depth?: number }) {
   return (
     <>
       <div
+        data-task={task.id}
         className="group flex items-center border-b border-border/50 px-4 py-1.5 hover:bg-accent/50 transition-colors cursor-pointer"
         style={{ paddingLeft: `${16 + depth * 24}px` }}
       >

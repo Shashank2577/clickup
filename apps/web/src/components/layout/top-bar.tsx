@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-export function TopBar() {
+export function TopBar({ onSearchClick }: { onSearchClick?: () => void }) {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="flex h-topbar items-center border-b border-border bg-background px-3 gap-2">
@@ -41,7 +41,10 @@ export function TopBar() {
 
         {/* Center: Search */}
         <div className="flex-1 flex justify-center">
-          <button className="flex h-7 w-full max-w-md items-center gap-2 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground hover:bg-accent transition-colors">
+          <button
+            onClick={onSearchClick}
+            className="flex h-7 w-full max-w-md items-center gap-2 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground hover:bg-accent transition-colors"
+          >
             <Search className="h-3.5 w-3.5" />
             <span>Search</span>
             <kbd className="ml-auto hidden rounded border border-border bg-muted px-1.5 py-0.5 text-2xs font-medium md:inline-block">

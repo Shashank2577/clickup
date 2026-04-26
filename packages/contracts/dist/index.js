@@ -48,4 +48,5 @@ __exportStar(require("./schemas/favorites.schema.js"), exports);
 __exportStar(require("./schemas/apikey.schema.js"), exports);
 __exportStar(require("./schemas/savedsearch.schema.js"), exports);
 __exportStar(require("./schemas/invite.schema.js"), exports);
+__exportStar(require("./schemas/chat.schema.js"), exports);
 //# sourceMappingURL=index.js.map

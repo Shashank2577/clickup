@@ -219,7 +219,73 @@ export interface ViewUpdatedEvent {
     updatedBy: string;
     occurredAt: string;
 }
+export declare const CHAT_EVENTS: {
+    readonly MESSAGE_CREATED: "chat.message_created";
+    readonly MESSAGE_UPDATED: "chat.message_updated";
+    readonly MESSAGE_DELETED: "chat.message_deleted";
+    readonly CHANNEL_CREATED: "chat.channel_created";
+    readonly CHANNEL_UPDATED: "chat.channel_updated";
+    readonly CHANNEL_DELETED: "chat.channel_deleted";
+    readonly MEMBER_JOINED: "chat.member_joined";
+    readonly MEMBER_LEFT: "chat.member_left";
+    readonly REACTION_ADDED: "chat.reaction_added";
+    readonly REACTION_REMOVED: "chat.reaction_removed";
+    readonly MENTIONED: "chat.mentioned";
+};
+export interface ChatMessageCreatedEvent {
+    messageId: string;
+    channelId: string;
+    workspaceId: string;
+    senderId: string;
+    content: string;
+    threadParentId: string | null;
+    mentionedUserIds: string[];
+    occurredAt: string;
+}
+export interface ChatMessageUpdatedEvent {
+    messageId: string;
+    channelId: string;
+    workspaceId: string;
+    updatedBy: string;
+    content: string;
+    occurredAt: string;
+}
+export interface ChatMessageDeletedEvent {
+    messageId: string;
+    channelId: string;
+    workspaceId: string;
+    deletedBy: string;
+    occurredAt: string;
+}
+export interface ChatChannelCreatedEvent {
+    channelId: string;
+    workspaceId: string;
+    name: string;
+    type: string;
+    createdBy: string;
+    occurredAt: string;
+}
+export interface ChatMentionedEvent {
+    messageId: string;
+    channelId: string;
+    workspaceId: string;
+    authorId: string;
+    mentionedUserIds: string[];
+    content: string;
+    occurredAt: string;
+}
 export declare const ALL_EVENTS: {
+    readonly MESSAGE_CREATED: "chat.message_created";
+    readonly MESSAGE_UPDATED: "chat.message_updated";
+    readonly MESSAGE_DELETED: "chat.message_deleted";
+    readonly CHANNEL_CREATED: "chat.channel_created";
+    readonly CHANNEL_UPDATED: "chat.channel_updated";
+    readonly CHANNEL_DELETED: "chat.channel_deleted";
+    readonly MEMBER_JOINED: "chat.member_joined";
+    readonly MEMBER_LEFT: "chat.member_left";
+    readonly REACTION_ADDED: "chat.reaction_added";
+    readonly REACTION_REMOVED: "chat.reaction_removed";
+    readonly MENTIONED: "chat.mentioned";
     readonly CREATED: "view.created";
     readonly UPDATED: "view.updated";
     readonly DELETED: "view.deleted";
@@ -231,8 +297,6 @@ export declare const ALL_EVENTS: {
     readonly MEMBER_REMOVED: "workspace.member_removed";
     readonly MEMBER_ROLE_CHANGED: "workspace.member_role_changed";
     readonly RESOLVED: "comment.resolved";
-    readonly REACTION_ADDED: "comment.reaction_added";
-    readonly MENTIONED: "clickup.comment.mentioned";
     readonly MOVED: "task.moved";
     readonly ASSIGNED: "task.assigned";
     readonly STATUS_CHANGED: "task.status_changed";

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ListView } from './list-view'
 import { BoardView } from './board-view'
+import { TaskDetail } from '@/components/task/task-detail'
 import {
   Star,
   ChevronDown,
@@ -29,9 +30,17 @@ const viewTabs = [
 
 export function SpaceView() {
   const [activeView, setActiveView] = useState('list')
+  const [showTaskDetail, setShowTaskDetail] = useState(false)
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" onClick={(e) => {
+      // Open task detail when clicking a task row (data-task attribute)
+      const target = e.target as HTMLElement
+      const taskRow = target.closest('[data-task]')
+      if (taskRow) {
+        setShowTaskDetail(true)
+      }
+    }}>
       {/* Space header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
@@ -121,6 +130,11 @@ export function SpaceView() {
           </div>
         )}
       </div>
+
+      {/* Task Detail Modal */}
+      {showTaskDetail && (
+        <TaskDetail onClose={() => setShowTaskDetail(false)} />
+      )}
     </div>
   )
 }
