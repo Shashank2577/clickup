@@ -76,7 +76,49 @@ export const TaskListQuerySchema = z.object({
   includeSubtasks: z.coerce.boolean().optional().default(false),
 })
 
+export const CreateTimeEntrySchema = z.object({
+  startedAt: isoDate,
+  endedAt: isoDate,
+  note: z.string().max(1000).optional(),
+  billable: z.boolean().optional().default(false),
+})
+
+export const UpdateTimeEntrySchema = z.object({
+  startedAt: isoDate.optional(),
+  endedAt: isoDate.optional(),
+  note: z.string().max(1000).nullable().optional(),
+  billable: z.boolean().optional(),
+})
+
+export const BulkUpdateTasksSchema = z.object({
+  taskIds: z.array(uuid).min(1).max(100),
+  updates: z.object({
+    status: z.string().max(100).optional(),
+    priority: z.nativeEnum(TaskPriority).optional(),
+    assigneeId: uuid.nullable().optional(),
+    dueDate: isoDate.nullable().optional(),
+  }).refine(
+    (u) => Object.values(u).some((v) => v !== undefined),
+    { message: 'At least one field must be provided' },
+  ),
+})
+
+export const SetCustomFieldValueSchema = z.object({
+  value: z.unknown(),
+})
+
+export const CreateCustomFieldSchema = z.object({
+  workspaceId: uuid,
+  name: z.string().min(1).max(200),
+  type: z.string().min(1),
+  config: z.record(z.unknown()).optional().default({}),
+})
+
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>
 export type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>
 export type MoveTaskInput = z.infer<typeof MoveTaskSchema>
 export type TaskListQuery = z.infer<typeof TaskListQuerySchema>
+export type CreateTimeEntryInput = z.infer<typeof CreateTimeEntrySchema>
+export type UpdateTimeEntryInput = z.infer<typeof UpdateTimeEntrySchema>
+export type BulkUpdateTasksInput = z.infer<typeof BulkUpdateTasksSchema>
+export type CreateCustomFieldInput = z.infer<typeof CreateCustomFieldSchema>

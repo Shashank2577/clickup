@@ -106,6 +106,7 @@ export const COMMENT_EVENTS = {
   DELETED: 'comment.deleted',
   RESOLVED: 'comment.resolved',
   REACTION_ADDED: 'comment.reaction_added',
+  MENTIONED: 'clickup.comment.mentioned',
 } as const
 
 export interface CommentCreatedEvent {
@@ -116,6 +117,16 @@ export interface CommentCreatedEvent {
   userId: string
   content: string
   mentionedUserIds: string[]
+  occurredAt: string
+}
+
+export interface CommentMentionedEvent {
+  commentId: string
+  taskId: string
+  workspaceId: string
+  authorId: string
+  mentionedUserIds: string[]
+  content: string
   occurredAt: string
 }
 
@@ -277,6 +288,71 @@ export interface ViewUpdatedEvent {
 }
 
 // ============================================================
+// CHAT EVENTS
+// ============================================================
+
+export const CHAT_EVENTS = {
+  MESSAGE_CREATED: 'chat.message_created',
+  MESSAGE_UPDATED: 'chat.message_updated',
+  MESSAGE_DELETED: 'chat.message_deleted',
+  CHANNEL_CREATED: 'chat.channel_created',
+  CHANNEL_UPDATED: 'chat.channel_updated',
+  CHANNEL_DELETED: 'chat.channel_deleted',
+  MEMBER_JOINED: 'chat.member_joined',
+  MEMBER_LEFT: 'chat.member_left',
+  REACTION_ADDED: 'chat.reaction_added',
+  REACTION_REMOVED: 'chat.reaction_removed',
+  MENTIONED: 'chat.mentioned',
+} as const
+
+export interface ChatMessageCreatedEvent {
+  messageId: string
+  channelId: string
+  workspaceId: string
+  senderId: string
+  content: string
+  threadParentId: string | null
+  mentionedUserIds: string[]
+  occurredAt: string
+}
+
+export interface ChatMessageUpdatedEvent {
+  messageId: string
+  channelId: string
+  workspaceId: string
+  updatedBy: string
+  content: string
+  occurredAt: string
+}
+
+export interface ChatMessageDeletedEvent {
+  messageId: string
+  channelId: string
+  workspaceId: string
+  deletedBy: string
+  occurredAt: string
+}
+
+export interface ChatChannelCreatedEvent {
+  channelId: string
+  workspaceId: string
+  name: string
+  type: string
+  createdBy: string
+  occurredAt: string
+}
+
+export interface ChatMentionedEvent {
+  messageId: string
+  channelId: string
+  workspaceId: string
+  authorId: string
+  mentionedUserIds: string[]
+  content: string
+  occurredAt: string
+}
+
+// ============================================================
 // All event subjects — use these constants when publishing
 // ============================================================
 
@@ -289,6 +365,7 @@ export const ALL_EVENTS = {
   ...FILE_EVENTS,
   ...GOAL_EVENTS,
   ...VIEW_EVENTS,
+  ...CHAT_EVENTS,
 } as const
 
 export type EventSubject = (typeof ALL_EVENTS)[keyof typeof ALL_EVENTS]

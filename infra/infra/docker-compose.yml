@@ -1,0 +1,98 @@
+version: '3.9'
+
+# ============================================================
+# Local development infrastructure only.
+# Application services are NOT here — run them with pnpm dev.
+# ============================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: clickup
+      POSTGRES_USER: clickup
+      POSTGRES_PASSWORD: clickup_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+      - ./migrations/002_research_improvements.sql:/docker-entrypoint-initdb.d/002_research_improvements.sql
+      - ./migrations/003_add_password_hash.sql:/docker-entrypoint-initdb.d/003_add_password_hash.sql
+      - ./migrations/004_doc_snapshots.sql:/docker-entrypoint-initdb.d/004_doc_snapshots.sql
+      - ./migrations/005_automation_runs.sql:/docker-entrypoint-initdb.d/005_automation_runs.sql
+      - ./migrations/006_views.sql:/docker-entrypoint-initdb.d/006_views.sql
+      - ./migrations/007_webhooks.sql:/docker-entrypoint-initdb.d/007_webhooks.sql
+      - ./migrations/008_wave3_features.sql:/docker-entrypoint-initdb.d/008_wave3_features.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U clickup']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2.10-alpine
+    command: ['--jetstream', '--store_dir=/data']
+    ports:
+      - '4222:4222'   # Client connections
+      - '8222:8222'   # HTTP monitoring
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:8222/healthz']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.12.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    ports:
+      - '9200:9200'
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:9200/_cluster/health | grep -q "green\|yellow"']
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: clickup_dev
+      MINIO_ROOT_PASSWORD: clickup_dev_secret
+    ports:
+      - '9000:9000'   # API
+      - '9001:9001'   # Console UI
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+  nats_data:
+  elastic_data:
+  minio_data:

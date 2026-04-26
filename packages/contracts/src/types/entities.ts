@@ -459,6 +459,8 @@ export interface View {
   type: string                     // ViewType enum value
   config: ViewConfig
   isPrivate: boolean
+  visibility: 'private' | 'shared'
+  pinned: boolean
   createdBy: string
   createdAt: string
   updatedAt: string
@@ -470,6 +472,93 @@ export interface ViewUserState {
   collapsedGroups: string[]
   hiddenColumns: string[]
   updatedAt: string
+}
+
+// ============================================================
+// REMINDERS
+// ============================================================
+
+export interface Reminder {
+  id: string
+  userId: string
+  title: string
+  description: string | null
+  remindAt: string
+  entityType: string | null
+  entityId: string | null
+  isCompleted: boolean
+  completedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+// ============================================================
+// FORMS (form-service)
+// ============================================================
+
+export interface Form {
+  id: string
+  workspaceId: string
+  listId: string
+  title: string
+  description: string | null
+  fields: FormField[]
+  isActive: boolean
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface FormField {
+  id: string
+  type: string
+  label: string
+  required: boolean
+  placeholder?: string
+  options?: string[]
+  description?: string
+  taskField?: string
+  customFieldId?: string
+}
+
+export interface FormResponse {
+  id: string
+  formId: string
+  taskId: string | null
+  data: Record<string, unknown>
+  submittedBy: string | null
+  submittedAt: string
+}
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
+export interface AuditLog {
+  id: string
+  workspaceId: string
+  actorId: string | null
+  resourceType: string
+  resourceId: string | null
+  action: string
+  metadata: Record<string, unknown>
+  changes: Record<string, unknown> | null
+  ipAddress: string | null
+  createdAt: string
+}
+
+// ============================================================
+// DASHBOARD TEMPLATE
+// ============================================================
+
+export interface DashboardTemplate {
+  id: string
+  name: string
+  description: string | null
+  category: string
+  widgets: unknown[]
+  isDefault: boolean
+  createdAt: string
 }
 
 // ============================================================
