@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { ThemeProvider } from '@/components/providers/theme-provider'
+import { AuthBootstrap } from '@/components/providers/auth-bootstrap'
 import '@/styles/globals.css'
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -28,7 +29,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AuthBootstrap>{children}</AuthBootstrap>
         </ThemeProvider>
       </body>
     </html>

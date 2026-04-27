@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -38,6 +38,8 @@ import {
   KeyRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { api } from '@/lib/api-client'
+import { useAuthStore } from '@/stores'
 import { motion, InteractiveRow, InteractiveCard, TabContent, springs } from '@/components/motion'
 
 // --- Types ---
@@ -189,14 +191,35 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
 }
 
 function PreferencesContent() {
-  const [fullName, setFullName] = useState('Shashank Saxena')
-  const [email, setEmail] = useState('shashank@example.com')
+  const user = useAuthStore((s) => s.user)
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [smsEnabled, setSmsEnabled] = useState(false)
   const [authAppEnabled, setAuthAppEnabled] = useState(false)
   const [selectedThemeColor, setSelectedThemeColor] = useState('purple')
   const [selectedAppearance, setSelectedAppearance] = useState('light')
   const [highContrast, setHighContrast] = useState(false)
+
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const me = await api.get<any>('/users/me')
+        setFullName(me.fullName ?? '')
+        setEmail(me.email ?? '')
+      } catch {
+        setFullName(user?.fullName ?? '')
+        setEmail(user?.email ?? '')
+      }
+    }
+    loadProfile()
+  }, [user?.fullName, user?.email])
+
+  async function saveChanges() {
+    await api.patch('/users/me', { body: { fullName, email } })
+    await api.patch('/users/me/preferences', { body: { accentColor: selectedThemeColor, appearanceMode: selectedAppearance, highContrast } })
+  }
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin">
@@ -293,7 +316,7 @@ function PreferencesContent() {
                   </p>
                 </div>
               </div>
-              <ToggleSwitch enabled={smsEnabled} onToggle={() => setSmsEnabled(!smsEnabled)} />
+              <ToggleSwitch enabled={smsEnabled} onToggle={async () => { const next=!smsEnabled; setSmsEnabled(next); await api.post(`/auth/2fa/${next ? 'enable':'disable'}`, { body: { method: 'sms' } }) }} />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
@@ -305,7 +328,7 @@ function PreferencesContent() {
                   </p>
                 </div>
               </div>
-              <ToggleSwitch enabled={authAppEnabled} onToggle={() => setAuthAppEnabled(!authAppEnabled)} />
+              <ToggleSwitch enabled={authAppEnabled} onToggle={async () => { const next=!authAppEnabled; setAuthAppEnabled(next); await api.post(`/auth/2fa/${next ? 'enable':'disable'}`, { body: { method: 'app' } }) }} />
             </div>
           </div>
         </section>
@@ -405,7 +428,7 @@ function PreferencesContent() {
         {/* Save */}
         <div className="pt-2 pb-8">
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
-            <Button className="px-6">
+            <Button className="px-6" onClick={saveChanges}>
               Save changes
             </Button>
           </motion.div>
