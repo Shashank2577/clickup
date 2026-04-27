@@ -1,5 +1,6 @@
 import express from 'express'
 import { Pool } from 'pg'
+import jwt from 'jsonwebtoken'
 import { httpLogger, correlationId, errorHandler, createHealthHandler } from '@clickup/sdk'
 import {
   routes,
@@ -35,6 +36,40 @@ async function bootstrap(): Promise<void> {
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '1mb' }))
+
+  // Pre-auth middleware: verify JWT or accept X-User headers from gateway
+  app.use((req, _res, next) => {
+    // Try JWT first
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7)
+      const secret = process.env['JWT_SECRET']
+      if (secret) {
+        try {
+          const payload = jwt.verify(token, secret) as any
+          ;(req as any).auth = {
+            userId: payload.userId,
+            workspaceId: payload.workspaceId || '',
+            role: payload.role || 'member',
+            sessionId: payload.sessionId || '',
+          }
+        } catch { /* invalid token — fall through */ }
+      }
+    }
+    // Fall back to X-User headers from gateway
+    if (!(req as any).auth) {
+      const userId = req.headers['x-user-id'] as string | undefined
+      if (userId) {
+        ;(req as any).auth = {
+          userId,
+          workspaceId: (req.headers['x-workspace-id'] as string) || '',
+          role: (req.headers['x-user-role'] as string) || 'member',
+          sessionId: (req.headers['x-session-id'] as string) || '',
+        }
+      }
+    }
+    next()
+  })
 
   // Health check
   app.get('/health', createHealthHandler(db))

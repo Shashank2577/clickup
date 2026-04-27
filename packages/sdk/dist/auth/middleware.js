@@ -14,8 +14,14 @@ const AppError_js_1 = require("../errors/AppError.js");
 // Mount on any route that requires authentication
 // ============================================================
 function requireAuth(req, _res, next) {
+    // If auth was already set by gateway X-User header middleware, skip JWT verification
+    if (req.auth && req.auth.userId) {
+        next();
+        return;
+    }
     const authHeader = req.headers.authorization;
     if (authHeader === undefined || !authHeader.startsWith('Bearer ')) {
+        console.error('[requireAuth] REJECTING - authHeader type:', typeof authHeader, 'isArray:', Array.isArray(authHeader), 'value:', JSON.stringify(authHeader));
         throw new AppError_js_1.AppError(contracts_1.ErrorCode.AUTH_MISSING_TOKEN);
     }
     const token = authHeader.slice(7);

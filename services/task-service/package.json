@@ -16,11 +16,13 @@
     "@clickup/contracts": "workspace:*",
     "@clickup/sdk": "workspace:*",
     "express": "^4.18.0",
+    "jsonwebtoken": "^9.0.0",
     "pg": "^8.11.0"
   },
   "devDependencies": {
     "@clickup/test-helpers": "workspace:*",
     "@types/express": "^4.17.0",
+    "@types/jsonwebtoken": "^9.0.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.11.0",
     "@types/supertest": "^6.0.0",

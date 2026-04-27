@@ -28,9 +28,16 @@ declare global {
 // ============================================================
 
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+  // If auth was already set by gateway X-User header middleware, skip JWT verification
+  if (req.auth && req.auth.userId) {
+    next()
+    return
+  }
+
   const authHeader = req.headers.authorization
 
   if (authHeader === undefined || !authHeader.startsWith('Bearer ')) {
+    console.error('[requireAuth] REJECTING - authHeader type:', typeof authHeader, 'isArray:', Array.isArray(authHeader), 'value:', JSON.stringify(authHeader))
     throw new AppError(ErrorCode.AUTH_MISSING_TOKEN)
   }
 
