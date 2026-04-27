@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FadeIn, InteractiveRow, InteractiveCard } from '@/components/motion'
 
 // Sidebar navigation items
 type DocSidebarItem = {
@@ -144,14 +145,14 @@ function DocsSidebar({ activeItem, onItemClick }: { activeItem: string; onItemCl
     <div className="w-56 border-r border-border bg-muted/30 p-3 shrink-0">
       <div className="space-y-0.5">
         {sidebarItems.map((item) => (
-          <button
+          <InteractiveRow
             key={item.id}
             onClick={() => onItemClick(item.id)}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer',
               activeItem === item.id
                 ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+                : 'text-foreground/70'
             )}
           >
             <span className="flex h-4 w-4 items-center justify-center shrink-0">
@@ -161,7 +162,7 @@ function DocsSidebar({ activeItem, onItemClick }: { activeItem: string; onItemCl
             {item.count !== undefined && (
               <span className="text-2xs text-muted-foreground">{item.count}</span>
             )}
-          </button>
+          </InteractiveRow>
         ))}
       </div>
     </div>
@@ -180,15 +181,15 @@ function TemplateRow() {
       </div>
       <div className="flex items-center gap-3">
         {templates.map((template) => (
-          <button
+          <InteractiveCard
             key={template.id}
-            className="flex items-center gap-2.5 rounded-lg border border-border px-4 py-2.5 hover:bg-accent/50 hover:border-border transition-colors"
+            className="flex items-center gap-2.5 rounded-lg border border-border px-4 py-2.5 cursor-pointer"
           >
             <span className={cn('flex h-8 w-8 items-center justify-center rounded-md', template.color)}>
               {template.icon}
             </span>
             <span className="text-sm font-medium">{template.title}</span>
-          </button>
+          </InteractiveCard>
         ))}
       </div>
     </div>
@@ -325,11 +326,11 @@ export function DocsHub() {
       <div className="flex flex-1 overflow-hidden">
         <DocsSidebar activeItem={activeSidebarItem} onItemClick={setActiveSidebarItem} />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <FadeIn className="flex-1 flex flex-col overflow-hidden">
           <TemplateRow />
           <DocsToolbar />
           <DocsTable />
-        </div>
+        </FadeIn>
       </div>
     </div>
   )

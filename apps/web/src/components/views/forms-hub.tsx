@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FadeIn, InteractiveRow, InteractiveCard } from '@/components/motion'
 
 // --- Types ---
 
@@ -104,14 +105,14 @@ function FormsSidebar({
 
       <div className="space-y-0.5 px-2">
         {sidebarItems.map((item) => (
-          <button
+          <InteractiveRow
             key={item.id}
             onClick={() => onItemChange(item.id)}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer',
               activeItem === item.id
                 ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+                : 'text-foreground/70'
             )}
           >
             <span className="flex h-4 w-4 items-center justify-center shrink-0">
@@ -121,7 +122,7 @@ function FormsSidebar({
             {item.count !== undefined && item.count > 0 && (
               <span className="text-2xs text-muted-foreground">{item.count}</span>
             )}
-          </button>
+          </InteractiveRow>
         ))}
       </div>
     </aside>
@@ -130,7 +131,7 @@ function FormsSidebar({
 
 function TemplateCard({ template }: { template: FormTemplate }) {
   return (
-    <button className="group flex flex-col items-start rounded-lg border border-border bg-card p-4 text-left transition-all hover:shadow-md hover:border-muted-foreground/30">
+    <InteractiveCard className="group flex flex-col items-start rounded-lg border border-border bg-card p-4 text-left cursor-pointer">
       <div
         className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg text-white"
         style={{ backgroundColor: template.color }}
@@ -141,7 +142,7 @@ function TemplateCard({ template }: { template: FormTemplate }) {
       <p className="text-2xs text-muted-foreground leading-relaxed line-clamp-2">
         {template.description}
       </p>
-    </button>
+    </InteractiveCard>
   )
 }
 
@@ -154,7 +155,7 @@ export function FormsHub() {
     <div className="flex h-full">
       <FormsSidebar activeItem={activeItem} onItemChange={setActiveItem} />
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <FadeIn className="flex-1 overflow-y-auto scrollbar-thin">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-3">
           <h1 className="text-lg font-semibold">Forms</h1>
@@ -210,7 +211,7 @@ export function FormsHub() {
             </div>
           </div>
         </div>
-      </div>
+      </FadeIn>
     </div>
   )
 }

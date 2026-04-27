@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, TabContent, FadeIn, springs } from '@/components/motion'
 
 // --- Types ---
 
@@ -221,21 +222,23 @@ function TimesheetGrid({ entries, dates }: { entries: TimeEntry[]; dates: Date[]
             <tr>
               <td colSpan={9}>
                 {/* Empty state */}
-                <div className="flex flex-col items-center justify-center py-20">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
-                    <Clock className="h-8 w-8 text-muted-foreground/50" />
+                <FadeIn delay={0.15}>
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
+                      <Clock className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                    <h3 className="text-sm font-medium text-foreground mb-1">
+                      No time entries for this week
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Track time on tasks to see entries here
+                    </p>
+                    <Button size="sm" className="gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      Track time
+                    </Button>
                   </div>
-                  <h3 className="text-sm font-medium text-foreground mb-1">
-                    No time entries for this week
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Track time on tasks to see entries here
-                  </p>
-                  <Button size="sm" className="gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    Track time
-                  </Button>
-                </div>
+                </FadeIn>
               </td>
             </tr>
           )}
@@ -272,13 +275,20 @@ export function TimesheetsView() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'py-2.5 text-sm font-medium transition-colors border-b-2',
+              'relative py-2.5 text-sm font-medium transition-colors border-b-2 border-transparent',
               activeTab === tab.id
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {tab.label}
+            {activeTab === tab.id && (
+              <motion.div
+                layoutId="activeTimesheetTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                transition={springs.snappy}
+              />
+            )}
           </button>
         ))}
       </div>

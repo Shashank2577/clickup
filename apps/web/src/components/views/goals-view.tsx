@@ -11,6 +11,7 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, FadeIn, InteractiveCard } from '@/components/motion'
 
 export function GoalsView() {
   return (
@@ -34,10 +35,14 @@ export function GoalsView() {
       </div>
 
       {/* Empty state */}
-      <div className="flex-1 flex items-center justify-center">
+      <FadeIn className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center text-center max-w-lg px-6">
           {/* Illustration placeholder */}
-          <div className="relative mb-8">
+          <motion.div
+            className="relative mb-8"
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          >
             <div className="flex h-32 w-32 items-center justify-center rounded-full bg-primary/5">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
                 <Target className="h-10 w-10 text-primary" />
@@ -53,7 +58,7 @@ export function GoalsView() {
             <div className="absolute top-0 left-4 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10">
               <CheckCircle2 className="h-3 w-3 text-blue-500" />
             </div>
-          </div>
+          </motion.div>
 
           <h2 className="text-2xl font-bold mb-3">Make your goals a reality.</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-8">
@@ -75,7 +80,7 @@ export function GoalsView() {
 
           {/* Feature highlights */}
           <div className="mt-12 grid grid-cols-3 gap-6 w-full">
-            <div className="flex flex-col items-center text-center">
+            <InteractiveCard className="flex flex-col items-center text-center cursor-pointer">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-2">
                 <Target className="h-5 w-5 text-primary" />
               </div>
@@ -83,8 +88,8 @@ export function GoalsView() {
               <p className="text-2xs text-muted-foreground">
                 Define measurable objectives with clear deadlines
               </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
+            </InteractiveCard>
+            <InteractiveCard className="flex flex-col items-center text-center cursor-pointer">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10 mb-2">
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
@@ -92,8 +97,8 @@ export function GoalsView() {
               <p className="text-2xs text-muted-foreground">
                 See real-time progress from linked tasks and key results
               </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
+            </InteractiveCard>
+            <InteractiveCard className="flex flex-col items-center text-center cursor-pointer">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 mb-2">
                 <CheckCircle2 className="h-5 w-5 text-blue-500" />
               </div>
@@ -101,10 +106,10 @@ export function GoalsView() {
               <p className="text-2xs text-muted-foreground">
                 Align your team and celebrate milestones together
               </p>
-            </div>
+            </InteractiveCard>
           </div>
         </div>
-      </div>
+      </FadeIn>
     </div>
   )
 }

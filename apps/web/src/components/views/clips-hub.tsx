@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FadeIn, InteractiveRow, InteractiveCard } from '@/components/motion'
 
 // --- Types ---
 
@@ -81,14 +82,14 @@ function ClipsSidebar({
 
       <div className="space-y-0.5 px-2">
         {sidebarItems.map((item) => (
-          <button
+          <InteractiveRow
             key={item.id}
             onClick={() => onItemChange(item.id)}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer',
               activeItem === item.id
                 ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+                : 'text-foreground/70'
             )}
           >
             <span className="flex h-4 w-4 items-center justify-center shrink-0">
@@ -98,7 +99,7 @@ function ClipsSidebar({
             {item.count !== undefined && item.count > 0 && (
               <span className="text-2xs text-muted-foreground">{item.count}</span>
             )}
-          </button>
+          </InteractiveRow>
         ))}
       </div>
     </aside>
@@ -107,7 +108,7 @@ function ClipsSidebar({
 
 function WelcomeFeatureCard({ card }: { card: FeatureCard }) {
   return (
-    <div className="flex flex-col items-center rounded-lg border border-border bg-card p-5 text-center">
+    <InteractiveCard className="flex flex-col items-center rounded-lg border border-border bg-card p-5 text-center cursor-pointer">
       <div
         className="mb-3 flex h-12 w-12 items-center justify-center rounded-full text-white"
         style={{ backgroundColor: card.color }}
@@ -118,7 +119,7 @@ function WelcomeFeatureCard({ card }: { card: FeatureCard }) {
       <p className="text-2xs text-muted-foreground leading-relaxed">
         {card.description}
       </p>
-    </div>
+    </InteractiveCard>
   )
 }
 
@@ -131,7 +132,7 @@ export function ClipsHub() {
     <div className="flex h-full">
       <ClipsSidebar activeItem={activeItem} onItemChange={setActiveItem} />
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <FadeIn className="flex-1 overflow-y-auto scrollbar-thin">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-3">
           <h1 className="text-lg font-semibold">Clips</h1>
@@ -179,7 +180,7 @@ export function ClipsHub() {
             </Button>
           </div>
         </div>
-      </div>
+      </FadeIn>
     </div>
   )
 }

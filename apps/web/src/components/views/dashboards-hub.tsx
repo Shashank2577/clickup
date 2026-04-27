@@ -19,6 +19,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FadeIn, InteractiveRow, InteractiveCard } from '@/components/motion'
 
 // Sidebar items
 interface DashboardSidebarItem {
@@ -124,14 +125,14 @@ function DashboardSidebar({
     <div className="w-56 border-r border-border bg-muted/30 p-3 shrink-0">
       <div className="space-y-0.5">
         {sidebarItems.map((item) => (
-          <button
+          <InteractiveRow
             key={item.id}
             onClick={() => onItemClick(item.id)}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer',
               activeItem === item.id
                 ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+                : 'text-foreground/70'
             )}
           >
             <span className="flex h-4 w-4 items-center justify-center shrink-0">
@@ -141,7 +142,7 @@ function DashboardSidebar({
             {item.count !== undefined && (
               <span className="text-2xs text-muted-foreground">{item.count}</span>
             )}
-          </button>
+          </InteractiveRow>
         ))}
       </div>
     </div>
@@ -150,7 +151,7 @@ function DashboardSidebar({
 
 function TemplateCard({ template }: { template: DashboardTemplate }) {
   return (
-    <div className="group flex flex-col rounded-lg border border-border bg-card p-4 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer">
+    <InteractiveCard className="group flex flex-col rounded-lg border border-border bg-card p-4 cursor-pointer">
       <div className="flex items-start justify-between mb-3">
         <span className={cn('flex h-10 w-10 items-center justify-center rounded-lg', template.color)}>
           {template.icon}
@@ -169,7 +170,7 @@ function TemplateCard({ template }: { template: DashboardTemplate }) {
         Use template
         <ChevronRight className="h-3 w-3" />
       </div>
-    </div>
+    </InteractiveCard>
   )
 }
 
@@ -221,7 +222,7 @@ export function DashboardsHub() {
       <div className="flex flex-1 overflow-hidden">
         <DashboardSidebar activeItem={activeSidebarItem} onItemClick={setActiveSidebarItem} />
 
-        <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <FadeIn className="flex-1 overflow-y-auto scrollbar-thin">
           {/* Template picker */}
           <div className="px-6 py-5">
             <div className="flex items-center justify-between mb-4">
@@ -257,7 +258,7 @@ export function DashboardsHub() {
               ))}
             </div>
           )}
-        </div>
+        </FadeIn>
       </div>
     </div>
   )

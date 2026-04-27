@@ -423,23 +423,25 @@ export function SettingsView() {
   return (
     <div className="flex h-full">
       <SettingsSidebar activeItem={activeItem} onItemChange={setActiveItem} />
-      {activeItem === 'preferences' ? (
-        <PreferencesContent />
-      ) : (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <Settings className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm font-medium capitalize">
-              {sidebarSections
-                .flatMap((s) => s.items)
-                .find((i) => i.id === activeItem)?.label || activeItem}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              This settings page is coming soon
-            </p>
+      <TabContent activeKey={activeItem} className="flex-1">
+        {activeItem === 'preferences' ? (
+          <PreferencesContent />
+        ) : (
+          <div className="flex flex-1 items-center justify-center h-full">
+            <div className="text-center">
+              <Settings className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+              <p className="text-sm font-medium capitalize">
+                {sidebarSections
+                  .flatMap((s) => s.items)
+                  .find((i) => i.id === activeItem)?.label || activeItem}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This settings page is coming soon
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </TabContent>
     </div>
   )
 }
