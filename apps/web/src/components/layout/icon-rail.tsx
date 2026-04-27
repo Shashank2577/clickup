@@ -16,7 +16,6 @@ import {
   Clock,
   MoreHorizontal,
   UserPlus,
-  Gem,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -41,6 +40,18 @@ const navItems = [
   { icon: Clock, label: 'Timesheets', href: '/timesheets', segment: 'timesheets' },
 ]
 
+// Animated icon wrapper — subtle idle animation per icon type
+function AnimatedIcon({ icon: Icon, active }: { icon: typeof Home; active: boolean }) {
+  return (
+    <motion.div
+      animate={active ? { scale: [1, 1.08, 1] } : {}}
+      transition={active ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } : {}}
+    >
+      <Icon className="h-[14px] w-[14px]" strokeWidth={active ? 2.2 : 1.8} />
+    </motion.div>
+  )
+}
+
 export function IconRail() {
   const pathname = usePathname()
 
@@ -52,17 +63,17 @@ export function IconRail() {
   return (
     <TooltipProvider delayDuration={0}>
       <FadeIn>
-        <div className="flex h-full w-icon-rail flex-col items-center border-r border-sidebar-border bg-sidebar py-2">
+        <div className="flex h-full w-icon-rail flex-col items-center border-r border-sidebar-border bg-sidebar py-3">
           {/* Workspace avatar */}
           <Link
             href="/"
-            className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold"
+            className="mb-3 flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold"
           >
             C
           </Link>
 
-          {/* Nav items */}
-          <nav className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto scrollbar-hide py-2">
+          {/* Nav items — spread evenly with breathing room */}
+          <nav className="flex flex-1 flex-col items-center justify-start gap-1 overflow-y-auto scrollbar-hide py-1">
             {navItems.map((item) => {
               const active = isActive(item.segment)
               return (
@@ -71,24 +82,29 @@ export function IconRail() {
                     <Link href={item.href} className="relative">
                       <motion.div
                         className={cn(
-                          'group relative flex h-10 w-10 flex-col items-center justify-center rounded-lg text-[10px] font-medium transition-colors',
+                          'group relative flex h-9 w-9 flex-col items-center justify-center rounded-md transition-colors',
                           active
                             ? 'bg-primary/10 text-primary'
                             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                         )}
-                        whileHover={{ scale: 1.05, transition: { duration: durations.fast } }}
-                        whileTap={{ scale: 0.95, transition: { duration: durations.instant } }}
+                        whileHover={{
+                          scale: 1.08,
+                          transition: { duration: durations.fast },
+                        }}
+                        whileTap={{
+                          scale: 0.92,
+                          transition: { duration: durations.instant },
+                        }}
                       >
-                        <item.icon className="h-4.5 w-4.5" strokeWidth={active ? 2.5 : 2} />
-                        <span className="mt-0.5 max-w-[2.5rem] truncate leading-none">
+                        <AnimatedIcon icon={item.icon} active={active} />
+                        <span className="mt-[3px] text-[8px] font-medium leading-none max-w-[2.25rem] truncate">
                           {item.label}
                         </span>
                       </motion.div>
-                      {/* Active indicator bar that slides between items */}
                       {active && (
                         <motion.div
                           layoutId="activeNav"
-                          className="absolute -left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary"
+                          className="absolute -left-1 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-primary"
                           transition={springs.snappy}
                         />
                       )}
@@ -103,16 +119,16 @@ export function IconRail() {
           </nav>
 
           {/* Bottom items */}
-          <div className="flex flex-col items-center gap-0.5 border-t border-sidebar-border pt-2">
+          <div className="flex flex-col items-center gap-1 border-t border-sidebar-border pt-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.button
-                  className="flex h-10 w-10 flex-col items-center justify-center rounded-lg text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                  whileHover={{ scale: 1.05, transition: { duration: durations.fast } }}
-                  whileTap={{ scale: 0.95, transition: { duration: durations.instant } }}
+                  className="flex h-9 w-9 flex-col items-center justify-center rounded-md text-[8px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                  whileHover={{ scale: 1.08, transition: { duration: durations.fast } }}
+                  whileTap={{ scale: 0.92, transition: { duration: durations.instant } }}
                 >
-                  <MoreHorizontal className="h-4.5 w-4.5" />
-                  <span className="mt-0.5">More</span>
+                  <MoreHorizontal className="h-[14px] w-[14px]" strokeWidth={1.8} />
+                  <span className="mt-[3px]">More</span>
                 </motion.button>
               </TooltipTrigger>
               <TooltipContent side="right">More</TooltipContent>
@@ -121,12 +137,12 @@ export function IconRail() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.button
-                  className="flex h-10 w-10 flex-col items-center justify-center rounded-lg text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                  whileHover={{ scale: 1.05, transition: { duration: durations.fast } }}
-                  whileTap={{ scale: 0.95, transition: { duration: durations.instant } }}
+                  className="flex h-9 w-9 flex-col items-center justify-center rounded-md text-[8px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                  whileHover={{ scale: 1.08, transition: { duration: durations.fast } }}
+                  whileTap={{ scale: 0.92, transition: { duration: durations.instant } }}
                 >
-                  <UserPlus className="h-4.5 w-4.5" />
-                  <span className="mt-0.5">Invite</span>
+                  <UserPlus className="h-[14px] w-[14px]" strokeWidth={1.8} />
+                  <span className="mt-[3px]">Invite</span>
                 </motion.button>
               </TooltipTrigger>
               <TooltipContent side="right">Invite</TooltipContent>
