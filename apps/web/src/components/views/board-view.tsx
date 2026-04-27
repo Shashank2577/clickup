@@ -15,6 +15,7 @@ import {
   Eye,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, StaggerList, StaggerItem, InteractiveCard, springs } from '@/components/motion'
 
 type TaskStatus = 'todo' | 'in-progress' | 'in-review' | 'done' | 'closed'
 
@@ -206,7 +207,7 @@ function TaskCard({ task }: { task: BoardTask }) {
   const priorityColor = priorityConfig[task.priority]
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+    <InteractiveCard className="rounded-lg border border-border bg-card p-3 shadow-sm cursor-pointer group">
       {task.parentTitle && (
         <p className="text-2xs text-muted-foreground mb-1 truncate">
           {task.parentTitle}
@@ -241,7 +242,7 @@ function TaskCard({ task }: { task: BoardTask }) {
           <Calendar className="h-3 w-3 text-muted-foreground/30" />
         </div>
       )}
-    </div>
+    </InteractiveCard>
   )
 }
 
@@ -250,24 +251,40 @@ function BoardColumnComponent({ column }: { column: BoardColumn }) {
     <div className="flex min-w-[280px] max-w-[320px] flex-col">
       {/* Column header */}
       <div className="flex items-center gap-2 px-2 py-2">
-        <Badge variant={column.status === 'todo' ? 'todo' : column.status === 'in-progress' ? 'in-progress' : column.status === 'in-review' ? 'in-review' : column.status === 'done' ? 'done' : 'closed'}>
-          {column.label}
-        </Badge>
+        <motion.div whileHover={{ scale: 1.05 }} transition={springs.snappy}>
+          <Badge variant={column.status === 'todo' ? 'todo' : column.status === 'in-progress' ? 'in-progress' : column.status === 'in-review' ? 'in-review' : column.status === 'done' ? 'done' : 'closed'}>
+            {column.label}
+          </Badge>
+        </motion.div>
         <span className="text-xs text-muted-foreground">{column.count}</span>
       </div>
 
       {/* Cards */}
-      <div className="flex-1 space-y-2 px-1 pb-4 overflow-y-auto scrollbar-thin">
+      <StaggerList className="flex-1 space-y-2 px-1 pb-4 overflow-y-auto scrollbar-thin">
         {column.tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <StaggerItem key={task.id}>
+            <TaskCard task={task} />
+          </StaggerItem>
         ))}
 
         {/* Add task */}
-        <button className="flex w-full items-center gap-2 rounded-lg border border-dashed border-border p-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-          <Plus className="h-3.5 w-3.5" />
-          Add Task
-        </button>
-      </div>
+        <StaggerItem>
+          <motion.button
+            className="flex w-full items-center gap-2 rounded-lg border border-dashed border-border p-2 text-sm text-muted-foreground transition-colors"
+            whileHover={{
+              borderColor: 'hsl(var(--primary))',
+              borderStyle: 'solid',
+              color: 'hsl(var(--foreground))',
+              backgroundColor: 'hsl(var(--accent) / 0.5)',
+              transition: { duration: 0.15 },
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Task
+          </motion.button>
+        </StaggerItem>
+      </StaggerList>
     </div>
   )
 }
@@ -276,19 +293,27 @@ export function BoardView() {
   return (
     <div className="h-full flex flex-col">
       <BoardToolbar />
-      <div className="flex-1 flex gap-3 overflow-x-auto p-4 scrollbar-thin">
+      <StaggerList className="flex-1 flex gap-3 overflow-x-auto p-4 scrollbar-thin">
         {demoColumns.map((column) => (
-          <BoardColumnComponent key={column.status} column={column} />
+          <StaggerItem key={column.status}>
+            <BoardColumnComponent column={column} />
+          </StaggerItem>
         ))}
 
         {/* Add group button */}
-        <div className="min-w-[200px]">
-          <button className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <Plus className="h-3.5 w-3.5" />
-            Add group
-          </button>
-        </div>
-      </div>
+        <StaggerItem>
+          <div className="min-w-[200px]">
+            <motion.button
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add group
+            </motion.button>
+          </div>
+        </StaggerItem>
+      </StaggerList>
     </div>
   )
 }

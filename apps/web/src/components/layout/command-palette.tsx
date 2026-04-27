@@ -19,6 +19,15 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  motion,
+  AnimatePresence,
+  ScaleIn,
+  StaggerList,
+  StaggerItem,
+  fadeIn,
+  durations,
+} from '@/components/motion'
 
 const sourcesTabs = [
   { id: 'all', label: 'All' },
@@ -75,117 +84,134 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [open, onClose])
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative mx-auto mt-20 w-full max-w-2xl">
-        <div className="rounded-xl border border-border bg-popover shadow-2xl overflow-hidden">
-          {/* Search input */}
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              placeholder="Search, run a command, or ask a question..."
-            />
-            <button className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20 transition-colors">
-              <Sparkles className="h-3 w-3" />
-              Ask AI
-            </button>
-          </div>
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <motion.div
+            className="absolute inset-0 bg-black/50"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: durations.normal }}
+          />
 
-          {/* Source tabs */}
-          <div className="flex items-center gap-1 border-b border-border px-4 py-1.5 overflow-x-auto scrollbar-hide">
-            {sourcesTabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSource(tab.id)}
-                className={cn(
-                  'rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors',
-                  activeSource === tab.id
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                )}
-              >
-                {tab.icon && <span className="mr-1">{tab.icon}</span>}
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {/* Modal container */}
+          <div className="relative mx-auto mt-20 w-full max-w-2xl">
+            <ScaleIn>
+              <div className="rounded-xl border border-border bg-popover shadow-2xl overflow-hidden">
+                {/* Search input */}
+                <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+                  <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <input
+                    autoFocus
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                    placeholder="Search, run a command, or ask a question..."
+                  />
+                  <button className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20 transition-colors">
+                    <Sparkles className="h-3 w-3" />
+                    Ask AI
+                  </button>
+                </div>
 
-          {/* Filter tabs */}
-          <div className="flex items-center gap-1 border-b border-border px-4 py-1.5 overflow-x-auto scrollbar-hide">
-            {filterTabs.map(tab => (
-              <button
-                key={tab.id}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors whitespace-nowrap"
-              >
-                <tab.icon className="h-3 w-3" />
-                {tab.label}
-              </button>
-            ))}
-            <span className="text-muted-foreground/50">|</span>
-            <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-              <Filter className="h-3 w-3" />
-              Filter
-            </button>
-            <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-              <ArrowUpDown className="h-3 w-3" />
-              Sort
-            </button>
-          </div>
+                {/* Source tabs */}
+                <div className="flex items-center gap-1 border-b border-border px-4 py-1.5 overflow-x-auto scrollbar-hide">
+                  {sourcesTabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveSource(tab.id)}
+                      className={cn(
+                        'rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors',
+                        activeSource === tab.id
+                          ? 'bg-accent text-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      )}
+                    >
+                      {tab.icon && <span className="mr-1">{tab.icon}</span>}
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
 
-          {/* Results */}
-          <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
-            <div className="px-3 py-1.5 text-2xs font-medium text-muted-foreground uppercase">
-              Results
-            </div>
-            {demoResults.map((result, idx) => (
-              <button
-                key={result.id}
-                className={cn(
-                  'flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors',
-                  idx === 0 && 'bg-accent/50'
-                )}
-              >
-                {result.status ? (
-                  statusIcons[result.status] || <Circle className="h-3.5 w-3.5" />
-                ) : result.type === 'list' ? (
-                  <List className="h-3.5 w-3.5 text-muted-foreground" />
-                ) : result.type === 'doc' ? (
-                  <FileText className="h-3.5 w-3.5 text-primary" />
-                ) : (
-                  <Circle className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
-                <span className="font-medium">{result.title}</span>
-                <span className="text-xs text-muted-foreground">
-                  in {result.location}
-                </span>
-                <span className="text-xs text-muted-foreground ml-auto">{result.time}</span>
-              </button>
-            ))}
-          </div>
+                {/* Filter tabs */}
+                <div className="flex items-center gap-1 border-b border-border px-4 py-1.5 overflow-x-auto scrollbar-hide">
+                  {filterTabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors whitespace-nowrap"
+                    >
+                      <tab.icon className="h-3 w-3" />
+                      {tab.label}
+                    </button>
+                  ))}
+                  <span className="text-muted-foreground/50">|</span>
+                  <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                    <Filter className="h-3 w-3" />
+                    Filter
+                  </button>
+                  <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                    <ArrowUpDown className="h-3 w-3" />
+                    Sort
+                  </button>
+                </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-border px-4 py-2 text-2xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <ChevronLeft className="h-3 w-3" />
-              <ChevronRight className="h-3 w-3" />
-              <span>
-                Type <kbd className="rounded border border-border bg-muted px-1 font-mono">/</kbd> to view commands, hit <kbd className="rounded border border-border bg-muted px-1 font-mono">tab</kbd> for actions
-              </span>
-            </div>
-            <button className="flex items-center gap-1 hover:text-foreground">
-              <Settings className="h-3 w-3" />
-              Settings
-            </button>
+                {/* Results */}
+                <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
+                  <div className="px-3 py-1.5 text-2xs font-medium text-muted-foreground uppercase">
+                    Results
+                  </div>
+                  <StaggerList>
+                    {demoResults.map((result, idx) => (
+                      <StaggerItem key={result.id}>
+                        <button
+                          className={cn(
+                            'flex w-full items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors',
+                            idx === 0 && 'bg-accent/50'
+                          )}
+                        >
+                          {result.status ? (
+                            statusIcons[result.status] || <Circle className="h-3.5 w-3.5" />
+                          ) : result.type === 'list' ? (
+                            <List className="h-3.5 w-3.5 text-muted-foreground" />
+                          ) : result.type === 'doc' ? (
+                            <FileText className="h-3.5 w-3.5 text-primary" />
+                          ) : (
+                            <Circle className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <span className="font-medium">{result.title}</span>
+                          <span className="text-xs text-muted-foreground">
+                            in {result.location}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-auto">{result.time}</span>
+                        </button>
+                      </StaggerItem>
+                    ))}
+                  </StaggerList>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between border-t border-border px-4 py-2 text-2xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <ChevronLeft className="h-3 w-3" />
+                    <ChevronRight className="h-3 w-3" />
+                    <span>
+                      Type <kbd className="rounded border border-border bg-muted px-1 font-mono">/</kbd> to view commands, hit <kbd className="rounded border border-border bg-muted px-1 font-mono">tab</kbd> for actions
+                    </span>
+                  </div>
+                  <button className="flex items-center gap-1 hover:text-foreground">
+                    <Settings className="h-3 w-3" />
+                    Settings
+                  </button>
+                </div>
+              </div>
+            </ScaleIn>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   )
 }

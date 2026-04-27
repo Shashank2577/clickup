@@ -19,6 +19,15 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  motion,
+  AnimatePresence,
+  InteractiveRow,
+  StaggerList,
+  StaggerItem,
+  springs,
+  durations,
+} from '@/components/motion'
 
 interface SidebarItemProps {
   icon: React.ReactNode
@@ -31,12 +40,12 @@ interface SidebarItemProps {
 
 function SidebarItem({ icon, label, href, active, count, onClick }: SidebarItemProps) {
   const content = (
-    <div
+    <InteractiveRow
       className={cn(
         'group flex h-7 items-center gap-2 rounded-md px-2 text-sm transition-colors cursor-pointer',
         active
           ? 'bg-primary/10 text-primary font-medium'
-          : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+          : 'text-foreground/70 hover:text-foreground'
       )}
       onClick={onClick}
     >
@@ -45,7 +54,7 @@ function SidebarItem({ icon, label, href, active, count, onClick }: SidebarItemP
       {count !== undefined && (
         <span className="text-2xs text-muted-foreground">{count}</span>
       )}
-    </div>
+    </InteractiveRow>
   )
 
   if (href) {
@@ -109,30 +118,43 @@ function SpaceItem({ name, color, lists = [] }: SpaceItemProps) {
           </button>
         </span>
       </div>
-      {expanded && lists.length > 0 && (
-        <div className="ml-4 mt-0.5 space-y-0.5">
-          {lists.map((list) => (
-            <Link
-              key={list.name}
-              href="#"
-              className="flex h-6 items-center gap-2 rounded-md px-2 text-sm text-foreground/70 hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <List className="h-3 w-3 text-muted-foreground" />
-              <span className="flex-1 truncate">{list.name}</span>
-              {list.count !== undefined && (
-                <span className="text-2xs text-muted-foreground">{list.count}</span>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {expanded && lists.length > 0 && (
+          <motion.div
+            className="ml-4 mt-0.5 space-y-0.5 overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1, transition: springs.gentle }}
+            exit={{ height: 0, opacity: 0, transition: { duration: durations.fast } }}
+          >
+            {lists.map((list) => (
+              <InteractiveRow key={list.name}>
+                <Link
+                  href="#"
+                  className="flex h-6 items-center gap-2 rounded-md px-2 text-sm text-foreground/70 hover:text-foreground transition-colors"
+                >
+                  <List className="h-3 w-3 text-muted-foreground" />
+                  <span className="flex-1 truncate">{list.name}</span>
+                  {list.count !== undefined && (
+                    <span className="text-2xs text-muted-foreground">{list.count}</span>
+                  )}
+                </Link>
+              </InteractiveRow>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 export function Sidebar() {
   return (
-    <aside className="flex h-full w-sidebar flex-col border-r border-sidebar-border bg-sidebar overflow-y-auto scrollbar-thin">
+    <motion.aside
+      className="flex h-full w-sidebar flex-col border-r border-sidebar-border bg-sidebar overflow-y-auto scrollbar-thin"
+      initial={{ x: -10, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={springs.gentle}
+    >
       {/* Home section header */}
       <div className="flex items-center justify-between px-3 pt-2 pb-1">
         <span className="text-sm font-semibold">Home</span>
@@ -168,79 +190,87 @@ export function Sidebar() {
       </div>
 
       {/* Favorites */}
-      <SidebarSection title="Favorites">
-        <div className="flex flex-col items-center py-4 text-center">
-          <Star className="h-5 w-5 text-yellow-400 mb-1" />
-          <span className="text-2xs text-muted-foreground">
-            Add to your sidebar
-          </span>
-        </div>
-      </SidebarSection>
+      <StaggerList>
+        <StaggerItem>
+          <SidebarSection title="Favorites">
+            <div className="flex flex-col items-center py-4 text-center">
+              <Star className="h-5 w-5 text-yellow-400 mb-1" />
+              <span className="text-2xs text-muted-foreground">
+                Add to your sidebar
+              </span>
+            </div>
+          </SidebarSection>
+        </StaggerItem>
 
-      {/* Channels */}
-      <SidebarSection
-        title="Channels"
-        action={
-          <button className="rounded p-0.5 hover:bg-accent">
-            <Plus className="h-3 w-3 text-muted-foreground" />
-          </button>
-        }
-      >
-        <div className="space-y-0.5 px-1">
-          <SidebarItem
-            icon={<Hash className="h-4 w-4 text-muted-foreground" />}
-            label="General"
-            href="/channels/general"
-          />
-          <SidebarItem
-            icon={<Hash className="h-4 w-4 text-muted-foreground" />}
-            label="Welcome"
-            href="/channels/welcome"
-          />
-          <SidebarItem
-            icon={<Plus className="h-4 w-4" />}
-            label="Add Channel"
-          />
-        </div>
-      </SidebarSection>
+        {/* Channels */}
+        <StaggerItem>
+          <SidebarSection
+            title="Channels"
+            action={
+              <button className="rounded p-0.5 hover:bg-accent">
+                <Plus className="h-3 w-3 text-muted-foreground" />
+              </button>
+            }
+          >
+            <div className="space-y-0.5 px-1">
+              <SidebarItem
+                icon={<Hash className="h-4 w-4 text-muted-foreground" />}
+                label="General"
+                href="/channels/general"
+              />
+              <SidebarItem
+                icon={<Hash className="h-4 w-4 text-muted-foreground" />}
+                label="Welcome"
+                href="/channels/welcome"
+              />
+              <SidebarItem
+                icon={<Plus className="h-4 w-4" />}
+                label="Add Channel"
+              />
+            </div>
+          </SidebarSection>
+        </StaggerItem>
 
-      {/* Spaces */}
-      <SidebarSection
-        title="Spaces"
-        action={
-          <button className="rounded p-0.5 hover:bg-accent">
-            <Plus className="h-3 w-3 text-muted-foreground" />
-          </button>
-        }
-      >
-        <div className="space-y-0.5 px-1">
-          <SidebarItem
-            icon={<ListChecks className="h-4 w-4 text-muted-foreground" />}
-            label="All Tasks"
-            href="/all-tasks"
-          />
-          <SpaceItem
-            name="Space"
-            color="#7B68EE"
-            lists={[
-              { name: 'General Project Manager', count: 4 },
-            ]}
-          />
-          <SpaceItem
-            name="Team Space"
-            color="#3B82F6"
-            lists={[
-              { name: 'Project 1' },
-            ]}
-          />
+        {/* Spaces */}
+        <StaggerItem>
+          <SidebarSection
+            title="Spaces"
+            action={
+              <button className="rounded p-0.5 hover:bg-accent">
+                <Plus className="h-3 w-3 text-muted-foreground" />
+              </button>
+            }
+          >
+            <div className="space-y-0.5 px-1">
+              <SidebarItem
+                icon={<ListChecks className="h-4 w-4 text-muted-foreground" />}
+                label="All Tasks"
+                href="/all-tasks"
+              />
+              <SpaceItem
+                name="Space"
+                color="#7B68EE"
+                lists={[
+                  { name: 'General Project Manager', count: 4 },
+                ]}
+              />
+              <SpaceItem
+                name="Team Space"
+                color="#3B82F6"
+                lists={[
+                  { name: 'Project 1' },
+                ]}
+              />
 
-          {/* New Space */}
-          <SidebarItem
-            icon={<Plus className="h-4 w-4" />}
-            label="New Space"
-          />
-        </div>
-      </SidebarSection>
-    </aside>
+              {/* New Space */}
+              <SidebarItem
+                icon={<Plus className="h-4 w-4" />}
+                label="New Space"
+              />
+            </div>
+          </SidebarSection>
+        </StaggerItem>
+      </StaggerList>
+    </motion.aside>
   )
 }

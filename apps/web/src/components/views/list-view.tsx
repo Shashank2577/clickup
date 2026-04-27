@@ -22,6 +22,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence, FadeIn, InteractiveRow, springs } from '@/components/motion'
 
 // Types
 type TaskStatus = 'todo' | 'in-progress' | 'in-review' | 'done' | 'closed'
@@ -166,20 +167,22 @@ function ListToolbar() {
 
 function ColumnHeaders() {
   return (
-    <div className="flex items-center border-b border-border px-4 py-1.5 text-2xs font-medium text-muted-foreground uppercase tracking-wider">
-      <div className="flex-1 min-w-0">Name</div>
-      <div className="w-24 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-foreground">
-        Due date
-        <ArrowUpDown className="h-2.5 w-2.5" />
+    <FadeIn>
+      <div className="flex items-center border-b border-border px-4 py-1.5 text-2xs font-medium text-muted-foreground uppercase tracking-wider">
+        <div className="flex-1 min-w-0">Name</div>
+        <div className="w-24 text-center flex items-center justify-center gap-1 cursor-pointer hover:text-foreground">
+          Due date
+          <ArrowUpDown className="h-2.5 w-2.5" />
+        </div>
+        <div className="w-20 text-center">Priority</div>
+        <div className="w-16 text-center">Effort</div>
+        <div className="w-28 text-center">Status</div>
+        <div className="w-20 text-center">Assignee</div>
+        <div className="w-8">
+          <Settings className="h-3 w-3 text-muted-foreground" />
+        </div>
       </div>
-      <div className="w-20 text-center">Priority</div>
-      <div className="w-16 text-center">Effort</div>
-      <div className="w-28 text-center">Status</div>
-      <div className="w-20 text-center">Assignee</div>
-      <div className="w-8">
-        <Settings className="h-3 w-3 text-muted-foreground" />
-      </div>
-    </div>
+    </FadeIn>
   )
 }
 
@@ -191,82 +194,101 @@ function TaskRow({ task, depth = 0 }: { task: Task; depth?: number }) {
 
   return (
     <>
-      <div
-        data-task={task.id}
-        className="group flex items-center border-b border-border/50 px-4 py-1.5 hover:bg-accent/50 transition-colors cursor-pointer"
-        style={{ paddingLeft: `${16 + depth * 24}px` }}
+      <InteractiveRow
+        className="group flex items-center border-b border-border/50 px-4 py-1.5 cursor-pointer"
       >
-        <div className="flex flex-1 items-center gap-2 min-w-0">
-          {hasSubtasks ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-              className="flex h-4 w-4 items-center justify-center rounded hover:bg-accent"
-            >
-              {expanded ? (
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="h-3 w-3 text-muted-foreground" />
-              )}
+        <div
+          data-task={task.id}
+          className="flex w-full items-center"
+          style={{ paddingLeft: `${depth * 24}px` }}
+        >
+          <div className="flex flex-1 items-center gap-2 min-w-0">
+            {hasSubtasks ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
+                className="flex h-4 w-4 items-center justify-center rounded hover:bg-accent"
+              >
+                <motion.div
+                  animate={{ rotate: expanded ? 0 : -90 }}
+                  transition={springs.snappy}
+                >
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </motion.div>
+              </button>
+            ) : (
+              <span className="w-4" />
+            )}
+
+            <span className="flex items-center justify-center">
+              {status.icon}
+            </span>
+
+            <span className="flex-1 truncate text-sm">{task.title}</span>
+
+            {task.subtaskCount && task.subtaskCount > 0 && (
+              <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
+                <GitBranch className="h-3 w-3" />
+                {task.subtaskCount}
+              </span>
+            )}
+          </div>
+
+          <div className="w-24 text-center text-xs text-muted-foreground">
+            {task.dueDate && (
+              <span className="flex items-center justify-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {task.dueDate}
+              </span>
+            )}
+          </div>
+
+          <div className="w-20 flex justify-center">
+            {task.priority !== 'none' && (
+              <Flag className={cn('h-3.5 w-3.5', priority.color)} />
+            )}
+            {task.priority === 'none' && (
+              <Flag className="h-3.5 w-3.5 text-muted-foreground/30" />
+            )}
+          </div>
+
+          <div className="w-16 text-center text-xs text-muted-foreground">
+            {task.effort || '–'}
+          </div>
+
+          <div className="w-28 flex justify-center">
+            <motion.div whileHover={{ scale: 1.05 }} transition={springs.snappy}>
+              <Badge variant={status.variant}>{status.label}</Badge>
+            </motion.div>
+          </div>
+
+          <div className="w-20 flex justify-center">
+            <User className="h-4 w-4 text-muted-foreground/30" />
+          </div>
+
+          <div className="w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button className="rounded p-0.5 hover:bg-accent">
+              <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
-          ) : (
-            <span className="w-4" />
-          )}
-
-          <span className="flex items-center justify-center">
-            {status.icon}
-          </span>
-
-          <span className="flex-1 truncate text-sm">{task.title}</span>
-
-          {task.subtaskCount && task.subtaskCount > 0 && (
-            <span className="flex items-center gap-0.5 text-2xs text-muted-foreground">
-              <GitBranch className="h-3 w-3" />
-              {task.subtaskCount}
-            </span>
-          )}
+          </div>
         </div>
-
-        <div className="w-24 text-center text-xs text-muted-foreground">
-          {task.dueDate && (
-            <span className="flex items-center justify-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {task.dueDate}
-            </span>
-          )}
-        </div>
-
-        <div className="w-20 flex justify-center">
-          {task.priority !== 'none' && (
-            <Flag className={cn('h-3.5 w-3.5', priority.color)} />
-          )}
-          {task.priority === 'none' && (
-            <Flag className="h-3.5 w-3.5 text-muted-foreground/30" />
-          )}
-        </div>
-
-        <div className="w-16 text-center text-xs text-muted-foreground">
-          {task.effort || '–'}
-        </div>
-
-        <div className="w-28 flex justify-center">
-          <Badge variant={status.variant}>{status.label}</Badge>
-        </div>
-
-        <div className="w-20 flex justify-center">
-          <User className="h-4 w-4 text-muted-foreground/30" />
-        </div>
-
-        <div className="w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="rounded p-0.5 hover:bg-accent">
-            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
-        </div>
-      </div>
+      </InteractiveRow>
 
       {/* Subtasks */}
-      {expanded && hasSubtasks && task.subtasks!.map((subtask) => (
-        <TaskRow key={subtask.id} task={subtask} depth={depth + 1} />
-      ))}
+      <AnimatePresence initial={false}>
+        {expanded && hasSubtasks && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={springs.gentle}
+            style={{ overflow: 'hidden' }}
+          >
+            {task.subtasks!.map((subtask) => (
+              <TaskRow key={subtask.id} task={subtask} depth={depth + 1} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
@@ -280,29 +302,42 @@ function GroupHeader({ group }: { group: TaskGroup }) {
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-2 px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
       >
-        {expanded ? (
+        <motion.div
+          animate={{ rotate: expanded ? 0 : -90 }}
+          transition={springs.snappy}
+        >
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-        )}
+        </motion.div>
         <span>{group.name}</span>
         <span className="text-muted-foreground">{group.tasks.length}</span>
         <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground ml-1 opacity-0 group-hover:opacity-100" />
         <Plus className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100" />
       </button>
 
-      {expanded && (
-        <>
-          <ColumnHeaders />
-          {group.tasks.map((task) => (
-            <TaskRow key={task.id} task={task} />
-          ))}
-          <button className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full">
-            <Plus className="h-3.5 w-3.5" />
-            Add Task
-          </button>
-        </>
-      )}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={springs.gentle}
+            style={{ overflow: 'hidden' }}
+          >
+            <ColumnHeaders />
+            {group.tasks.map((task) => (
+              <TaskRow key={task.id} task={task} />
+            ))}
+            <motion.button
+              className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Task
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

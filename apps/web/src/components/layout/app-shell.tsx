@@ -5,9 +5,12 @@ import { IconRail } from './icon-rail'
 import { Sidebar } from './sidebar'
 import { TopBar } from './top-bar'
 import { CommandPalette } from './command-palette'
+import { motion, AnimatePresence, fadeSlideUp, springs } from '@/components/motion'
+import { usePathname } from 'next/navigation'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -35,9 +38,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* Secondary Sidebar */}
           <Sidebar />
 
-          {/* Main Content */}
+          {/* Main Content with page transition */}
           <main className="flex-1 overflow-y-auto bg-background">
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={springs.gentle}
+                className="h-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
       </div>

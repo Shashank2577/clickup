@@ -41,6 +41,7 @@ import {
   User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence, SlidePanel, ScaleIn, StaggerList, StaggerItem, InteractiveRow, springs, durations } from '@/components/motion'
 
 type TaskStatus = 'todo' | 'in-progress' | 'in-review' | 'done' | 'closed'
 type TaskPriority = 'urgent' | 'high' | 'normal' | 'low'
@@ -135,12 +136,24 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
   const completedSubtasks = task.subtasks.filter(s => s.status === 'done').length
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <motion.div
+      className="fixed inset-0 z-50 flex"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <motion.div
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: durations.normal }}
+      />
 
       {/* Modal */}
-      <div className="relative ml-auto flex h-full w-full max-w-[1200px] bg-background shadow-2xl">
+      <SlidePanel className="relative ml-auto flex h-full w-full max-w-[1200px] bg-background shadow-2xl">
         {/* Main content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top bar */}
@@ -215,9 +228,9 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
             </p>
 
             {/* Properties grid */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6">
+            <StaggerList className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6">
               {/* Status */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <Settings className="h-3.5 w-3.5" />
                   Status
@@ -233,50 +246,52 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                     <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </button>
 
-                  {showStatusDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-48 rounded-md border border-border bg-popover p-1 shadow-lg z-10">
-                      <input
-                        className="w-full rounded-sm border border-input bg-background px-2 py-1 text-sm mb-1"
-                        placeholder="Search..."
-                        autoFocus
-                      />
-                      {['Not started', 'Active', 'Done', 'Closed'].map(group => (
-                        <div key={group}>
-                          <div className="px-2 py-1 text-2xs font-semibold text-muted-foreground uppercase">
-                            {group}
+                  <AnimatePresence>
+                    {showStatusDropdown && (
+                      <ScaleIn className="absolute top-full left-0 mt-1 w-48 rounded-md border border-border bg-popover p-1 shadow-lg z-10">
+                        <input
+                          className="w-full rounded-sm border border-input bg-background px-2 py-1 text-sm mb-1"
+                          placeholder="Search..."
+                          autoFocus
+                        />
+                        {['Not started', 'Active', 'Done', 'Closed'].map(group => (
+                          <div key={group}>
+                            <div className="px-2 py-1 text-2xs font-semibold text-muted-foreground uppercase">
+                              {group}
+                            </div>
+                            {statusOptions.filter(s => s.group === group).map(opt => (
+                              <button
+                                key={opt.value}
+                                className={cn(
+                                  'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent',
+                                  task.status === opt.value && 'bg-accent'
+                                )}
+                                onClick={() => setShowStatusDropdown(false)}
+                              >
+                                {statusIcons[opt.value as TaskStatus]}
+                                {opt.label}
+                                {task.status === opt.value && <span className="ml-auto">✓</span>}
+                              </button>
+                            ))}
                           </div>
-                          {statusOptions.filter(s => s.group === group).map(opt => (
-                            <button
-                              key={opt.value}
-                              className={cn(
-                                'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent',
-                                task.status === opt.value && 'bg-accent'
-                              )}
-                              onClick={() => setShowStatusDropdown(false)}
-                            >
-                              {statusIcons[opt.value as TaskStatus]}
-                              {opt.label}
-                              {task.status === opt.value && <span className="ml-auto">✓</span>}
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </ScaleIn>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* Assignees */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <User className="h-3.5 w-3.5" />
                   Assignees
                 </span>
                 <span className="text-sm text-muted-foreground">Empty</span>
-              </div>
+              </StaggerItem>
 
               {/* Dates */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <Calendar className="h-3.5 w-3.5" />
                   Dates
@@ -286,10 +301,10 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                   <span className="text-muted-foreground">→</span>
                   <Calendar className="h-3 w-3" /> {task.dueDate}
                 </span>
-              </div>
+              </StaggerItem>
 
               {/* Priority */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <Flag className="h-3.5 w-3.5" />
                   Priority
@@ -303,38 +318,40 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                     {priorityOptions.find(p => p.value === task.priority)?.label}
                   </button>
 
-                  {showPriorityDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-44 rounded-md border border-border bg-popover p-1 shadow-lg z-10">
-                      <div className="px-2 py-1 text-2xs font-semibold text-muted-foreground uppercase">
-                        Priority
-                      </div>
-                      {priorityOptions.map(opt => (
-                        <button
-                          key={opt.value}
-                          className={cn(
-                            'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent',
-                            task.priority === opt.value && 'bg-accent'
-                          )}
-                          onClick={() => setShowPriorityDropdown(false)}
-                        >
-                          <Flag className={cn('h-3.5 w-3.5', opt.color)} />
-                          {opt.label}
-                          {task.priority === opt.value && <span className="ml-auto">✓</span>}
-                        </button>
-                      ))}
-                      <div className="border-t border-border mt-1 pt-1">
-                        <button className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent text-primary">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          Prioritize with AI
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {showPriorityDropdown && (
+                      <ScaleIn className="absolute top-full left-0 mt-1 w-44 rounded-md border border-border bg-popover p-1 shadow-lg z-10">
+                        <div className="px-2 py-1 text-2xs font-semibold text-muted-foreground uppercase">
+                          Priority
+                        </div>
+                        {priorityOptions.map(opt => (
+                          <button
+                            key={opt.value}
+                            className={cn(
+                              'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent',
+                              task.priority === opt.value && 'bg-accent'
+                            )}
+                            onClick={() => setShowPriorityDropdown(false)}
+                          >
+                            <Flag className={cn('h-3.5 w-3.5', opt.color)} />
+                            {opt.label}
+                            {task.priority === opt.value && <span className="ml-auto">✓</span>}
+                          </button>
+                        ))}
+                        <div className="border-t border-border mt-1 pt-1">
+                          <button className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent text-primary">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Prioritize with AI
+                          </button>
+                        </div>
+                      </ScaleIn>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* Track Time */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <Clock className="h-3.5 w-3.5" />
                   Track Time
@@ -342,26 +359,26 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                 <button className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" /> Add time
                 </button>
-              </div>
+              </StaggerItem>
 
               {/* Tags */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <Tag className="h-3.5 w-3.5" />
                   Tags
                 </span>
                 <span className="text-sm text-muted-foreground">Empty</span>
-              </div>
+              </StaggerItem>
 
               {/* Relationships */}
-              <div className="flex items-center gap-3">
+              <StaggerItem className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground w-28 flex items-center gap-2">
                   <Link2 className="h-3.5 w-3.5" />
                   Relationships
                 </span>
                 <span className="text-sm text-muted-foreground">Empty</span>
-              </div>
-            </div>
+              </StaggerItem>
+            </StaggerList>
 
             {/* Hide empty properties */}
             <button
@@ -433,7 +450,7 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                   <div className="w-8" />
                 </div>
                 {task.subtasks.map((subtask) => (
-                  <div key={subtask.id} className="flex items-center border-b border-border/50 px-3 py-2 hover:bg-accent/50 transition-colors cursor-pointer group">
+                  <InteractiveRow key={subtask.id} className="flex items-center border-b border-border/50 px-3 py-2 cursor-pointer group">
                     <div className="flex items-center gap-2 flex-1">
                       {statusIcons[subtask.status]}
                       <span className="text-sm">{subtask.title}</span>
@@ -450,7 +467,7 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                     <div className="w-8 opacity-0 group-hover:opacity-100">
                       <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
-                  </div>
+                  </InteractiveRow>
                 ))}
                 <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
                   <Plus className="h-3.5 w-3.5" />
@@ -509,21 +526,21 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
 
           {/* Activity list */}
           <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-            <div className="space-y-4">
+            <StaggerList className="space-y-4">
               {task.activities.map((activity) => (
-                <div key={activity.id} className="flex gap-3">
+                <StaggerItem key={activity.id} className="flex gap-3">
                   <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 mt-2 shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm">{activity.text}</p>
                     <p className="text-2xs text-muted-foreground mt-0.5">{activity.timestamp}</p>
                   </div>
-                </div>
+                </StaggerItem>
               ))}
               <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                 <ChevronRight className="h-3 w-3" />
                 Show more
               </button>
-            </div>
+            </StaggerList>
           </div>
 
           {/* Comment input */}
@@ -535,12 +552,15 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
               />
               <div className="flex items-center gap-0.5 px-2 py-1 border-t border-border/50">
                 {[Plus, Sparkles, SmilePlus, Paperclip, Mic, AtSign, Code, Clipboard, ArrowUpRight].map((Icon, i) => (
-                  <button
+                  <motion.button
                     key={i}
                     className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={springs.snappy}
                   >
                     <Icon className="h-3.5 w-3.5" />
-                  </button>
+                  </motion.button>
                 ))}
                 <div className="ml-auto">
                   <Button size="icon-sm" className="rounded-full">
@@ -551,7 +571,7 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </SlidePanel>
+    </motion.div>
   )
 }

@@ -19,6 +19,7 @@ import {
   GanttChart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence, TabContent, FadeIn, springs } from '@/components/motion'
 
 const viewTabs = [
   { id: 'welcome', label: 'Welcome', icon: FileText },
@@ -52,22 +53,30 @@ export function SpaceView() {
           </button>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="text-xs gap-1">
-            <Bot className="h-3 w-3" />
-            Agents
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs gap-1">
-            <Zap className="h-3 w-3" />
-            Automate
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs gap-1">
-            <Sparkles className="h-3 w-3" />
-            Ask AI
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs gap-1">
-            <Share2 className="h-3 w-3" />
-            Share
-          </Button>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1">
+              <Bot className="h-3 w-3" />
+              Agents
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1">
+              <Zap className="h-3 w-3" />
+              Automate
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1">
+              <Sparkles className="h-3 w-3" />
+              Ask AI
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1">
+              <Share2 className="h-3 w-3" />
+              Share
+            </Button>
+          </motion.div>
         </div>
       </div>
 
@@ -83,14 +92,21 @@ export function SpaceView() {
             key={tab.id}
             onClick={() => setActiveView(tab.id)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors border-b-2',
+              'relative flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors border-b-2 border-transparent',
               activeView === tab.id
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {tab.icon && <tab.icon className="h-3 w-3" />}
             {tab.label}
+            {activeView === tab.id && (
+              <motion.div
+                layoutId="activeViewTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                transition={springs.snappy}
+              />
+            )}
           </button>
         ))}
 
@@ -101,7 +117,7 @@ export function SpaceView() {
       </div>
 
       {/* View content */}
-      <div className="flex-1 overflow-hidden">
+      <TabContent activeKey={activeView} className="flex-1 overflow-hidden">
         {activeView === 'list' && <ListView />}
         {activeView === 'board' && <BoardView />}
         {activeView === 'timeline' && (
@@ -129,12 +145,14 @@ export function SpaceView() {
             </p>
           </div>
         )}
-      </div>
+      </TabContent>
 
       {/* Task Detail Modal */}
-      {showTaskDetail && (
-        <TaskDetail onClose={() => setShowTaskDetail(false)} />
-      )}
+      <AnimatePresence>
+        {showTaskDetail && (
+          <TaskDetail onClose={() => setShowTaskDetail(false)} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

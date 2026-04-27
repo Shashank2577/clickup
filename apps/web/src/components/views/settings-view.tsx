@@ -38,6 +38,7 @@ import {
   KeyRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, InteractiveRow, InteractiveCard, TabContent, springs } from '@/components/motion'
 
 // --- Types ---
 
@@ -143,14 +144,14 @@ function SettingsSidebar({
           </div>
           <div className="space-y-0.5 px-2">
             {section.items.map((item) => (
-              <button
+              <InteractiveRow
                 key={item.id}
                 onClick={() => onItemChange(item.id)}
                 className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
+                  'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm cursor-pointer',
                   activeItem === item.id
                     ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+                    : 'text-foreground/70'
                 )}
               >
                 <span className="flex h-4 w-4 items-center justify-center shrink-0 text-current">
@@ -160,7 +161,7 @@ function SettingsSidebar({
                 {item.id === activeItem && (
                   <ChevronRight className="h-3 w-3 text-muted-foreground" />
                 )}
-              </button>
+              </InteractiveRow>
             ))}
           </div>
         </div>
@@ -178,11 +179,10 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
         enabled ? 'bg-primary' : 'bg-muted-foreground/30'
       )}
     >
-      <span
-        className={cn(
-          'inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm',
-          enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-        )}
+      <motion.span
+        className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm"
+        animate={{ x: enabled ? 18 : 3 }}
+        transition={springs.snappy}
       />
     </button>
   )
@@ -318,11 +318,11 @@ function PreferencesContent() {
           </p>
           <div className="flex items-center gap-2">
             {themeColors.map((tc) => (
-              <button
+              <motion.button
                 key={tc.id}
                 onClick={() => setSelectedThemeColor(tc.id)}
                 className={cn(
-                  'relative h-8 w-8 rounded-full transition-transform hover:scale-110',
+                  'relative h-8 w-8 rounded-full',
                   selectedThemeColor === tc.id && 'ring-2 ring-offset-2 ring-offset-background'
                 )}
                 style={{
@@ -330,11 +330,14 @@ function PreferencesContent() {
                   ...(selectedThemeColor === tc.id ? { ringColor: tc.color } : {}),
                 }}
                 title={tc.label}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                transition={springs.bouncy}
               >
                 {selectedThemeColor === tc.id && (
                   <Check className="h-4 w-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 )}
-              </button>
+              </motion.button>
             ))}
           </div>
         </section>
@@ -349,14 +352,14 @@ function PreferencesContent() {
             {appearanceOptions.map((opt) => {
               const Icon = opt.icon
               return (
-                <button
+                <InteractiveCard
                   key={opt.id}
                   onClick={() => setSelectedAppearance(opt.id)}
                   className={cn(
-                    'flex flex-col items-center rounded-lg border-2 p-4 transition-colors',
+                    'flex flex-col items-center rounded-lg border-2 p-4 cursor-pointer',
                     selectedAppearance === opt.id
                       ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-muted-foreground/30'
+                      : 'border-border'
                   )}
                 >
                   <div
@@ -380,7 +383,7 @@ function PreferencesContent() {
                   <span className="text-2xs text-muted-foreground mt-0.5">
                     {opt.description}
                   </span>
-                </button>
+                </InteractiveCard>
               )
             })}
           </div>
@@ -401,9 +404,11 @@ function PreferencesContent() {
 
         {/* Save */}
         <div className="pt-2 pb-8">
-          <Button className="px-6">
-            Save changes
-          </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+            <Button className="px-6">
+              Save changes
+            </Button>
+          </motion.div>
         </div>
       </div>
     </div>

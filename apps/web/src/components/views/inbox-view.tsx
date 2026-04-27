@@ -21,6 +21,7 @@ import {
   Archive,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, StaggerList, StaggerItem, InteractiveRow, TabContent, FadeIn, springs } from '@/components/motion'
 
 // Types
 type NotificationType = 'task-assigned' | 'comment' | 'mention' | 'status-change' | 'subtask' | 'due-date'
@@ -149,20 +150,23 @@ const notificationsByTab: Record<TabId, Notification[]> = {
 
 function NotificationItem({ notification }: { notification: Notification }) {
   return (
-    <div
+    <InteractiveRow
       className={cn(
-        'group flex items-start gap-3 px-4 py-3 border-b border-border/50 cursor-pointer transition-colors hover:bg-accent/50',
+        'group flex items-start gap-3 px-4 py-3 border-b border-border/50 cursor-pointer',
         !notification.read && 'bg-primary/[0.03]'
       )}
     >
       {/* Unread indicator */}
       <div className="flex items-center pt-1.5">
-        <div
-          className={cn(
-            'h-2 w-2 rounded-full',
-            !notification.read ? 'bg-primary' : 'bg-transparent'
-          )}
-        />
+        {!notification.read ? (
+          <motion.div
+            className="h-2 w-2 rounded-full bg-primary"
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        ) : (
+          <div className="h-2 w-2 rounded-full bg-transparent" />
+        )}
       </div>
 
       {/* Type icon */}
@@ -212,30 +216,32 @@ function NotificationItem({ notification }: { notification: Notification }) {
           </button>
         </div>
       </div>
-    </div>
+    </InteractiveRow>
   )
 }
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-6">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted mb-6">
-        <Users className="h-10 w-10 text-muted-foreground/40" />
+    <FadeIn delay={0.1}>
+      <div className="flex flex-col items-center justify-center py-20 px-6">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted mb-6">
+          <Users className="h-10 w-10 text-muted-foreground/40" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Looking to collaborate?</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
+          Notifications from your tasks, comments, and mentions will show up here.
+          Assign tasks to teammates or leave a comment to get started.
+        </p>
+        <div className="flex items-center gap-3">
+          <Button size="sm">
+            Create a task
+          </Button>
+          <Button variant="outline" size="sm">
+            Invite teammates
+          </Button>
+        </div>
       </div>
-      <h3 className="text-lg font-semibold mb-2">Looking to collaborate?</h3>
-      <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
-        Notifications from your tasks, comments, and mentions will show up here.
-        Assign tasks to teammates or leave a comment to get started.
-      </p>
-      <div className="flex items-center gap-3">
-        <Button size="sm">
-          Create a task
-        </Button>
-        <Button variant="outline" size="sm">
-          Invite teammates
-        </Button>
-      </div>
-    </div>
+    </FadeIn>
   )
 }
 
@@ -272,10 +278,10 @@ export function InboxView() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2',
+              'relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2 border-transparent',
               activeTab === tab.id
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {tab.label}
@@ -289,33 +295,44 @@ export function InboxView() {
                 {tab.count}
               </span>
             )}
+            {activeTab === tab.id && (
+              <motion.div
+                layoutId="activeInboxTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                transition={springs.snappy}
+              />
+            )}
           </button>
         ))}
       </div>
 
       {/* Notification list */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <TabContent activeKey={activeTab} className="flex-1 overflow-y-auto scrollbar-thin">
         {notifications.length > 0 ? (
-          <div>
+          <StaggerList>
             {/* Today header */}
             {activeTab === 'primary' && (
-              <div className="flex items-center justify-between px-4 py-2 bg-muted/30">
-                <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Today
-                </span>
-                <button className="text-2xs text-muted-foreground hover:text-foreground transition-colors">
-                  Mark all as read
-                </button>
-              </div>
+              <StaggerItem>
+                <div className="flex items-center justify-between px-4 py-2 bg-muted/30">
+                  <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Today
+                  </span>
+                  <button className="text-2xs text-muted-foreground hover:text-foreground transition-colors">
+                    Mark all as read
+                  </button>
+                </div>
+              </StaggerItem>
             )}
             {notifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
+              <StaggerItem key={notification.id}>
+                <NotificationItem notification={notification} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         ) : (
           <EmptyState />
         )}
-      </div>
+      </TabContent>
     </div>
   )
 }
