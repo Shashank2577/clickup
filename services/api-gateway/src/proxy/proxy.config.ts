@@ -21,6 +21,8 @@ export function buildServiceRoutes(): ServiceRoute[] {
   const IDENTITY = requireEnv('IDENTITY_SERVICE_URL')
   const TASK     = requireEnv('TASK_SERVICE_URL')
   const GOAL     = requireEnv('GOAL_SERVICE_URL')
+  const CHAT     = requireEnv('CHAT_SERVICE_URL')
+  const AUDIT    = requireEnv('AUDIT_SERVICE_URL')
   // Identity service routes share pathStripPrefix: '/api/v1' so the upstream
   // receives paths like /auth/..., /users/..., /workspaces/..., /spaces/..., /lists/...
   // matching identity-service's router.use('/auth', ...) etc.
@@ -36,6 +38,11 @@ export function buildServiceRoutes(): ServiceRoute[] {
     // Wave 4: invites accept endpoint + command palette
     { prefix: '/api/v1/invites',          target: IDENTITY, isMutation: true,  pathStripPrefix: '/api/v1' },
     { prefix: '/api/v1/command-palette',  target: IDENTITY, isMutation: false, pathStripPrefix: '/api/v1' },
+    // Wave 5: favorites, teams, trash, sidebar
+    { prefix: '/api/v1/favorites',        target: IDENTITY, isMutation: true,  pathStripPrefix: '/api/v1' },
+    { prefix: '/api/v1/teams',            target: IDENTITY, isMutation: false, pathStripPrefix: '/api/v1' },
+    { prefix: '/api/v1/trash',            target: IDENTITY, isMutation: true,  pathStripPrefix: '/api/v1' },
+    { prefix: '/api/v1/sidebar',          target: IDENTITY, isMutation: false, pathStripPrefix: '/api/v1' },
 
     // ── Task service ─────────────────────────────────────────────────────────────
     // Core task CRUD — strips /api/v1/tasks, upstream receives /:taskId etc.
@@ -52,6 +59,14 @@ export function buildServiceRoutes(): ServiceRoute[] {
     { prefix: '/api/v1/forms',            target: TASK, isMutation: true,  pathStripPrefix: '/api/v1' },
     // Task types (custom task types per workspace) — upstream sees /task-types/...
     { prefix: '/api/v1/task-types',       target: TASK, isMutation: false, pathStripPrefix: '/api/v1' },
+
+    // ── Chat service — channels, DMs, messages ─────────────────────────────────
+    { prefix: '/api/v1/channels',         target: CHAT,     isMutation: false, pathStripPrefix: '/api/v1' },
+    { prefix: '/api/v1/dm',               target: CHAT,     isMutation: true,  pathStripPrefix: '/api/v1' },
+    { prefix: '/api/v1/messages',         target: CHAT,     isMutation: false, pathStripPrefix: '/api/v1' },
+
+    // ── Audit service ────────────────────────────────────────────────────────────
+    { prefix: '/api/v1/audit-logs',       target: AUDIT,    isMutation: false, pathStripPrefix: '/api/v1' },
 
     // ── Comment service ───────────────────────────────────────────────────────────
     { prefix: '/api/v1/comments',         target: requireEnv('COMMENT_SERVICE_URL'),       isMutation: false },

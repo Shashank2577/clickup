@@ -43,6 +43,8 @@ async function bootstrap(): Promise<void> {
         sprints:       process.env['SPRINT_SERVICE_URL'],
         slack:         process.env['SLACK_SERVICE_URL'],
         github:        process.env['GITHUB_SERVICE_URL'],
+        chat:          process.env['CHAT_SERVICE_URL'],
+        audit:         process.env['AUDIT_SERVICE_URL'],
       },
     })
   })
