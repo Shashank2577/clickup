@@ -78,7 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   loadWorkspaces: async () => {
-    const workspaces = await api.get<Workspace[]>('/workspaces')
+    const workspaces = await api.get<Workspace[]>('/workspaces/me')
     const savedId = localStorage.getItem('clickup_workspace')
     const active = workspaces.find(w => w.id === savedId) ?? workspaces[0] ?? null
     set({ workspaces, workspace: active })

@@ -60,7 +60,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   loadSpaces: async (workspaceId) => {
     set({ isLoading: true })
-    const spaces = await api.get<Space[]>('/spaces', { params: { workspaceId } })
+    const spaces = await api.get<Space[]>(`/workspaces/${workspaceId}/spaces`)
     // Load lists for each space
     const spacesWithLists = await Promise.all(
       spaces.map(async (space) => {
@@ -92,7 +92,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   },
 
   createSpace: async (workspaceId, name, color) => {
-    const space = await api.post<Space>('/spaces', { body: { workspaceId, name, color } })
+    const space = await api.post<Space>(`/workspaces/${workspaceId}/spaces`, { body: { name, color } })
     set({ spaces: [...get().spaces, { ...space, lists: [] }] })
     return space
   },
