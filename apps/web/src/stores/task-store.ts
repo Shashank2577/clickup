@@ -67,7 +67,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   loadTasks: async (listId, groupBy) => {
     set({ isLoading: true })
-    const tasks = await api.get<Task[]>('/tasks', { params: { listId, groupBy } })
+    const tasks = await api.get<Task[]>(`/tasks/list/${listId}`, { params: { groupBy } })
     set({ tasks, isLoading: false })
   },
 
