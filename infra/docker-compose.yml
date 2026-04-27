@@ -20,10 +20,16 @@ services:
       - ./migrations/002_research_improvements.sql:/docker-entrypoint-initdb.d/002_research_improvements.sql
       - ./migrations/003_add_password_hash.sql:/docker-entrypoint-initdb.d/003_add_password_hash.sql
       - ./migrations/004_doc_snapshots.sql:/docker-entrypoint-initdb.d/004_doc_snapshots.sql
+      - ./migrations/004_favorites_teams_trash_sidebar_presence_theming.sql:/docker-entrypoint-initdb.d/004b_favorites_teams.sql
       - ./migrations/005_automation_runs.sql:/docker-entrypoint-initdb.d/005_automation_runs.sql
       - ./migrations/006_views.sql:/docker-entrypoint-initdb.d/006_views.sql
       - ./migrations/007_webhooks.sql:/docker-entrypoint-initdb.d/007_webhooks.sql
       - ./migrations/008_wave3_features.sql:/docker-entrypoint-initdb.d/008_wave3_features.sql
+      - ./migrations/009_wave4_features.sql:/docker-entrypoint-initdb.d/009_wave4_features.sql
+      - ./migrations/010_wave5_features.sql:/docker-entrypoint-initdb.d/010_wave5_features.sql
+      - ./migrations/011_wave5b_gaps.sql:/docker-entrypoint-initdb.d/011_wave5b_gaps.sql
+      - ./migrations/012_chat.sql:/docker-entrypoint-initdb.d/012_chat.sql
+      - ./migrations/013_notification_views_dashboard_forms_audit.sql:/docker-entrypoint-initdb.d/013_notification_views.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U clickup']
       interval: 5s

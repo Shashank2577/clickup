@@ -65,7 +65,7 @@ ALTER TABLE views ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'pri
 ALTER TABLE views ADD COLUMN IF NOT EXISTS pinned BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_views_pinned
-  ON views (workspace_id, pinned DESC, position ASC)
+  ON views (pinned DESC)
   WHERE pinned = TRUE;
 
 -- ============================================================

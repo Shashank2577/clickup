@@ -38,11 +38,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
 
   login: async (email, password) => {
-    const data = await api.post<{ token: string; user: User }>('/auth/login', {
+    const data = await api.post<{ token: string; user: { id: string; name: string; email: string; avatar_url?: string } }>('/auth/login', {
       body: { email, password },
     })
     api.setToken(data.token)
-    set({ user: data.user, isAuthenticated: true })
+    const nameParts = data.user.name.split(' ')
+    const user: User = {
+      id: data.user.id,
+      fullName: data.user.name,
+      email: data.user.email,
+      avatarUrl: data.user.avatar_url,
+      initials: nameParts.map(p => p[0]).join('').toUpperCase().slice(0, 2),
+    }
+    set({ user, isAuthenticated: true })
     await get().loadWorkspaces()
   },
 
@@ -54,7 +62,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadCurrentUser: async () => {
     try {
-      const user = await api.get<User>('/users/me')
+      const raw = await api.get<{ id: string; name: string; email: string; avatar_url?: string }>('/users/me')
+      const nameParts = raw.name.split(' ')
+      const user: User = {
+        id: raw.id,
+        fullName: raw.name,
+        email: raw.email,
+        avatarUrl: raw.avatar_url,
+        initials: nameParts.map(p => p[0]).join('').toUpperCase().slice(0, 2),
+      }
       set({ user, isAuthenticated: true, isLoading: false })
     } catch {
       set({ isAuthenticated: false, isLoading: false })

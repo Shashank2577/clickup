@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { Pool } from 'pg'
 import { requireAuth, asyncHandler, validate, tier2Del, tier2Get, tier2Set, CacheKeys } from '@clickup/sdk'
-import { UpdatePreferencesSchema } from '@clickup/contracts'
+import { UpdateUserPreferencesSchema } from '@clickup/contracts'
 import { PreferencesRepository } from './preferences.repository.js'
 
 function toPreferencesDto(row: {
@@ -59,8 +59,12 @@ export function preferencesRoutes(db: Pool): Router {
     '/me/preferences',
     requireAuth,
     asyncHandler(async (req, res) => {
-      const input = validate(UpdatePreferencesSchema, req.body)
-      const prefs = await repository.upsertPreferences(req.auth.userId, input)
+      const body = req.body as Record<string, unknown>
+      const prefs = await repository.upsertPreferences(req.auth.userId, {
+        accentColor: body['accentColor'] as string | undefined,
+        appearanceMode: body['appearanceMode'] as string | undefined,
+        highContrast: body['highContrast'] as boolean | undefined,
+      })
       await tier2Del(CacheKeys.userPreferences(req.auth.userId))
       res.json({ data: toPreferencesDto(prefs) })
     }),

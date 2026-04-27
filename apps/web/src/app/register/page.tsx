@@ -39,7 +39,7 @@ export default function RegisterPage() {
     setIsLoading(true)
     try {
       await api.post('/auth/register', {
-        body: { fullName, email, password },
+        body: { name: fullName, email, password },
       })
       await login(email, password)
       router.push('/')
