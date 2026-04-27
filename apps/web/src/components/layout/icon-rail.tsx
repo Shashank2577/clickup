@@ -25,6 +25,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { motion, FadeIn, springs, durations } from '@/components/motion'
+import { useAuthStore, useNotificationStore } from '@/stores'
 
 const navItems = [
   { icon: Home, label: 'Home', href: '/', segment: '' },
@@ -54,6 +55,8 @@ function AnimatedIcon({ icon: Icon, active }: { icon: typeof Home; active: boole
 
 export function IconRail() {
   const pathname = usePathname()
+  const workspace = useAuthStore((s) => s.workspace)
+  const unreadCount = useNotificationStore((s) => s.unreadCount)
 
   function isActive(segment: string) {
     if (segment === '') return pathname === '/'
@@ -69,7 +72,7 @@ export function IconRail() {
             href="/"
             className="mb-3 flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold"
           >
-            C
+            {workspace?.name?.[0] ?? 'C'}
           </Link>
 
           {/* Nav items — spread evenly with breathing room */}
@@ -97,6 +100,11 @@ export function IconRail() {
                         }}
                       >
                         <AnimatedIcon icon={item.icon} active={active} />
+                        {item.segment === '' && unreadCount > 0 && (
+                          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[8px] font-bold text-primary-foreground">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
                         <span className="mt-[3px] text-[8px] font-medium leading-none max-w-[2.25rem] truncate">
                           {item.label}
                         </span>

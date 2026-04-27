@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { CheckSquare, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/motion'
-import { useAuthStore } from '@/stores/auth-store'
+import { useAuthStore } from '@/stores'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 

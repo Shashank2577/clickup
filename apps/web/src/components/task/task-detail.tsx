@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -41,7 +41,8 @@ import {
   User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion, AnimatePresence, SlidePanel, ScaleIn, StaggerList, StaggerItem, InteractiveRow, springs, durations } from '@/components/motion'
+import { motion, AnimatePresence, SlidePanel, ScaleIn, StaggerList, StaggerItem, InteractiveRow, springs, durations, Skeleton } from '@/components/motion'
+import { useTaskStore, useUIStore } from '@/stores'
 
 type TaskStatus = 'todo' | 'in-progress' | 'in-review' | 'done' | 'closed'
 type TaskPriority = 'urgent' | 'high' | 'normal' | 'low'
@@ -73,33 +74,6 @@ interface TaskDetailData {
   }[]
 }
 
-const demoTask: TaskDetailData = {
-  id: '86d2rr889',
-  taskId: '86d2rr889',
-  title: 'Mobile App MVP Development',
-  status: 'in-progress',
-  priority: 'urgent',
-  assignees: [],
-  startDate: '4/15/26',
-  dueDate: '6/16/26',
-  description: '',
-  tags: [],
-  subtasks: [
-    { id: 's1', title: 'Database Schema Design', status: 'done' },
-    { id: 's2', title: 'API Integration', status: 'in-progress' },
-    { id: 's3', title: 'UI Component Library', status: 'in-progress' },
-  ],
-  customFields: [
-    { name: 'Effort', icon: 'grid' },
-    { name: 'Project Phase', icon: 'grid' },
-    { name: 'Update Summary', icon: 'zap' },
-  ],
-  activities: [
-    { id: 'a1', text: 'You created this task', timestamp: 'Apr 23 at 10:02 pm' },
-    { id: 'a2', text: 'You created subtask: UI Component Library', timestamp: 'Apr 23 at 10:02 pm' },
-  ],
-}
-
 const statusOptions = [
   { value: 'todo', label: 'TO DO', group: 'Not started', color: 'text-status-todo' },
   { value: 'in-progress', label: 'IN PROGRESS', group: 'Active', color: 'text-status-in-progress' },
@@ -128,12 +102,37 @@ interface TaskDetailProps {
 }
 
 export function TaskDetail({ onClose }: TaskDetailProps) {
-  const [task] = useState(demoTask)
+  const activeTaskId = useUIStore((s) => s.activeTaskId)
+  const { taskDetail, isDetailLoading, loadTaskDetail, updateTask, addComment } = useTaskStore()
+
+  useEffect(() => {
+    if (activeTaskId) loadTaskDetail(activeTaskId)
+  }, [activeTaskId, loadTaskDetail])
+
+  const task = useMemo<TaskDetailData>(() => ({
+    id: taskDetail?.id ?? '',
+    taskId: taskDetail?.id ?? '',
+    title: taskDetail?.title ?? 'Task',
+    status: (taskDetail?.status as TaskStatus) ?? 'todo',
+    priority: ((taskDetail?.priority as TaskPriority) ?? 'normal'),
+    assignees: taskDetail?.assignees ?? [],
+    startDate: taskDetail?.startDate ? new Date(taskDetail.startDate).toLocaleDateString() : undefined,
+    dueDate: taskDetail?.dueDate ? new Date(taskDetail.dueDate).toLocaleDateString() : undefined,
+    description: taskDetail?.description ?? '',
+    tags: taskDetail?.tags ?? [],
+    subtasks: (taskDetail?.subtasks ?? []).map((st) => ({ id: st.id, title: st.title, status: st.status as TaskStatus })),
+    customFields: Object.keys(taskDetail?.customFields ?? {}).map((name) => ({ name, icon: 'grid', value: String((taskDetail?.customFields ?? {})[name] ?? '') })),
+    activities: (taskDetail?.comments ?? []).map((c) => ({ id: c.id, text: c.content, timestamp: new Date(c.createdAt).toLocaleString() })),
+  }), [taskDetail])
   const [showStatusDropdown, setShowStatusDropdown] = useState(false)
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false)
   const [showEmptyProps, setShowEmptyProps] = useState(true)
 
   const completedSubtasks = task.subtasks.filter(s => s.status === 'done').length
+
+  if (isDetailLoading) {
+    return <div className="fixed inset-0 z-50 p-6"><Skeleton className="h-full w-full" /></div>
+  }
 
   return (
     <motion.div
@@ -266,7 +265,7 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                                   'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent',
                                   task.status === opt.value && 'bg-accent'
                                 )}
-                                onClick={() => setShowStatusDropdown(false)}
+                                onClick={() => { setShowStatusDropdown(false); if (task.id) updateTask(task.id, { status: opt.value as TaskStatus }) }}
                               >
                                 {statusIcons[opt.value as TaskStatus]}
                                 {opt.label}
@@ -331,7 +330,7 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                               'flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent',
                               task.priority === opt.value && 'bg-accent'
                             )}
-                            onClick={() => setShowPriorityDropdown(false)}
+                            onClick={() => { setShowPriorityDropdown(false); if (task.id) updateTask(task.id, { priority: opt.value as TaskPriority }) }}
                           >
                             <Flag className={cn('h-3.5 w-3.5', opt.color)} />
                             {opt.label}
@@ -563,7 +562,7 @@ export function TaskDetail({ onClose }: TaskDetailProps) {
                   </motion.button>
                 ))}
                 <div className="ml-auto">
-                  <Button size="icon-sm" className="rounded-full">
+                  <Button size="icon-sm" className="rounded-full" onClick={() => task.id && addComment(task.id, "New comment")}>
                     <Send className="h-3 w-3" />
                   </Button>
                 </div>

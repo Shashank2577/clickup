@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ListView } from './list-view'
 import { BoardView } from './board-view'
@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence, TabContent, FadeIn, springs } from '@/components/motion'
+import { useParams } from 'next/navigation'
+import { useWorkspaceStore } from '@/stores'
 
 const viewTabs = [
   { id: 'welcome', label: 'Welcome', icon: FileText },
@@ -30,8 +32,14 @@ const viewTabs = [
 ]
 
 export function SpaceView() {
+  const params = useParams<{ spaceId?: string; listId?: string }>()
   const [activeView, setActiveView] = useState('list')
   const [showTaskDetail, setShowTaskDetail] = useState(false)
+  const spaces = useWorkspaceStore((s) => s.spaces)
+  const addFavorite = useWorkspaceStore((s) => s.addFavorite)
+
+  const activeSpace = useMemo(() => spaces.find((s) => s.id === params?.spaceId) ?? spaces[0], [spaces, params?.spaceId])
+  const activeList = useMemo(() => activeSpace?.lists.find((l) => l.id === params?.listId) ?? activeSpace?.lists[0], [activeSpace, params?.listId])
 
   return (
     <div className="flex h-full flex-col" onClick={(e) => {
@@ -46,9 +54,9 @@ export function SpaceView() {
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="h-4 w-4 rounded bg-primary" />
-          <h1 className="text-sm font-semibold">General Project Manager</h1>
+          <h1 className="text-sm font-semibold">{activeList?.name ?? 'List'}</h1>
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
+          <button className="text-muted-foreground hover:text-yellow-500 transition-colors" onClick={() => activeList?.id && addFavorite('list', activeList.id)}>
             <Star className="h-3.5 w-3.5" />
           </button>
         </div>
