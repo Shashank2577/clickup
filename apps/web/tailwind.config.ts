@@ -7,6 +7,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         // Semantic design tokens using CSS variables for theme switching
         border: 'hsl(var(--border))',
