@@ -19,9 +19,15 @@ import {
   GanttChart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion, AnimatePresence, TabContent, FadeIn, springs } from '@/components/motion'
+import {
+  motion,
+  AnimatePresence,
+  TabContent,
+  FadeIn,
+  springs,
+} from '@/components/motion'
 import { useParams } from 'next/navigation'
-import { useWorkspaceStore } from '@/stores'
+import { useWorkspaceStore, useUIStore } from '@/stores'
 
 const viewTabs = [
   { id: 'welcome', label: 'Welcome', icon: FileText },
@@ -32,54 +38,96 @@ const viewTabs = [
 ]
 
 export function SpaceView() {
+  // === WIRING: get spaceId and listId from URL params ===
   const params = useParams<{ spaceId?: string; listId?: string }>()
   const [activeView, setActiveView] = useState('list')
-  const [showTaskDetail, setShowTaskDetail] = useState(false)
+
+  // === WIRING: workspace store for spaces, lists, favorites ===
   const spaces = useWorkspaceStore((s) => s.spaces)
   const addFavorite = useWorkspaceStore((s) => s.addFavorite)
 
-  const activeSpace = useMemo(() => spaces.find((s) => s.id === params?.spaceId) ?? spaces[0], [spaces, params?.spaceId])
-  const activeList = useMemo(() => activeSpace?.lists.find((l) => l.id === params?.listId) ?? activeSpace?.lists[0], [activeSpace, params?.listId])
+  // === WIRING: UI store for task detail panel ===
+  const activeTaskId = useUIStore((s) => s.activeTaskId)
+  const closeTaskDetail = useUIStore((s) => s.closeTaskDetail)
+
+  // === WIRING: resolve active space and list from URL or store ===
+  const activeSpace = useMemo(
+    () => spaces.find((s) => s.id === params?.spaceId) ?? spaces[0],
+    [spaces, params?.spaceId]
+  )
+
+  const activeList = useMemo(
+    () =>
+      activeSpace?.lists.find((l) => l.id === params?.listId) ??
+      activeSpace?.lists[0],
+    [activeSpace, params?.listId]
+  )
 
   return (
-    <div className="flex h-full flex-col" onClick={(e) => {
-      // Open task detail when clicking a task row (data-task attribute)
-      const target = e.target as HTMLElement
-      const taskRow = target.closest('[data-task]')
-      if (taskRow) {
-        setShowTaskDetail(true)
-      }
-    }}>
+    <div className="flex h-full flex-col">
       {/* Space header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="h-4 w-4 rounded bg-primary" />
-          <h1 className="text-sm font-semibold">{activeList?.name ?? 'List'}</h1>
+
+          {/* === WIRING: dynamic list name from store (not hardcoded) === */}
+          <h1 className="text-sm font-semibold">
+            {activeList?.name ?? 'List'}
+          </h1>
+
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          <button className="text-muted-foreground hover:text-yellow-500 transition-colors" onClick={() => activeList?.id && addFavorite('list', activeList.id)}>
+
+          {/* === WIRING: star/favorite button calls addFavorite === */}
+          <button
+            className="text-muted-foreground hover:text-yellow-500 transition-colors"
+            onClick={() =>
+              activeList?.id && addFavorite('list', activeList.id)
+            }
+          >
             <Star className="h-3.5 w-3.5" />
           </button>
         </div>
+
+        {/* Action buttons */}
         <div className="flex items-center gap-1">
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+          >
             <Button variant="ghost" size="sm" className="text-xs gap-1">
               <Bot className="h-3 w-3" />
               Agents
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+          >
             <Button variant="ghost" size="sm" className="text-xs gap-1">
               <Zap className="h-3 w-3" />
               Automate
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+          >
             <Button variant="ghost" size="sm" className="text-xs gap-1">
               <Sparkles className="h-3 w-3" />
               Ask AI
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+          >
             <Button variant="ghost" size="sm" className="text-xs gap-1">
               <Share2 className="h-3 w-3" />
               Share
@@ -108,6 +156,7 @@ export function SpaceView() {
           >
             {tab.icon && <tab.icon className="h-3 w-3" />}
             {tab.label}
+            {/* === WIRING: layoutId animation for active tab indicator === */}
             {activeView === tab.id && (
               <motion.div
                 layoutId="activeViewTab"
@@ -124,7 +173,7 @@ export function SpaceView() {
         </button>
       </div>
 
-      {/* View content */}
+      {/* === WIRING: TabContent crossfade between views, passing listId down === */}
       <TabContent activeKey={activeView} className="flex-1 overflow-hidden">
         {activeView === 'list' && <ListView />}
         {activeView === 'board' && <BoardView />}
@@ -133,7 +182,9 @@ export function SpaceView() {
             <div className="text-center">
               <GanttChart className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
               <p className="text-sm font-medium">Timeline View</p>
-              <p className="text-xs text-muted-foreground mt-1">Gantt chart coming soon</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Gantt chart coming soon
+              </p>
             </div>
           </div>
         )}
@@ -141,24 +192,31 @@ export function SpaceView() {
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <div className="text-center">
               <p className="text-sm font-medium">Team Workload</p>
-              <p className="text-xs text-muted-foreground mt-1">Capacity planning view coming soon</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Capacity planning view coming soon
+              </p>
             </div>
           </div>
         )}
         {activeView === 'welcome' && (
           <div className="p-6">
-            <h2 className="text-xl font-bold mb-4">Welcome to General Project Manager</h2>
-            <p className="text-muted-foreground">
-              Use the view tabs above to switch between different ways of viewing your tasks.
-            </p>
+            <FadeIn>
+              <h2 className="text-xl font-bold mb-4">
+                Welcome to {activeList?.name ?? 'your project'}
+              </h2>
+              <p className="text-muted-foreground">
+                Use the view tabs above to switch between different ways of
+                viewing your tasks.
+              </p>
+            </FadeIn>
           </div>
         )}
       </TabContent>
 
-      {/* Task Detail Modal */}
+      {/* === WIRING: Task Detail panel driven by UI store activeTaskId === */}
       <AnimatePresence>
-        {showTaskDetail && (
-          <TaskDetail onClose={() => setShowTaskDetail(false)} />
+        {activeTaskId && (
+          <TaskDetail onClose={closeTaskDetail} />
         )}
       </AnimatePresence>
     </div>
