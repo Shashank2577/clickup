@@ -26,7 +26,7 @@ function makeReq(body: object, headers: Record<string, string> = {}): Request {
       'svix-signature': 'v1,sig',
       ...headers,
     },
-    body,
+    body: Buffer.from(JSON.stringify(body)),
   } as unknown as Request
 }
 

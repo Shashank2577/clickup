@@ -4,8 +4,9 @@ import { withRollback, createTestUser, getTestDb } from '@clickup/test-helpers'
 import { errorHandler, correlationId } from '@clickup/sdk'
 import { routes } from '../../src/routes.js'
 
-// Set JWT_SECRET for tests
+// Set required env vars for tests
 process.env['JWT_SECRET'] = 'test-secret-for-identity-tests'
+process.env['CLERK_WEBHOOK_SECRET'] = 'whsec_test'
 
 function buildApp() {
   const db = getTestDb()

@@ -13,6 +13,11 @@ interface ClerkUserPayload {
   }
 }
 
+interface ClerkUserDeletedData {
+  id: string
+  deleted: true
+}
+
 interface ClerkOrgPayload {
   type: 'organization.created' | 'organization.updated' | 'organization.deleted'
   data: {
@@ -37,18 +42,20 @@ type ClerkEvent = ClerkUserPayload | ClerkOrgPayload | ClerkMembershipPayload
 export function clerkWebhookRoutes(db: Pool): Router {
   const router = Router()
 
+  const webhookSecret = process.env['CLERK_WEBHOOK_SECRET']
+  if (!webhookSecret) throw new Error('CLERK_WEBHOOK_SECRET is required')
+  const wh = new Webhook(webhookSecret)
+
   router.post('/clerk', async (req, res) => {
-    const webhookSecret = process.env['CLERK_WEBHOOK_SECRET']
-    if (!webhookSecret) {
-      res.status(500).json({ error: 'CLERK_WEBHOOK_SECRET not configured' })
+    if (!Buffer.isBuffer(req.body)) {
+      res.status(500).json({ error: 'Raw body middleware not applied — check express.raw mount order' })
       return
     }
 
-    const wh = new Webhook(webhookSecret)
     let event: ClerkEvent
 
     try {
-      event = wh.verify(JSON.stringify(req.body), {
+      event = wh.verify(req.body as Buffer, {
         'svix-id': req.headers['svix-id'] as string,
         'svix-timestamp': req.headers['svix-timestamp'] as string,
         'svix-signature': req.headers['svix-signature'] as string,
@@ -87,7 +94,7 @@ async function handleEvent(db: Pool, event: ClerkEvent): Promise<void> {
     }
 
     case 'user.deleted': {
-      const d = event.data as ClerkUserPayload['data']
+      const d = (event.data as unknown) as ClerkUserDeletedData
       await db.query('DELETE FROM users WHERE id = $1', [d.id])
       break
     }
