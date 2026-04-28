@@ -23,7 +23,8 @@ import {
   motion,
   springs,
 } from '@/components/motion'
-import { useAuthStore, useTaskStore } from '@/stores'
+import { useUser } from '@clerk/nextjs'
+import { useTaskStore } from '@/stores'
 
 // === WIRING: status icon map with ALL 5 statuses including 'closed' ===
 const statusIcon: Record<string, React.ReactNode> = {
@@ -60,8 +61,8 @@ const demoTasks = [
 ]
 
 export function MyTasksView() {
-  // === WIRING: auth store for user name ===
-  const user = useAuthStore((s) => s.user)
+  // === WIRING: Clerk user for display name ===
+  const { user } = useUser()
 
   // === WIRING: task store for tasks and loading state ===
   const { tasks, isLoading, loadMyTasks } = useTaskStore()
@@ -135,7 +136,7 @@ export function MyTasksView() {
     { id: 'delegated', label: 'Delegated' },
   ]
 
-  const firstName = user?.fullName?.split(' ')[0] ?? 'there'
+  const firstName = user?.firstName ?? user?.fullName?.split(' ')[0] ?? 'there'
 
   return (
     <div className="h-full flex flex-col">

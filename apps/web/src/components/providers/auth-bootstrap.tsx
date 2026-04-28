@@ -2,57 +2,49 @@
 
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useUser, useOrganization } from '@clerk/nextjs'
 import { Skeleton } from '@/components/motion'
 import { wsClient } from '@/lib/websocket'
-import { useAuthStore, useWorkspaceStore, useNotificationStore } from '@/stores'
+import { useWorkspaceStore, useNotificationStore } from '@/stores'
 
 export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
-  const { isLoading, isAuthenticated, user, workspace, loadCurrentUser, loadWorkspaces } = useAuthStore()
+  const { isLoaded, isSignedIn, user } = useUser()
+  const { organization } = useOrganization()
   const { loadSpaces, loadFavorites } = useWorkspaceStore()
   const { loadNotifications } = useNotificationStore()
 
+  // Redirect unauthenticated users to login
   useEffect(() => {
-    loadCurrentUser()
-  }, [loadCurrentUser])
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && pathname !== '/login' && pathname !== '/register') {
+    if (!isLoaded) return
+    if (!isSignedIn && pathname !== '/login' && pathname !== '/register') {
       router.replace('/login')
     }
-  }, [isLoading, isAuthenticated, pathname, router])
+  }, [isLoaded, isSignedIn, pathname, router])
 
+  // Bootstrap workspace data once signed in
   useEffect(() => {
-    async function bootstrap() {
-      if (!isAuthenticated || !user) return
-      await loadWorkspaces()
-    }
-    bootstrap()
-  }, [isAuthenticated, user, loadWorkspaces])
+    if (!isLoaded || !isSignedIn || !user || !organization) return
 
-  useEffect(() => {
-    if (!isAuthenticated || !user || !workspace) return
-
-    loadSpaces(workspace.id)
-    loadFavorites(workspace.id)
+    loadSpaces(organization.id)
+    loadFavorites(organization.id)
     loadNotifications('primary')
 
-    const token = localStorage.getItem('clickup_token')
-    if (token) {
-      wsClient.connect(token)
-      wsClient.subscribe(`workspace:${workspace.id}`)
-      wsClient.subscribe(`user:${user.id}`)
-    }
+    // Pass user.id as the connection identifier (placeholder; WS auth will be
+    // updated separately once Clerk session tokens are plumbed through the gateway)
+    wsClient.connect(user.id)
+    wsClient.subscribe(`workspace:${organization.id}`)
+    wsClient.subscribe(`user:${user.id}`)
 
     return () => {
-      wsClient.unsubscribe(`workspace:${workspace.id}`)
+      wsClient.unsubscribe(`workspace:${organization.id}`)
       wsClient.unsubscribe(`user:${user.id}`)
     }
-  }, [isAuthenticated, user, workspace, loadSpaces, loadFavorites, loadNotifications])
+  }, [isLoaded, isSignedIn, user, organization, loadSpaces, loadFavorites, loadNotifications])
 
-  if (isLoading && pathname !== '/login' && pathname !== '/register') {
+  if (!isLoaded && pathname !== '/login' && pathname !== '/register') {
     return <Skeleton className="h-screen w-screen" />
   }
 

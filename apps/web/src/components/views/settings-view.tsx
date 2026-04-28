@@ -39,7 +39,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api-client'
-import { useAuthStore } from '@/stores'
+import { useUser } from '@clerk/nextjs'
 import { motion, InteractiveRow, InteractiveCard, TabContent, springs } from '@/components/motion'
 
 // --- Types ---
@@ -191,8 +191,8 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
 }
 
 function PreferencesContent() {
-  // === WIRING: load user profile from auth store ===
-  const user = useAuthStore((s) => s.user)
+  // === WIRING: load user profile from Clerk ===
+  const { user } = useUser()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -223,11 +223,11 @@ function PreferencesContent() {
         setEmail(me.email ?? '')
       } catch {
         setFullName(user?.fullName ?? '')
-        setEmail(user?.email ?? '')
+        setEmail(user?.primaryEmailAddress?.emailAddress ?? '')
       }
     }
     loadProfile()
-  }, [user?.fullName, user?.email])
+  }, [user?.fullName, user?.primaryEmailAddress?.emailAddress])
 
   // === WIRING: save profile + preferences to API ===
   async function saveChanges() {
@@ -309,7 +309,7 @@ function PreferencesContent() {
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
                 <AvatarFallback className="text-lg font-bold">
-                  {user?.initials ?? 'U'}
+                  {user?.firstName?.[0] ?? user?.fullName?.[0] ?? 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>

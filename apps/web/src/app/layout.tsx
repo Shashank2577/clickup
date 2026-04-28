@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
+import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthBootstrap } from '@/components/providers/auth-bootstrap'
 import '@/styles/globals.css'
@@ -21,17 +22,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${plusJakarta.variable} font-sans`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthBootstrap>{children}</AuthBootstrap>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${plusJakarta.variable} font-sans`}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AuthBootstrap>{children}</AuthBootstrap>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

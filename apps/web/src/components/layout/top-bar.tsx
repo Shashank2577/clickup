@@ -20,12 +20,18 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { motion, StatusDot, springs, durations } from '@/components/motion'
+import { useUser } from '@clerk/nextjs'
 import { useAuthStore, useNotificationStore } from '@/stores'
 
 export function TopBar({ onSearchClick }: { onSearchClick?: () => void }) {
   const workspace = useAuthStore((s) => s.workspace)
-  const user = useAuthStore((s) => s.user)
+  const { user } = useUser()
   const unreadCount = useNotificationStore((s) => s.unreadCount)
+
+  // Derive initials from Clerk user
+  const initials = user?.firstName && user?.lastName
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : user?.firstName?.[0]?.toUpperCase() ?? 'U'
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -85,7 +91,7 @@ export function TopBar({ onSearchClick }: { onSearchClick?: () => void }) {
 
           <button className="relative ml-1">
             <Avatar className="h-7 w-7">
-              <AvatarFallback className="text-[10px]">{user?.initials ?? 'SS'}</AvatarFallback>
+              <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
             </Avatar>
             <span className="absolute -bottom-0.5 -right-0.5">
               <StatusDot status="online" size="sm" />
