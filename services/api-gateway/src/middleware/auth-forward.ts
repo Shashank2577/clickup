@@ -17,7 +17,6 @@ function isPublic(path: string, method: string): boolean {
   if (PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix)) || path.endsWith('/health')) {
     return true
   }
-  if (method === 'GET' && path.includes('/tasks/share/')) return true
   return false
 }
 
@@ -89,5 +88,5 @@ export function authForward(req: Request, res: Response, next: NextFunction): vo
   }
 
   // ── Clerk session path ─────────────────────────────────────────────────────
-  clerkAuth(req, res, next)
+  clerkAuth(req, res, next).catch(next)
 }

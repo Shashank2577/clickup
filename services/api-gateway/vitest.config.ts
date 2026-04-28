@@ -12,5 +12,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    env: {
+      CLERK_SECRET_KEY: 'sk_test_placeholder_for_tests',
+      CLERK_PUBLISHABLE_KEY: 'pk_test_placeholder_for_tests',
+    },
   },
 })

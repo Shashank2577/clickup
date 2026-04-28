@@ -1,16 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Request, Response, NextFunction } from 'express'
 
+const mockAuthenticateRequest = vi.fn()
+
 vi.mock('@clerk/backend', () => ({
-  createClerkClient: vi.fn(() => ({
-    authenticateRequest: vi.fn(),
-  })),
+  createClerkClient: vi.fn(() => ({ authenticateRequest: mockAuthenticateRequest })),
 }))
 
-import { createClerkClient } from '@clerk/backend'
 import { clerkAuth } from './clerk-auth'
-
-const mockClerk = vi.mocked(createClerkClient)
 
 function makeReq(overrides?: Partial<Request>): Request {
   return { headers: {}, ...overrides } as unknown as Request
@@ -20,12 +17,15 @@ function makeRes(): Response {
 }
 
 describe('clerkAuth', () => {
-  it('sets x-user-id and x-org-id headers when session is valid', async () => {
-    const instance = mockClerk.mock.results[0]?.value ?? { authenticateRequest: vi.fn() }
-    vi.mocked(instance.authenticateRequest).mockResolvedValueOnce({
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('sets x-user-id, x-org-id, and x-session-id headers when session is valid', async () => {
+    mockAuthenticateRequest.mockResolvedValueOnce({
       isSignedIn: true,
       toAuth: () => ({ userId: 'user_abc', orgId: 'org_xyz', sessionId: 'sess_1' }),
-    } as any)
+    })
 
     const req = makeReq()
     const res = makeRes()
@@ -35,15 +35,15 @@ describe('clerkAuth', () => {
 
     expect(req.headers['x-user-id']).toBe('user_abc')
     expect(req.headers['x-org-id']).toBe('org_xyz')
+    expect(req.headers['x-session-id']).toBe('sess_1')
     expect(next).toHaveBeenCalledWith()
   })
 
   it('returns 401 when session is not signed in', async () => {
-    const instance = mockClerk.mock.results[0]?.value ?? { authenticateRequest: vi.fn() }
-    vi.mocked(instance.authenticateRequest).mockResolvedValueOnce({
+    mockAuthenticateRequest.mockResolvedValueOnce({
       isSignedIn: false,
       toAuth: () => null,
-    } as any)
+    })
 
     const req = makeReq()
     const res = makeRes()
