@@ -43,3 +43,4 @@ pact/logs/
 tmp/
 .temp/
 apps/web/.next
+.omc/state/sessions/
