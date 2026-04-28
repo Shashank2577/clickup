@@ -12,7 +12,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.0.0",
     "@clerk/nextjs": "^5.7.6",
     "@clickup/contracts": "workspace:*",
     "@gsap/react": "^2.1.2",
