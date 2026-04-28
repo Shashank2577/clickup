@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import express, { Router } from 'express'
 import type { Pool } from 'pg'
 import { authRoutes } from './auth/auth.handler.js'
 import { usersRoutes } from './users/users.handler.js'
@@ -11,9 +11,14 @@ import { trashRoutes } from './trash/trash.handler.js'
 import { sidebarRoutes } from './sidebar/sidebar.handler.js'
 import { presenceRoutes } from './presence/presence.handler.js'
 import { preferencesRoutes } from './preferences/preferences.handler.js'
+import { clerkWebhookRoutes } from './webhooks/clerk-webhook.handler.js'
 
 export function routes(db: Pool): Router {
   const router = Router()
+
+  // Webhook route must be mounted before /auth to receive raw body for svix signature verification
+  router.use('/auth/webhooks', express.raw({ type: 'application/json' }), clerkWebhookRoutes(db))
+
   router.use('/auth', authRoutes(db))
 
   // User routes — presence and preferences are mounted under /users
