@@ -13,7 +13,10 @@ RUN corepack enable && corepack prepare pnpm@9 --activate
 # Workspace manifests (for dependency resolution)
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
-# Shared packages (source — built below)
+# Root tsconfig (extended by packages)
+COPY tsconfig.base.json ./
+
+# Shared packages — includes pre-built dist/ artifacts committed to the repo
 COPY packages/ ./packages/
 
 # Service source
@@ -22,8 +25,8 @@ COPY services/${SERVICE_NAME}/ ./services/${SERVICE_NAME}/
 # Install workspace deps for this service and its transitive workspace deps
 RUN pnpm install --frozen-lockfile --filter @clickup/${SERVICE_NAME}...
 
-# Build shared packages then the service (... means build deps first)
-RUN pnpm run --filter @clickup/${SERVICE_NAME}... build
+# Build only the service (packages/contracts and packages/sdk use committed dist/)
+RUN pnpm run --filter @clickup/${SERVICE_NAME} build
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
 FROM node:20-alpine AS runtime
