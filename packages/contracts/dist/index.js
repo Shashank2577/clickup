@@ -49,4 +49,10 @@ __exportStar(require("./schemas/apikey.schema.js"), exports);
 __exportStar(require("./schemas/savedsearch.schema.js"), exports);
 __exportStar(require("./schemas/invite.schema.js"), exports);
 __exportStar(require("./schemas/chat.schema.js"), exports);
+__exportStar(require("./schemas/notification.schema.js"), exports);
+__exportStar(require("./schemas/audit.schema.js"), exports);
+__exportStar(require("./schemas/presence.schema.js"), exports);
+__exportStar(require("./schemas/sidebar.schema.js"), exports);
+__exportStar(require("./schemas/teams.schema.js"), exports);
+__exportStar(require("./schemas/trash.schema.js"), exports);
 //# sourceMappingURL=index.js.map

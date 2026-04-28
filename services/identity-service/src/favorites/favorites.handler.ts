@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { Pool } from 'pg'
 import { requireAuth, asyncHandler, validate, AppError, tier2Del, CacheKeys } from '@clickup/sdk'
-import { ErrorCode, AddFavoriteSchema, ReorderFavoritesSchema } from '@clickup/contracts'
+import { ErrorCode, CreateFavoriteSchema, ReorderFavoritesSchema } from '@clickup/contracts'
 import { FavoritesRepository } from './favorites.repository.js'
 
 function toFavoriteDto(row: {
@@ -31,16 +31,16 @@ export function favoritesRoutes(db: Pool): Router {
     '/',
     requireAuth,
     asyncHandler(async (req, res) => {
-      const input = validate(AddFavoriteSchema, req.body)
+      const input = validate(CreateFavoriteSchema, req.body)
 
-      const exists = await repository.existsFavorite(req.auth.userId, input.entityType, input.entityId)
+      const exists = await repository.existsFavorite(req.auth.userId, input.itemType, input.itemId)
       if (exists) throw new AppError(ErrorCode.FAVORITE_ALREADY_EXISTS)
 
       const maxPos = await repository.getMaxPosition(req.auth.userId)
       const favorite = await repository.addFavorite({
         userId: req.auth.userId,
-        entityType: input.entityType,
-        entityId: input.entityId,
+        entityType: input.itemType,
+        entityId: input.itemId,
         position: maxPos + 1000,
       })
       await tier2Del(CacheKeys.userFavorites(req.auth.userId))
@@ -81,7 +81,7 @@ export function favoritesRoutes(db: Pool): Router {
     requireAuth,
     asyncHandler(async (req, res) => {
       const input = validate(ReorderFavoritesSchema, req.body)
-      await repository.reorderFavorites(req.auth.userId, input.orderedIds)
+      await repository.reorderFavorites(req.auth.userId, input.favoriteIds)
       await tier2Del(CacheKeys.userFavorites(req.auth.userId))
       const favorites = await repository.getFavoritesByUser(req.auth.userId)
       res.json({ data: favorites.map(toFavoriteDto) })

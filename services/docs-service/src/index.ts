@@ -7,7 +7,8 @@ import {
   errorHandler, 
   logger, 
   createHealthHandler,
-  subscribe
+  subscribe,
+  injectGatewayAuth
 } from '@clickup/sdk'
 import { TASK_EVENTS } from '@clickup/contracts'
 import { createRouter } from './routes.js'
@@ -32,6 +33,8 @@ async function bootstrap(): Promise<void> {
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '1mb' }))
+
+  app.use(injectGatewayAuth)
 
   app.get('/health', createHealthHandler(db))
   app.use('/', createRouter(db))

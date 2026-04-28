@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const CreateGoalSchema = z.object({
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
   name: z.string().min(1).max(255),
   description: z.string().nullable().optional(),
   dueDate: z.string().datetime().nullable().optional(),

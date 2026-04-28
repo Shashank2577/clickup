@@ -93,7 +93,7 @@ exports.SetCustomFieldValueSchema = zod_1.z.object({
     value: zod_1.z.unknown(),
 });
 exports.CreateCustomFieldSchema = zod_1.z.object({
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
     name: zod_1.z.string().min(1).max(200),
     type: zod_1.z.string().min(1),
     config: zod_1.z.record(zod_1.z.unknown()).optional().default({}),

@@ -4,7 +4,7 @@ const uuid = z.string().uuid()
 const isoDate = z.string().datetime({ offset: true })
 
 export const CreateTaskTemplateSchema = z.object({
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   name: z.string().min(1).max(200),
   description: z.string().max(5000).optional(),
   templateData: z.object({

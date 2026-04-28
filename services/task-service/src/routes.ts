@@ -1,6 +1,17 @@
-import { Router } from 'express'
+import { Router, type Request, type Response, type NextFunction } from 'express'
 import type { Pool } from 'pg'
-import { requireAuth } from '@clickup/sdk'
+import { AppError } from '@clickup/sdk'
+import { ErrorCode } from '@clickup/contracts'
+
+// Use pre-auth middleware from index.ts that sets req.auth via JWT or X-User headers
+function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+  console.log('[LOCAL requireAuth] auth:', JSON.stringify((req as any).auth))
+  if ((req as any).auth && (req as any).auth.userId) {
+    next()
+    return
+  }
+  throw new AppError(ErrorCode.AUTH_MISSING_TOKEN)
+}
 import {
   createTaskHandler, getTaskHandler, listTasksHandler, updateTaskHandler, deleteTaskHandler,
   archiveTaskHandler, unarchiveTaskHandler,

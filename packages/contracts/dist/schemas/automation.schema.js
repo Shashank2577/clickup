@@ -29,7 +29,7 @@ exports.AutomationActionSchema = zod_1.z.object({
     config: zod_1.z.record(zod_1.z.any()),
 });
 exports.CreateAutomationSchema = zod_1.z.object({
-    workspaceId: zod_1.z.string().uuid(),
+    workspaceId: zod_1.z.string().min(1),
     name: zod_1.z.string().min(1).max(100),
     triggerType: exports.AutomationTriggerTypeSchema,
     triggerConfig: zod_1.z.record(zod_1.z.any()).default({}),

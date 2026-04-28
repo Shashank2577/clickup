@@ -13,6 +13,25 @@ async function bootstrap(): Promise<void> {
   const app = express()
 
   // Middleware — ORDER MATTERS, do not reorder
+  // CORS — allow frontend origin
+  app.use((_req, res, next) => {
+    const origin = _req.headers.origin
+    const allowed = process.env['CORS_ORIGINS']?.split(',') ?? ['http://localhost:3100', 'http://localhost:3000']
+    if (origin && allowed.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin)
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3100')
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Trace-Id')
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+    res.setHeader('Access-Control-Max-Age', '86400')
+    if (_req.method === 'OPTIONS') {
+      res.status(204).end()
+      return
+    }
+    next()
+  })
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '10mb' }))

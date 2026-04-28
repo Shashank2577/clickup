@@ -12,6 +12,7 @@ declare global {
         }
     }
 }
+export declare function injectGatewayAuth(req: Request, _res: Response, next: NextFunction): void;
 export declare function requireAuth(req: Request, _res: Response, next: NextFunction): void;
 export declare function requireRole(...allowedRoles: string[]): (req: Request, _res: Response, next: NextFunction) => void;
 export declare function signToken(payload: AuthContext, expiresIn?: string): string;

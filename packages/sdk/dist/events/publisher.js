@@ -32,7 +32,7 @@ async function publish(subject, payload) {
     try {
         const nats = await getNats();
         const js = nats.jetstream();
-        await js.publish(subject, sc.encode(JSON.stringify(payload)));
+        await js.publish('clickup.' + subject, sc.encode(JSON.stringify(payload)));
         logger_js_1.logger.debug({ subject }, 'Event published');
     }
     catch (err) {

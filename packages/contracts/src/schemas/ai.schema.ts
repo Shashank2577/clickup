@@ -11,7 +11,7 @@ const uuid = z.string().uuid()
 
 export const TaskBreakdownInputSchema = z.object({
   input: z.string().min(1, 'Input is required').max(2000, 'Input too long'),
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   listId: uuid,
   context: z
     .object({
@@ -42,7 +42,7 @@ export const TaskBreakdownOutputSchema = z.object({
 export const SummarizeInputSchema = z.object({
   content: z.string().min(1).max(20000),
   type: z.nativeEnum(SummarizeTargetType),
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
 })
 
 export const SummarizeOutputSchema = z.object({
@@ -60,7 +60,7 @@ export const PrioritizeInputSchema = z.object({
       status: z.string(),
     }),
   ).min(1).max(50),
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   userId: uuid,
 })
 
@@ -75,7 +75,7 @@ export const PrioritizeOutputSchema = z.object({
 
 export const DailyPlanInputSchema = z.object({
   userId: uuid,
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
   availableMinutes: z.number().int().positive().optional().default(480),
 })

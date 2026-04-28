@@ -4,6 +4,7 @@ import { requireAuth } from '@clickup/sdk'
 import {
   createCommentHandler,
   listCommentsHandler,
+  listCommentsByQueryHandler,
   createDocCommentHandler,
   listDocCommentsHandler,
   updateCommentHandler,
@@ -18,6 +19,9 @@ import { commentAssignmentsRouter, myAssignedCommentsHandler } from './comments/
 
 export function createRouter(db: Pool): Router {
   const router = Router()
+
+  // Frontend calls GET /api/v1/comments?taskId=... → gateway strips /v1/comments → service sees GET /
+  router.get('/', requireAuth, listCommentsByQueryHandler(db))
 
   router.post('/tasks/:taskId/comments', requireAuth, createCommentHandler(db))
   router.get('/tasks/:taskId/comments', requireAuth, listCommentsHandler(db))

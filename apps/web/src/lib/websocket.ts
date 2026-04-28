@@ -11,7 +11,7 @@
 
 type EventHandler = (data: unknown) => void
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3000/ws'
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3333/ws'
 
 class WebSocketClient {
   private ws: WebSocket | null = null

@@ -1,5 +1,7 @@
 import express from 'express'
-import { httpLogger, correlationId, errorHandler, subscribe, logger } from '@clickup/sdk'
+import { httpLogger, correlationId, errorHandler, subscribe, logger,
+  injectGatewayAuth
+} from '@clickup/sdk'
 import { db } from './goals/goals.repository.js'
 import { routes } from './routes.js'
 import { TASK_EVENTS } from '@clickup/contracts'
@@ -14,6 +16,8 @@ async function bootstrap(): Promise<void> {
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '1mb' }))
+
+  app.use(injectGatewayAuth)
 
   app.get('/health', (req, res) => res.json({ status: 'ok' }))
   app.use('/', routes(db))

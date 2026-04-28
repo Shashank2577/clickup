@@ -10,6 +10,10 @@ import { logger } from '../logging/logger.js'
 // ============================================================
 
 const sc = StringCodec()
+const STREAM = 'clickup'
+// All published subjects are prefixed so the stream subject 'clickup.>'
+// never overlaps with NATS internal subjects like $JS.API.*.
+const PREFIX = 'clickup.'
 
 export async function subscribe<T>(
   subject: EventSubject,
@@ -20,16 +24,24 @@ export async function subscribe<T>(
   const js = nats.jetstream()
   const jsm = await nats.jetstreamManager()
 
-  // Pull consumer implementation
-  const stream = 'clickup'
   const durable = options.durable || options.queue || 'consumer-' + subject.replace('.', '-')
-  
+
+  // Ensure stream exists — idempotent, safe to call on every boot.
+  // 'clickup.>' avoids overlap with $JS.API.* and other NATS internals.
+  try {
+    await jsm.streams.add({ name: STREAM, subjects: [PREFIX + '>'] })
+  } catch (err: any) {
+    if (!err.message?.includes('stream name already in use')) {
+      throw err
+    }
+  }
+
   // Ensure consumer exists
   try {
-    await jsm.consumers.add(stream, {
+    await jsm.consumers.add(STREAM, {
       durable_name: durable,
       ack_policy: AckPolicy.Explicit,
-      filter_subject: subject,
+      filter_subject: PREFIX + subject,
     })
   } catch (err: any) {
     if (!err.message.includes('already exists')) {
@@ -37,7 +49,7 @@ export async function subscribe<T>(
     }
   }
 
-  const consumer = await js.consumers.get(stream, durable)
+  const consumer = await js.consumers.get(STREAM, durable)
   const messages = await consumer.consume()
 
   logger.info({ subject, durable }, 'Subscribed to event (pull consumer)')

@@ -4,7 +4,7 @@ export const CreateSavedSearchSchema = z.object({
   name: z.string().min(1).max(100),
   query: z.string().min(1).max(500),
   filters: z.record(z.unknown()).optional().default({}),
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
 })
 
 export const UpdateSavedSearchSchema = z.object({

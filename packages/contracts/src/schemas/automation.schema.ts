@@ -31,7 +31,7 @@ export const AutomationActionSchema = z.object({
 })
 
 export const CreateAutomationSchema = z.object({
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
   name: z.string().min(1).max(100),
   triggerType: AutomationTriggerTypeSchema,
   triggerConfig: z.record(z.any()).default({}),

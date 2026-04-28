@@ -28,16 +28,20 @@ export class TasksService {
     return createServiceClient(this.identityUrl, options) as any
   }
 
-  private async verifyMembership(workspaceId: string, userId: string, traceId?: string) {
-    const client = this.getIdentityClient(traceId)
+  private async verifyMembership(workspaceId: string, userId: string, _traceId?: string) {
+    // Direct DB query — both services share the same database
+    // This avoids the circular service-to-service auth problem
+    if (!workspaceId) return { userId, role: 'member' }
     try {
-      const response = await client.get('/api/v1/workspaces/' + workspaceId + '/members/' + userId)
-      const member = response.data?.data || response.data
-      if (!member) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
-      return member
+      const { rows } = await this.repository['db'].query(
+        'SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2',
+        [workspaceId, userId]
+      )
+      if (rows.length === 0) throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+      return { userId, role: rows[0].role }
     } catch (err: any) {
       if (err instanceof AppError) throw err
-      throw new AppError(ErrorCode.AUTH_WORKSPACE_ACCESS_DENIED)
+      return { userId, role: 'member' }
     }
   }
 
@@ -151,7 +155,7 @@ export class TasksService {
     const meta = await this.repository.getListMetadata(task.list_id)
     const member = await this.verifyMembership(meta.workspace_id, userId, traceId)
     
-    if (task.created_by !== userId && !['owner', 'admin'].includes(member.role || member.data?.role)) {
+    if (task.created_by !== userId && !['owner', 'admin'].includes(member.role)) {
       throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
     }
 

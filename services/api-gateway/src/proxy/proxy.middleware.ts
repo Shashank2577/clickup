@@ -30,12 +30,29 @@ export function buildProxy(route: ServiceRoute): RequestHandler {
     changeOrigin: true,
     on: {
       proxyReq: (proxyReq: any, req: any) => {
+        // Fix path
         const originalUrl: string = req.originalUrl || req.url
         const qIdx = originalUrl.indexOf('?')
         const pathname = qIdx >= 0 ? originalUrl.slice(0, qIdx) : originalUrl
         const query = qIdx >= 0 ? originalUrl.slice(qIdx) : ''
         const rewritten = pathname.replace(stripRe, '') || '/'
         proxyReq.path = rewritten + query
+
+        // Forward auth and user headers explicitly
+        if (req.headers['authorization']) {
+          proxyReq.setHeader('Authorization', req.headers['authorization'])
+        }
+        for (const h of ['x-user-id', 'x-user-role', 'x-workspace-id', 'x-session-id', 'x-trace-id']) {
+          if (req.headers[h]) proxyReq.setHeader(h, req.headers[h] as string)
+        }
+
+        // Re-serialize body if express.json() already parsed it
+        if (req.body && Object.keys(req.body).length > 0) {
+          const bodyData = JSON.stringify(req.body)
+          proxyReq.setHeader('Content-Type', 'application/json')
+          proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData))
+          proxyReq.write(bodyData)
+        }
       },
       error: (err: Error, _req: Request, res: any) => {
         // Upstream service unavailable — return 503

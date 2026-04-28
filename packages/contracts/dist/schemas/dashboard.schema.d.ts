@@ -15,12 +15,40 @@ export type CreateDashboardSchemaType = z.infer<typeof CreateDashboardSchema>;
 export declare const UpdateDashboardSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
     isPrivate: z.ZodOptional<z.ZodBoolean>;
+    reportSchedule: z.ZodOptional<z.ZodObject<{
+        enabled: z.ZodBoolean;
+        cronExpression: z.ZodOptional<z.ZodString>;
+        recipientEmails: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        format: z.ZodDefault<z.ZodOptional<z.ZodEnum<["pdf", "email"]>>>;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+        format: "email" | "pdf";
+        cronExpression?: string | undefined;
+        recipientEmails?: string[] | undefined;
+    }, {
+        enabled: boolean;
+        cronExpression?: string | undefined;
+        recipientEmails?: string[] | undefined;
+        format?: "email" | "pdf" | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
     isPrivate?: boolean | undefined;
+    reportSchedule?: {
+        enabled: boolean;
+        format: "email" | "pdf";
+        cronExpression?: string | undefined;
+        recipientEmails?: string[] | undefined;
+    } | undefined;
 }, {
     name?: string | undefined;
     isPrivate?: boolean | undefined;
+    reportSchedule?: {
+        enabled: boolean;
+        cronExpression?: string | undefined;
+        recipientEmails?: string[] | undefined;
+        format?: "email" | "pdf" | undefined;
+    } | undefined;
 }>;
 export type UpdateDashboardSchemaType = z.infer<typeof UpdateDashboardSchema>;
 export declare const WidgetConfigSchema: z.ZodObject<{
@@ -88,7 +116,7 @@ export declare const CreateWidgetSchema: z.ZodObject<{
     width: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     height: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    type: "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "embed" | "burnup";
+    type: "embed" | "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "burnup";
     config: {
         text?: string | undefined;
         url?: string | undefined;
@@ -102,12 +130,12 @@ export declare const CreateWidgetSchema: z.ZodObject<{
         [k: string]: unknown;
     };
     title: string;
+    height: number;
     positionX: number;
     positionY: number;
     width: number;
-    height: number;
 }, {
-    type: "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "embed" | "burnup";
+    type: "embed" | "task_count" | "task_by_status" | "task_by_assignee" | "task_by_priority" | "completion_rate" | "time_tracked" | "time_by_user" | "billable_time" | "velocity" | "burndown" | "cumulative_flow" | "overdue_tasks" | "recent_activity" | "goals_progress" | "custom_text" | "burnup";
     title: string;
     config?: z.objectInputType<{
         listId: z.ZodOptional<z.ZodString>;
@@ -119,10 +147,10 @@ export declare const CreateWidgetSchema: z.ZodObject<{
         text: z.ZodOptional<z.ZodString>;
         url: z.ZodOptional<z.ZodString>;
     }, z.ZodTypeAny, "passthrough"> | undefined;
+    height?: number | undefined;
     positionX?: number | undefined;
     positionY?: number | undefined;
     width?: number | undefined;
-    height?: number | undefined;
 }>;
 export type CreateWidgetSchemaType = z.infer<typeof CreateWidgetSchema>;
 export declare const UpdateWidgetSchema: z.ZodObject<{
@@ -171,10 +199,10 @@ export declare const UpdateWidgetSchema: z.ZodObject<{
         url: z.ZodOptional<z.ZodString>;
     }, z.ZodTypeAny, "passthrough"> | undefined;
     title?: string | undefined;
+    height?: number | undefined;
     positionX?: number | undefined;
     positionY?: number | undefined;
     width?: number | undefined;
-    height?: number | undefined;
 }, {
     config?: z.objectInputType<{
         listId: z.ZodOptional<z.ZodString>;
@@ -187,10 +215,10 @@ export declare const UpdateWidgetSchema: z.ZodObject<{
         url: z.ZodOptional<z.ZodString>;
     }, z.ZodTypeAny, "passthrough"> | undefined;
     title?: string | undefined;
+    height?: number | undefined;
     positionX?: number | undefined;
     positionY?: number | undefined;
     width?: number | undefined;
-    height?: number | undefined;
 }>;
 export type UpdateWidgetSchemaType = z.infer<typeof UpdateWidgetSchema>;
 //# sourceMappingURL=dashboard.schema.d.ts.map

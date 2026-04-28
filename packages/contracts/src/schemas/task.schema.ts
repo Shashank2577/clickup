@@ -108,7 +108,7 @@ export const SetCustomFieldValueSchema = z.object({
 })
 
 export const CreateCustomFieldSchema = z.object({
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   name: z.string().min(1).max(200),
   type: z.string().min(1),
   config: z.record(z.unknown()).optional().default({}),

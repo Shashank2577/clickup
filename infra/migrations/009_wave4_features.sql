@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS favorites (
   UNIQUE (user_id, item_type, item_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites (user_id, workspace_id, position);
+CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites (user_id, position);
 
 -- ============================================================
 -- RECENTLY VIEWED

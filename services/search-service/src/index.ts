@@ -1,5 +1,7 @@
 import express from 'express'
-import { httpLogger, correlationId, errorHandler, logger } from '@clickup/sdk'
+import { httpLogger, correlationId, errorHandler, logger,
+  injectGatewayAuth
+} from '@clickup/sdk'
 import { createElasticClient, ensureIndex } from './search/elastic.client.js'
 import { startSearchIndexers } from './search/search.indexer.js'
 import { createRouter } from './routes.js'
@@ -16,6 +18,8 @@ async function bootstrap(): Promise<void> {
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '1mb' }))
+
+  app.use(injectGatewayAuth)
 
   app.get('/health', async (req, res) => {
     let esStatus: 'ok' | 'error' = 'ok'

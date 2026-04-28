@@ -5,7 +5,7 @@ const zod_1 = require("zod");
 const uuid = zod_1.z.string().uuid();
 const isoDate = zod_1.z.string().datetime({ offset: true });
 exports.CreateTaskTemplateSchema = zod_1.z.object({
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
     name: zod_1.z.string().min(1).max(200),
     description: zod_1.z.string().max(5000).optional(),
     templateData: zod_1.z.object({

@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/.pnpm-store
+services/**/dist
+apps/**/.next
+apps/**/dist
+**/*.log
+.git
+.github
+docs
+infra/migrations

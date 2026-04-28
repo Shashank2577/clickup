@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateGoalTargetSchema = exports.CreateGoalTargetSchema = exports.UpdateGoalSchema = exports.CreateGoalSchema = void 0;
 const zod_1 = require("zod");
 exports.CreateGoalSchema = zod_1.z.object({
-    workspaceId: zod_1.z.string().uuid(),
+    workspaceId: zod_1.z.string().min(1),
     name: zod_1.z.string().min(1).max(255),
     description: zod_1.z.string().nullable().optional(),
     dueDate: zod_1.z.string().datetime().nullable().optional(),

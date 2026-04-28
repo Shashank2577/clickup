@@ -46,6 +46,119 @@ export declare const CreateViewSchema: z.ZodObject<{
         }>>>;
         columnWidths: z.ZodDefault<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>>;
         collapsedGroups: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
+        table: z.ZodOptional<z.ZodObject<{
+            inlineEditing: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            rowHeight: z.ZodDefault<z.ZodOptional<z.ZodEnum<["compact", "normal", "tall"]>>>;
+            frozenColumns: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            inlineEditing: boolean;
+            rowHeight: "normal" | "compact" | "tall";
+            frozenColumns: number;
+        }, {
+            inlineEditing?: boolean | undefined;
+            rowHeight?: "normal" | "compact" | "tall" | undefined;
+            frozenColumns?: number | undefined;
+        }>>;
+        timeline: z.ZodOptional<z.ZodObject<{
+            startField: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            endField: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            zoom: z.ZodDefault<z.ZodOptional<z.ZodEnum<["day", "week", "month", "quarter"]>>>;
+        }, "strip", z.ZodTypeAny, {
+            startField: string;
+            endField: string;
+            zoom: "day" | "week" | "month" | "quarter";
+        }, {
+            startField?: string | undefined;
+            endField?: string | undefined;
+            zoom?: "day" | "week" | "month" | "quarter" | undefined;
+        }>>;
+        workload: z.ZodOptional<z.ZodObject<{
+            capacityField: z.ZodDefault<z.ZodOptional<z.ZodEnum<["hours", "points"]>>>;
+            maxCapacity: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            showOverallocated: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        }, "strip", z.ZodTypeAny, {
+            capacityField: "hours" | "points";
+            maxCapacity: number;
+            showOverallocated: boolean;
+        }, {
+            capacityField?: "hours" | "points" | undefined;
+            maxCapacity?: number | undefined;
+            showOverallocated?: boolean | undefined;
+        }>>;
+        team: z.ZodOptional<z.ZodObject<{
+            groupByUser: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            showAvatar: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            showTaskCount: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        }, "strip", z.ZodTypeAny, {
+            groupByUser: boolean;
+            showAvatar: boolean;
+            showTaskCount: boolean;
+        }, {
+            groupByUser?: boolean | undefined;
+            showAvatar?: boolean | undefined;
+            showTaskCount?: boolean | undefined;
+        }>>;
+        activity: z.ZodOptional<z.ZodObject<{
+            showSystem: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            limit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            showSystem: boolean;
+            limit: number;
+        }, {
+            showSystem?: boolean | undefined;
+            limit?: number | undefined;
+        }>>;
+        map: z.ZodOptional<z.ZodObject<{
+            locationFieldId: z.ZodOptional<z.ZodString>;
+            defaultZoom: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            defaultCenter: z.ZodOptional<z.ZodObject<{
+                lat: z.ZodNumber;
+                lng: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                lat: number;
+                lng: number;
+            }, {
+                lat: number;
+                lng: number;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            defaultZoom: number;
+            locationFieldId?: string | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        }, {
+            locationFieldId?: string | undefined;
+            defaultZoom?: number | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        }>>;
+        mindmap: z.ZodOptional<z.ZodObject<{
+            rootTaskId: z.ZodOptional<z.ZodString>;
+            layout: z.ZodDefault<z.ZodOptional<z.ZodEnum<["tree", "radial"]>>>;
+        }, "strip", z.ZodTypeAny, {
+            layout: "tree" | "radial";
+            rootTaskId?: string | undefined;
+        }, {
+            rootTaskId?: string | undefined;
+            layout?: "tree" | "radial" | undefined;
+        }>>;
+        embed: z.ZodOptional<z.ZodObject<{
+            url: z.ZodString;
+            embedType: z.ZodDefault<z.ZodOptional<z.ZodEnum<["website", "google_sheets", "figma", "miro", "youtube", "other"]>>>;
+            height: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            url: string;
+            embedType: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube";
+            height: number;
+        }, {
+            url: string;
+            embedType?: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube" | undefined;
+            height?: number | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         filter: {
             operation: "and" | "or";
@@ -61,9 +174,91 @@ export declare const CreateViewSchema: z.ZodObject<{
         visiblePropertyIds: string[];
         columnWidths: Record<string, number>;
         collapsedGroups: string[];
+        timeline?: {
+            startField: string;
+            endField: string;
+            zoom: "day" | "week" | "month" | "quarter";
+        } | undefined;
+        table?: {
+            inlineEditing: boolean;
+            rowHeight: "normal" | "compact" | "tall";
+            frozenColumns: number;
+        } | undefined;
+        workload?: {
+            capacityField: "hours" | "points";
+            maxCapacity: number;
+            showOverallocated: boolean;
+        } | undefined;
+        activity?: {
+            showSystem: boolean;
+            limit: number;
+        } | undefined;
+        team?: {
+            groupByUser: boolean;
+            showAvatar: boolean;
+            showTaskCount: boolean;
+        } | undefined;
+        map?: {
+            defaultZoom: number;
+            locationFieldId?: string | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            layout: "tree" | "radial";
+            rootTaskId?: string | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube";
+            height: number;
+        } | undefined;
         groupById?: string | undefined;
         datePropertyId?: string | undefined;
     }, {
+        timeline?: {
+            startField?: string | undefined;
+            endField?: string | undefined;
+            zoom?: "day" | "week" | "month" | "quarter" | undefined;
+        } | undefined;
+        table?: {
+            inlineEditing?: boolean | undefined;
+            rowHeight?: "normal" | "compact" | "tall" | undefined;
+            frozenColumns?: number | undefined;
+        } | undefined;
+        workload?: {
+            capacityField?: "hours" | "points" | undefined;
+            maxCapacity?: number | undefined;
+            showOverallocated?: boolean | undefined;
+        } | undefined;
+        activity?: {
+            showSystem?: boolean | undefined;
+            limit?: number | undefined;
+        } | undefined;
+        team?: {
+            groupByUser?: boolean | undefined;
+            showAvatar?: boolean | undefined;
+            showTaskCount?: boolean | undefined;
+        } | undefined;
+        map?: {
+            locationFieldId?: string | undefined;
+            defaultZoom?: number | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            rootTaskId?: string | undefined;
+            layout?: "tree" | "radial" | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType?: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube" | undefined;
+            height?: number | undefined;
+        } | undefined;
         filter?: {
             operation: "and" | "or";
             filters: Array<z.infer<typeof FilterClauseSchema> | {
@@ -100,6 +295,47 @@ export declare const CreateViewSchema: z.ZodObject<{
         visiblePropertyIds: string[];
         columnWidths: Record<string, number>;
         collapsedGroups: string[];
+        timeline?: {
+            startField: string;
+            endField: string;
+            zoom: "day" | "week" | "month" | "quarter";
+        } | undefined;
+        table?: {
+            inlineEditing: boolean;
+            rowHeight: "normal" | "compact" | "tall";
+            frozenColumns: number;
+        } | undefined;
+        workload?: {
+            capacityField: "hours" | "points";
+            maxCapacity: number;
+            showOverallocated: boolean;
+        } | undefined;
+        activity?: {
+            showSystem: boolean;
+            limit: number;
+        } | undefined;
+        team?: {
+            groupByUser: boolean;
+            showAvatar: boolean;
+            showTaskCount: boolean;
+        } | undefined;
+        map?: {
+            defaultZoom: number;
+            locationFieldId?: string | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            layout: "tree" | "radial";
+            rootTaskId?: string | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube";
+            height: number;
+        } | undefined;
         groupById?: string | undefined;
         datePropertyId?: string | undefined;
     };
@@ -109,6 +345,47 @@ export declare const CreateViewSchema: z.ZodObject<{
     name: string;
     type?: ViewType | undefined;
     config?: {
+        timeline?: {
+            startField?: string | undefined;
+            endField?: string | undefined;
+            zoom?: "day" | "week" | "month" | "quarter" | undefined;
+        } | undefined;
+        table?: {
+            inlineEditing?: boolean | undefined;
+            rowHeight?: "normal" | "compact" | "tall" | undefined;
+            frozenColumns?: number | undefined;
+        } | undefined;
+        workload?: {
+            capacityField?: "hours" | "points" | undefined;
+            maxCapacity?: number | undefined;
+            showOverallocated?: boolean | undefined;
+        } | undefined;
+        activity?: {
+            showSystem?: boolean | undefined;
+            limit?: number | undefined;
+        } | undefined;
+        team?: {
+            groupByUser?: boolean | undefined;
+            showAvatar?: boolean | undefined;
+            showTaskCount?: boolean | undefined;
+        } | undefined;
+        map?: {
+            locationFieldId?: string | undefined;
+            defaultZoom?: number | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            rootTaskId?: string | undefined;
+            layout?: "tree" | "radial" | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType?: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube" | undefined;
+            height?: number | undefined;
+        } | undefined;
         filter?: {
             operation: "and" | "or";
             filters: Array<z.infer<typeof FilterClauseSchema> | {
@@ -160,6 +437,119 @@ export declare const UpdateViewSchema: z.ZodObject<{
         }>>>;
         columnWidths: z.ZodDefault<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>>;
         collapsedGroups: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
+        table: z.ZodOptional<z.ZodObject<{
+            inlineEditing: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            rowHeight: z.ZodDefault<z.ZodOptional<z.ZodEnum<["compact", "normal", "tall"]>>>;
+            frozenColumns: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            inlineEditing: boolean;
+            rowHeight: "normal" | "compact" | "tall";
+            frozenColumns: number;
+        }, {
+            inlineEditing?: boolean | undefined;
+            rowHeight?: "normal" | "compact" | "tall" | undefined;
+            frozenColumns?: number | undefined;
+        }>>;
+        timeline: z.ZodOptional<z.ZodObject<{
+            startField: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            endField: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            zoom: z.ZodDefault<z.ZodOptional<z.ZodEnum<["day", "week", "month", "quarter"]>>>;
+        }, "strip", z.ZodTypeAny, {
+            startField: string;
+            endField: string;
+            zoom: "day" | "week" | "month" | "quarter";
+        }, {
+            startField?: string | undefined;
+            endField?: string | undefined;
+            zoom?: "day" | "week" | "month" | "quarter" | undefined;
+        }>>;
+        workload: z.ZodOptional<z.ZodObject<{
+            capacityField: z.ZodDefault<z.ZodOptional<z.ZodEnum<["hours", "points"]>>>;
+            maxCapacity: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            showOverallocated: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        }, "strip", z.ZodTypeAny, {
+            capacityField: "hours" | "points";
+            maxCapacity: number;
+            showOverallocated: boolean;
+        }, {
+            capacityField?: "hours" | "points" | undefined;
+            maxCapacity?: number | undefined;
+            showOverallocated?: boolean | undefined;
+        }>>;
+        team: z.ZodOptional<z.ZodObject<{
+            groupByUser: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            showAvatar: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            showTaskCount: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        }, "strip", z.ZodTypeAny, {
+            groupByUser: boolean;
+            showAvatar: boolean;
+            showTaskCount: boolean;
+        }, {
+            groupByUser?: boolean | undefined;
+            showAvatar?: boolean | undefined;
+            showTaskCount?: boolean | undefined;
+        }>>;
+        activity: z.ZodOptional<z.ZodObject<{
+            showSystem: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+            limit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            showSystem: boolean;
+            limit: number;
+        }, {
+            showSystem?: boolean | undefined;
+            limit?: number | undefined;
+        }>>;
+        map: z.ZodOptional<z.ZodObject<{
+            locationFieldId: z.ZodOptional<z.ZodString>;
+            defaultZoom: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            defaultCenter: z.ZodOptional<z.ZodObject<{
+                lat: z.ZodNumber;
+                lng: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                lat: number;
+                lng: number;
+            }, {
+                lat: number;
+                lng: number;
+            }>>;
+        }, "strip", z.ZodTypeAny, {
+            defaultZoom: number;
+            locationFieldId?: string | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        }, {
+            locationFieldId?: string | undefined;
+            defaultZoom?: number | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        }>>;
+        mindmap: z.ZodOptional<z.ZodObject<{
+            rootTaskId: z.ZodOptional<z.ZodString>;
+            layout: z.ZodDefault<z.ZodOptional<z.ZodEnum<["tree", "radial"]>>>;
+        }, "strip", z.ZodTypeAny, {
+            layout: "tree" | "radial";
+            rootTaskId?: string | undefined;
+        }, {
+            rootTaskId?: string | undefined;
+            layout?: "tree" | "radial" | undefined;
+        }>>;
+        embed: z.ZodOptional<z.ZodObject<{
+            url: z.ZodString;
+            embedType: z.ZodDefault<z.ZodOptional<z.ZodEnum<["website", "google_sheets", "figma", "miro", "youtube", "other"]>>>;
+            height: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        }, "strip", z.ZodTypeAny, {
+            url: string;
+            embedType: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube";
+            height: number;
+        }, {
+            url: string;
+            embedType?: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube" | undefined;
+            height?: number | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         filter: {
             operation: "and" | "or";
@@ -175,9 +565,91 @@ export declare const UpdateViewSchema: z.ZodObject<{
         visiblePropertyIds: string[];
         columnWidths: Record<string, number>;
         collapsedGroups: string[];
+        timeline?: {
+            startField: string;
+            endField: string;
+            zoom: "day" | "week" | "month" | "quarter";
+        } | undefined;
+        table?: {
+            inlineEditing: boolean;
+            rowHeight: "normal" | "compact" | "tall";
+            frozenColumns: number;
+        } | undefined;
+        workload?: {
+            capacityField: "hours" | "points";
+            maxCapacity: number;
+            showOverallocated: boolean;
+        } | undefined;
+        activity?: {
+            showSystem: boolean;
+            limit: number;
+        } | undefined;
+        team?: {
+            groupByUser: boolean;
+            showAvatar: boolean;
+            showTaskCount: boolean;
+        } | undefined;
+        map?: {
+            defaultZoom: number;
+            locationFieldId?: string | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            layout: "tree" | "radial";
+            rootTaskId?: string | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube";
+            height: number;
+        } | undefined;
         groupById?: string | undefined;
         datePropertyId?: string | undefined;
     }, {
+        timeline?: {
+            startField?: string | undefined;
+            endField?: string | undefined;
+            zoom?: "day" | "week" | "month" | "quarter" | undefined;
+        } | undefined;
+        table?: {
+            inlineEditing?: boolean | undefined;
+            rowHeight?: "normal" | "compact" | "tall" | undefined;
+            frozenColumns?: number | undefined;
+        } | undefined;
+        workload?: {
+            capacityField?: "hours" | "points" | undefined;
+            maxCapacity?: number | undefined;
+            showOverallocated?: boolean | undefined;
+        } | undefined;
+        activity?: {
+            showSystem?: boolean | undefined;
+            limit?: number | undefined;
+        } | undefined;
+        team?: {
+            groupByUser?: boolean | undefined;
+            showAvatar?: boolean | undefined;
+            showTaskCount?: boolean | undefined;
+        } | undefined;
+        map?: {
+            locationFieldId?: string | undefined;
+            defaultZoom?: number | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            rootTaskId?: string | undefined;
+            layout?: "tree" | "radial" | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType?: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube" | undefined;
+            height?: number | undefined;
+        } | undefined;
         filter?: {
             operation: "and" | "or";
             filters: Array<z.infer<typeof FilterClauseSchema> | {
@@ -213,6 +685,47 @@ export declare const UpdateViewSchema: z.ZodObject<{
         visiblePropertyIds: string[];
         columnWidths: Record<string, number>;
         collapsedGroups: string[];
+        timeline?: {
+            startField: string;
+            endField: string;
+            zoom: "day" | "week" | "month" | "quarter";
+        } | undefined;
+        table?: {
+            inlineEditing: boolean;
+            rowHeight: "normal" | "compact" | "tall";
+            frozenColumns: number;
+        } | undefined;
+        workload?: {
+            capacityField: "hours" | "points";
+            maxCapacity: number;
+            showOverallocated: boolean;
+        } | undefined;
+        activity?: {
+            showSystem: boolean;
+            limit: number;
+        } | undefined;
+        team?: {
+            groupByUser: boolean;
+            showAvatar: boolean;
+            showTaskCount: boolean;
+        } | undefined;
+        map?: {
+            defaultZoom: number;
+            locationFieldId?: string | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            layout: "tree" | "radial";
+            rootTaskId?: string | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube";
+            height: number;
+        } | undefined;
         groupById?: string | undefined;
         datePropertyId?: string | undefined;
     } | undefined;
@@ -220,6 +733,47 @@ export declare const UpdateViewSchema: z.ZodObject<{
 }, {
     name?: string | undefined;
     config?: {
+        timeline?: {
+            startField?: string | undefined;
+            endField?: string | undefined;
+            zoom?: "day" | "week" | "month" | "quarter" | undefined;
+        } | undefined;
+        table?: {
+            inlineEditing?: boolean | undefined;
+            rowHeight?: "normal" | "compact" | "tall" | undefined;
+            frozenColumns?: number | undefined;
+        } | undefined;
+        workload?: {
+            capacityField?: "hours" | "points" | undefined;
+            maxCapacity?: number | undefined;
+            showOverallocated?: boolean | undefined;
+        } | undefined;
+        activity?: {
+            showSystem?: boolean | undefined;
+            limit?: number | undefined;
+        } | undefined;
+        team?: {
+            groupByUser?: boolean | undefined;
+            showAvatar?: boolean | undefined;
+            showTaskCount?: boolean | undefined;
+        } | undefined;
+        map?: {
+            locationFieldId?: string | undefined;
+            defaultZoom?: number | undefined;
+            defaultCenter?: {
+                lat: number;
+                lng: number;
+            } | undefined;
+        } | undefined;
+        mindmap?: {
+            rootTaskId?: string | undefined;
+            layout?: "tree" | "radial" | undefined;
+        } | undefined;
+        embed?: {
+            url: string;
+            embedType?: "other" | "website" | "google_sheets" | "figma" | "miro" | "youtube" | undefined;
+            height?: number | undefined;
+        } | undefined;
         filter?: {
             operation: "and" | "or";
             filters: Array<z.infer<typeof FilterClauseSchema> | {
@@ -281,8 +835,19 @@ export declare const UpdateTaskStatusSchema: z.ZodObject<{
     group?: "backlog" | "unstarted" | "started" | "completed" | "cancelled" | undefined;
     isDefault?: boolean | undefined;
 }>;
+export declare const UpdateViewSharingSchema: z.ZodObject<{
+    visibility: z.ZodEnum<["private", "shared"]>;
+    pinned: z.ZodOptional<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    visibility: "private" | "shared";
+    pinned?: boolean | undefined;
+}, {
+    visibility: "private" | "shared";
+    pinned?: boolean | undefined;
+}>;
 export type CreateViewInput = z.infer<typeof CreateViewSchema>;
 export type UpdateViewInput = z.infer<typeof UpdateViewSchema>;
+export type UpdateViewSharingInput = z.infer<typeof UpdateViewSharingSchema>;
 export type CreateTaskStatusInput = z.infer<typeof CreateTaskStatusSchema>;
 export {};
 //# sourceMappingURL=view.schema.d.ts.map

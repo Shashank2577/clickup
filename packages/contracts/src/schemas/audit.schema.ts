@@ -16,7 +16,7 @@ export const CreateAuditLogSchema = z.object({
 })
 
 export const ListAuditLogsQuerySchema = z.object({
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   actorId: uuid.optional(),
   action: z.string().optional(),
   entityType: z.string().optional(),

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -38,6 +38,8 @@ import {
   KeyRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { api } from '@/lib/api-client'
+import { useUser } from '@clerk/nextjs'
 import { motion, InteractiveRow, InteractiveCard, TabContent, springs } from '@/components/motion'
 
 // --- Types ---
@@ -189,14 +191,112 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
 }
 
 function PreferencesContent() {
-  const [fullName, setFullName] = useState('Shashank Saxena')
-  const [email, setEmail] = useState('shashank@example.com')
+  // === WIRING: load user profile from Clerk ===
+  const { user } = useUser()
+
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [smsEnabled, setSmsEnabled] = useState(false)
   const [authAppEnabled, setAuthAppEnabled] = useState(false)
   const [selectedThemeColor, setSelectedThemeColor] = useState('purple')
   const [selectedAppearance, setSelectedAppearance] = useState('light')
   const [highContrast, setHighContrast] = useState(false)
+
+  // === WIRING: password change fields ===
+  const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+
+  // === WIRING: save feedback ===
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // === WIRING: fetch profile from API, fallback to auth store ===
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const me = await api.get<any>('/users/me')
+        setFullName(me.fullName ?? '')
+        setEmail(me.email ?? '')
+      } catch {
+        setFullName(user?.fullName ?? '')
+        setEmail(user?.primaryEmailAddress?.emailAddress ?? '')
+      }
+    }
+    loadProfile()
+  }, [user?.fullName, user?.primaryEmailAddress?.emailAddress])
+
+  // === WIRING: save profile + preferences to API ===
+  async function saveChanges() {
+    setSaving(true)
+    setSaveSuccess(false)
+    try {
+      await api.patch('/users/me', { body: { fullName, email } })
+      await api.patch('/users/me/preferences', {
+        body: {
+          accentColor: selectedThemeColor,
+          appearanceMode: selectedAppearance,
+          highContrast,
+        },
+      })
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 2000)
+    } catch {
+      // Silently fail
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // === WIRING: change password via API ===
+  async function handleChangePassword() {
+    if (!currentPassword || !newPassword) {
+      setPasswordError('Both fields are required')
+      return
+    }
+    setPasswordError('')
+    setPasswordSuccess(false)
+    try {
+      await api.post('/users/me/change-password', {
+        body: { currentPassword, newPassword },
+      })
+      setPasswordSuccess(true)
+      setCurrentPassword('')
+      setNewPassword('')
+      setShowPasswordChange(false)
+      setTimeout(() => setPasswordSuccess(false), 2000)
+    } catch {
+      setPasswordError('Failed to change password. Check your current password.')
+    }
+  }
+
+  // === WIRING: 2FA toggle via API ===
+  async function handleToggleSms() {
+    const next = !smsEnabled
+    setSmsEnabled(next)
+    try {
+      await api.post(`/auth/2fa/${next ? 'enable' : 'disable'}`, {
+        body: { method: 'sms' },
+      })
+    } catch {
+      setSmsEnabled(!next) // Revert on failure
+    }
+  }
+
+  async function handleToggleAuthApp() {
+    const next = !authAppEnabled
+    setAuthAppEnabled(next)
+    try {
+      await api.post(`/auth/2fa/${next ? 'enable' : 'disable'}`, {
+        body: { method: 'app' },
+      })
+    } catch {
+      setAuthAppEnabled(!next) // Revert on failure
+    }
+  }
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin">
@@ -208,7 +308,9 @@ function PreferencesContent() {
             {/* Avatar */}
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarFallback className="text-lg font-bold">SS</AvatarFallback>
+                <AvatarFallback className="text-lg font-bold">
+                  {user?.firstName?.[0] ?? user?.fullName?.[0] ?? 'U'}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <Button variant="outline" size="sm" className="text-xs">
@@ -251,38 +353,99 @@ function PreferencesContent() {
               <label className="text-sm font-medium text-foreground mb-1.5 block">
                 Password
               </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value="password123"
-                  readOnly
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 pr-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-                <button
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-3.5 w-3.5" />
-                  ) : (
-                    <Eye className="h-3.5 w-3.5" />
+              {!showPasswordChange ? (
+                <>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value="************"
+                      readOnly
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-3 pr-8 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                    <button
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-3.5 w-3.5" />
+                      ) : (
+                        <Eye className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                  <button
+                    className="mt-1 text-xs text-primary hover:underline"
+                    onClick={() => setShowPasswordChange(true)}
+                  >
+                    Change password
+                  </button>
+                </>
+              ) : (
+                // === WIRING: password change form ===
+                <div className="space-y-3 rounded-lg border border-border p-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Current password
+                    </label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      New password
+                    </label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  {passwordError && (
+                    <p className="text-xs text-red-500">{passwordError}</p>
                   )}
-                </button>
-              </div>
-              <button className="mt-1 text-xs text-primary hover:underline">
-                Change password
-              </button>
+                  {passwordSuccess && (
+                    <p className="text-xs text-green-500">Password changed successfully</p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={handleChangePassword}>
+                      Update password
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowPasswordChange(false)
+                        setCurrentPassword('')
+                        setNewPassword('')
+                        setPasswordError('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
         {/* 2FA Section */}
         <section>
-          <h3 className="text-base font-semibold mb-1">Two-factor authentication (2FA)</h3>
+          <h3 className="text-base font-semibold mb-1">
+            Two-factor authentication (2FA)
+          </h3>
           <p className="text-xs text-muted-foreground mb-4">
             Add an extra layer of security to your account
           </p>
           <div className="space-y-3">
+            {/* SMS 2FA */}
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
@@ -293,8 +456,10 @@ function PreferencesContent() {
                   </p>
                 </div>
               </div>
-              <ToggleSwitch enabled={smsEnabled} onToggle={() => setSmsEnabled(!smsEnabled)} />
+              <ToggleSwitch enabled={smsEnabled} onToggle={handleToggleSms} />
             </div>
+
+            {/* Auth app 2FA */}
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
                 <KeyRound className="h-4 w-4 text-muted-foreground" />
@@ -305,7 +470,7 @@ function PreferencesContent() {
                   </p>
                 </div>
               </div>
-              <ToggleSwitch enabled={authAppEnabled} onToggle={() => setAuthAppEnabled(!authAppEnabled)} />
+              <ToggleSwitch enabled={authAppEnabled} onToggle={handleToggleAuthApp} />
             </div>
           </div>
         </section>
@@ -323,7 +488,8 @@ function PreferencesContent() {
                 onClick={() => setSelectedThemeColor(tc.id)}
                 className={cn(
                   'relative h-8 w-8 rounded-full',
-                  selectedThemeColor === tc.id && 'ring-2 ring-offset-2 ring-offset-background'
+                  selectedThemeColor === tc.id &&
+                    'ring-2 ring-offset-2 ring-offset-background'
                 )}
                 style={{
                   backgroundColor: tc.color,
@@ -367,7 +533,8 @@ function PreferencesContent() {
                       'mb-3 flex h-12 w-16 items-center justify-center rounded-md',
                       opt.id === 'light' && 'bg-white border border-border',
                       opt.id === 'dark' && 'bg-gray-900 border border-gray-700',
-                      opt.id === 'auto' && 'bg-gradient-to-r from-white to-gray-900 border border-border'
+                      opt.id === 'auto' &&
+                        'bg-gradient-to-r from-white to-gray-900 border border-border'
                     )}
                   >
                     <Icon
@@ -398,15 +565,26 @@ function PreferencesContent() {
                 Increase contrast for better readability
               </p>
             </div>
-            <ToggleSwitch enabled={highContrast} onToggle={() => setHighContrast(!highContrast)} />
+            <ToggleSwitch
+              enabled={highContrast}
+              onToggle={() => setHighContrast(!highContrast)}
+            />
           </div>
         </section>
 
         {/* Save */}
         <div className="pt-2 pb-8">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
-            <Button className="px-6">
-              Save changes
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+          >
+            <Button
+              className="px-6"
+              onClick={saveChanges}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save changes'}
             </Button>
           </motion.div>
         </div>

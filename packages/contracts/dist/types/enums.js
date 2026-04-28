@@ -4,7 +4,7 @@
 // All agents import from here, never define their own enums
 // ============================================================
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FilterCondition = exports.StatusGroup = exports.ViewType = exports.RoomPrefix = exports.SummarizeTargetType = exports.AiCapability = exports.AutomationActionType = exports.AutomationTriggerType = exports.NotificationType = exports.GoalTargetType = exports.CustomFieldType = exports.TaskRelationType = exports.TaskPriority = exports.UserRole = void 0;
+exports.FilterCondition = exports.StatusGroup = exports.FormFieldType = exports.NotificationCategory = exports.ViewType = exports.RoomPrefix = exports.SummarizeTargetType = exports.AiCapability = exports.AutomationActionType = exports.AutomationTriggerType = exports.NotificationType = exports.GoalTargetType = exports.CustomFieldType = exports.TaskRelationType = exports.TaskPriority = exports.UserRole = void 0;
 var UserRole;
 (function (UserRole) {
     UserRole["Owner"] = "owner";
@@ -119,7 +119,31 @@ var ViewType;
     ViewType["Activity"] = "activity";
     ViewType["Box"] = "box";
     ViewType["Doc"] = "doc";
+    ViewType["Team"] = "team";
+    ViewType["Map"] = "map";
+    ViewType["Mindmap"] = "mindmap";
+    ViewType["Embed"] = "embed";
 })(ViewType || (exports.ViewType = ViewType = {}));
+// Notification category for inbox filtering
+var NotificationCategory;
+(function (NotificationCategory) {
+    NotificationCategory["Primary"] = "primary";
+    NotificationCategory["Other"] = "other";
+})(NotificationCategory || (exports.NotificationCategory = NotificationCategory = {}));
+// Form field types for form-service
+var FormFieldType;
+(function (FormFieldType) {
+    FormFieldType["Text"] = "text";
+    FormFieldType["Number"] = "number";
+    FormFieldType["Dropdown"] = "dropdown";
+    FormFieldType["Checkbox"] = "checkbox";
+    FormFieldType["Date"] = "date";
+    FormFieldType["Email"] = "email";
+    FormFieldType["Phone"] = "phone";
+    FormFieldType["Url"] = "url";
+    FormFieldType["Rating"] = "rating";
+    FormFieldType["FileUpload"] = "file_upload";
+})(FormFieldType || (exports.FormFieldType = FormFieldType = {}));
 // Task status semantic groups (mirrors status_group DB enum)
 var StatusGroup;
 (function (StatusGroup) {

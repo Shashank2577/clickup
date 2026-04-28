@@ -18,5 +18,11 @@ export declare const CacheKeys: {
     goalProgress: (goalId: string) => string;
     doc: (docId: string) => string;
     docList: (workspaceId: string) => string;
+    userFavorites: (userId: string) => string;
+    team: (teamId: string) => string;
+    teamList: (workspaceId: string) => string;
+    sidebarConfig: (userId: string, workspaceId: string) => string;
+    userPresence: (userId: string) => string;
+    userPreferences: (userId: string) => string;
 };
 //# sourceMappingURL=client.d.ts.map

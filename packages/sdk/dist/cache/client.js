@@ -129,5 +129,11 @@ exports.CacheKeys = {
     goalProgress: (goalId) => `goal:progress:${goalId}`,
     doc: (docId) => `doc:${docId}`,
     docList: (workspaceId) => `doc:list:${workspaceId}`,
+    userFavorites: (userId) => `user:favorites:${userId}`,
+    team: (teamId) => `team:${teamId}`,
+    teamList: (workspaceId) => `team:list:${workspaceId}`,
+    sidebarConfig: (userId, workspaceId) => `user:sidebar:${userId}:${workspaceId}`,
+    userPresence: (userId) => `user:presence:${userId}`,
+    userPreferences: (userId) => `user:prefs:${userId}`,
 };
 //# sourceMappingURL=client.js.map

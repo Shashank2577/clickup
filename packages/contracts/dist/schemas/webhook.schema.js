@@ -4,7 +4,7 @@ exports.UpdateWebhookSchema = exports.CreateWebhookSchema = void 0;
 const zod_1 = require("zod");
 const uuid = zod_1.z.string().uuid();
 exports.CreateWebhookSchema = zod_1.z.object({
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
     name: zod_1.z.string().min(1).max(200),
     url: zod_1.z.string().url(),
     secret: zod_1.z.string().min(8).optional(), // auto-generated if not provided
