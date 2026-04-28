@@ -38,6 +38,14 @@ export function buildProxy(route: ServiceRoute): RequestHandler {
         const rewritten = pathname.replace(stripRe, '') || '/'
         proxyReq.path = rewritten + query
 
+        // Forward auth and user headers explicitly
+        if (req.headers['authorization']) {
+          proxyReq.setHeader('Authorization', req.headers['authorization'])
+        }
+        for (const h of ['x-user-id', 'x-user-role', 'x-workspace-id', 'x-session-id', 'x-trace-id']) {
+          if (req.headers[h]) proxyReq.setHeader(h, req.headers[h] as string)
+        }
+
         // Re-serialize body if express.json() already parsed it
         if (req.body && Object.keys(req.body).length > 0) {
           const bodyData = JSON.stringify(req.body)

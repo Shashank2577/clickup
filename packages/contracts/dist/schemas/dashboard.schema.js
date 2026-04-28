@@ -34,6 +34,12 @@ exports.CreateDashboardSchema = zod_1.z.object({
 exports.UpdateDashboardSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).max(255).optional(),
     isPrivate: zod_1.z.boolean().optional(),
+    reportSchedule: zod_1.z.object({
+        enabled: zod_1.z.boolean(),
+        cronExpression: zod_1.z.string().optional(),
+        recipientEmails: zod_1.z.array(zod_1.z.string().email()).optional(),
+        format: zod_1.z.enum(['pdf', 'email']).optional().default('email'),
+    }).optional(),
 });
 // ============================================================
 // Widget config schema — flexible JSONB config per widget type

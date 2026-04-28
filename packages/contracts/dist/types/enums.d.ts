@@ -95,7 +95,27 @@ export declare enum ViewType {
     Gantt = "gantt",
     Activity = "activity",
     Box = "box",
-    Doc = "doc"
+    Doc = "doc",
+    Team = "team",
+    Map = "map",
+    Mindmap = "mindmap",
+    Embed = "embed"
+}
+export declare enum NotificationCategory {
+    Primary = "primary",
+    Other = "other"
+}
+export declare enum FormFieldType {
+    Text = "text",
+    Number = "number",
+    Dropdown = "dropdown",
+    Checkbox = "checkbox",
+    Date = "date",
+    Email = "email",
+    Phone = "phone",
+    Url = "url",
+    Rating = "rating",
+    FileUpload = "file_upload"
 }
 export declare enum StatusGroup {
     Backlog = "backlog",

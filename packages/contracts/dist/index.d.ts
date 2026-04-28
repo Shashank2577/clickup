@@ -25,4 +25,10 @@ export * from './schemas/apikey.schema.js';
 export * from './schemas/savedsearch.schema.js';
 export * from './schemas/invite.schema.js';
 export * from './schemas/chat.schema.js';
+export * from './schemas/notification.schema.js';
+export * from './schemas/audit.schema.js';
+export * from './schemas/presence.schema.js';
+export * from './schemas/sidebar.schema.js';
+export * from './schemas/teams.schema.js';
+export * from './schemas/trash.schema.js';
 //# sourceMappingURL=index.d.ts.map
