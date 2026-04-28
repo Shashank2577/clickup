@@ -3,7 +3,7 @@ import { z } from 'zod'
 const uuid = z.string().uuid()
 
 export const CreateWebhookSchema = z.object({
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   name: z.string().min(1).max(200),
   url: z.string().url(),
   secret: z.string().min(8).optional(), // auto-generated if not provided

@@ -9,7 +9,7 @@ const SidebarItemSchema = z.object({
 })
 
 export const SaveSidebarConfigSchema = z.object({
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
   items: z.array(SidebarItemSchema).max(500),
 })
 

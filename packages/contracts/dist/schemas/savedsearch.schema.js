@@ -6,7 +6,7 @@ exports.CreateSavedSearchSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).max(100),
     query: zod_1.z.string().min(1).max(500),
     filters: zod_1.z.record(zod_1.z.unknown()).optional().default({}),
-    workspaceId: zod_1.z.string().uuid(),
+    workspaceId: zod_1.z.string().min(1),
 });
 exports.UpdateSavedSearchSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).max(100).optional(),

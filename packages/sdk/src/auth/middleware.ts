@@ -27,6 +27,19 @@ declare global {
 // Mount on any route that requires authentication
 // ============================================================
 
+export function injectGatewayAuth(req: Request, _res: Response, next: NextFunction): void {
+  const userId = req.headers['x-user-id'] as string | undefined
+  if (userId) {
+    req.auth = {
+      userId,
+      workspaceId: (req.headers['x-workspace-id'] as string) ?? '',
+      role: (req.headers['x-user-role'] as string) ?? 'member',
+      sessionId: (req.headers['x-session-id'] as string) ?? '',
+    }
+  }
+  next()
+}
+
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   // If auth was already set by gateway X-User header middleware, skip JWT verification
   if (req.auth && req.auth.userId) {

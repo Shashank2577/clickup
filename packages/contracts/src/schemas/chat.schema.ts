@@ -7,7 +7,7 @@ const uuid = z.string().uuid()
 export const CreateChannelSchema = z.object({
   name: z.string().min(1, 'Channel name is required').max(200, 'Channel name too long'),
   description: z.string().max(2000).optional(),
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   spaceId: uuid.optional(),
   type: z.enum(['public', 'private', 'direct']).default('public'),
 })
@@ -18,7 +18,7 @@ export const UpdateChannelSchema = z.object({
 })
 
 export const ChannelListQuerySchema = z.object({
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   type: z.enum(['public', 'private', 'direct']).optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(50),
@@ -60,7 +60,7 @@ export const AddMessageReactionSchema = z.object({
 // ── Direct Messages ─────────────────────────────────────────────────────────
 
 export const CreateDMChannelSchema = z.object({
-  workspaceId: uuid,
+  workspaceId: z.string().min(1),
   participantIds: z.array(uuid).min(1, 'At least one participant is required').max(8),
 })
 

@@ -12,13 +12,42 @@ export const metadata: Metadata = {
   description: 'Project management, reimagined.',
 }
 
+const clerkLocalization = {
+  signIn: {
+    start: {
+      title: 'Sign in to ClickUp',
+      subtitle: 'Welcome back! Continue to your workspace.',
+      actionText: "Don't have an account?",
+      actionLink: 'Sign up',
+    },
+  },
+  signUp: {
+    start: {
+      title: 'Create your ClickUp account',
+      subtitle: 'Get started with project management.',
+      actionText: 'Already have an account?',
+      actionLink: 'Sign in',
+    },
+  },
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={clerkLocalization}
+      appearance={{
+        variables: {
+          colorPrimary: '#7B68EE',
+          colorText: '#1a1a2e',
+          fontFamily: 'var(--font-sans)',
+          borderRadius: '0.5rem',
+        },
+      }}
+    >
       <html lang="en" suppressHydrationWarning>
         <body className={`${plusJakarta.variable} font-sans`}>
           <ThemeProvider

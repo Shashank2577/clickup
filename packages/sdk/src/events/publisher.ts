@@ -35,7 +35,7 @@ export async function publish(subject: EventSubject, payload: unknown): Promise<
   try {
     const nats = await getNats()
     const js = nats.jetstream()
-    await js.publish(subject, sc.encode(JSON.stringify(payload)))
+    await js.publish('clickup.' + subject, sc.encode(JSON.stringify(payload)))
     logger.debug({ subject }, 'Event published')
   } catch (err) {
     // Publishing failures are logged but never crash the service.

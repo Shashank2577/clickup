@@ -6,7 +6,7 @@
 
 import express from 'express'
 import { Pool } from 'pg'
-import { httpLogger, correlationId, errorHandler, createHealthHandler } from '@clickup/sdk'
+import { httpLogger, correlationId, errorHandler, createHealthHandler, injectGatewayAuth } from '@clickup/sdk'
 import { routes } from './routes.js'
 
 const SERVICE_NAME = process.env['SERVICE_NAME'] ?? 'unknown-service'
@@ -35,6 +35,8 @@ async function bootstrap(): Promise<void> {
   app.use(express.json({ limit: '1mb' }))
 
   // Health check — no auth required
+  app.use(injectGatewayAuth)
+
   app.get('/health', createHealthHandler(db))
 
   // Service routes

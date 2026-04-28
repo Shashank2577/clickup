@@ -3,7 +3,7 @@
  * Auth is handled via Clerk session cookies (set automatically by Clerk, sent via credentials: 'include').
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
 export class ApiError extends Error {
   constructor(
@@ -28,7 +28,13 @@ interface MutationOptions extends RequestOptions {
 }
 
 function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
-  const url = new URL(`${API_BASE}${path}`)
+  const origin =
+    API_BASE.startsWith('http')
+      ? ''
+      : typeof window !== 'undefined'
+        ? window.location.origin
+        : 'http://localhost:3333'
+  const url = new URL(`${origin}${API_BASE}${path}`)
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) {

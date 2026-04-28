@@ -1,6 +1,8 @@
 import express from 'express'
 import { Pool } from 'pg'
-import { httpLogger, correlationId, errorHandler, logger } from '@clickup/sdk'
+import { httpLogger, correlationId, errorHandler, logger,
+  injectGatewayAuth
+} from '@clickup/sdk'
 import { createRouter } from './routes.js'
 
 const SERVICE_NAME = process.env['SERVICE_NAME'] ?? 'views-service'
@@ -24,6 +26,8 @@ async function bootstrap(): Promise<void> {
   app.use(httpLogger)
   app.use(correlationId)
   app.use(express.json({ limit: '1mb' }))
+
+  app.use(injectGatewayAuth)
 
   app.get('/health', (_req, res) => res.json({ status: 'ok' }))
   app.use('/', createRouter(db))

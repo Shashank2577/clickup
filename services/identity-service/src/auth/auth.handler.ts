@@ -105,5 +105,48 @@ export function authRoutes(db: Pool): Router {
     }),
   )
 
+  // ============================================================
+  // Clerk Sign-In Sync — upserts user + personal workspace on first login.
+  // The API gateway validates the Clerk JWT and sets x-user-id.
+  // A personal workspace keyed to userId is created if missing.
+  // ============================================================
+
+  router.post(
+    '/sync',
+    requireAuth,
+    asyncHandler(async (req, res) => {
+      const userId = req.auth.userId
+
+      const { email, name } = req.body as { email: string; name: string }
+
+      // Upsert user
+      await db.query(
+        `INSERT INTO users (id, email, name, password_hash, timezone)
+         VALUES ($1, $2, $3, '', 'UTC')
+         ON CONFLICT (id) DO UPDATE SET email = $2, name = $3`,
+        [userId, email, name],
+      )
+
+      // Ensure a personal workspace exists (id = userId prefix + -ws)
+      const wsId   = userId + '-ws'
+      const wsName = (name || email).split('@')[0] + "'s Workspace"
+      const wsSlug = wsId
+      await db.query(
+        `INSERT INTO workspaces (id, name, slug, owner_id)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id) DO NOTHING`,
+        [wsId, wsName, wsSlug, userId],
+      )
+      await db.query(
+        `INSERT INTO workspace_members (workspace_id, user_id, role)
+         VALUES ($1, $2, 'owner')
+         ON CONFLICT (workspace_id, user_id) DO NOTHING`,
+        [wsId, userId],
+      )
+
+      res.json({ data: { synced: true, workspaceId: wsId } })
+    }),
+  )
+
   return router
 }

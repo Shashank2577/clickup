@@ -2,18 +2,19 @@
 
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useUser, useOrganization } from '@clerk/nextjs'
+import { useUser, useSession } from '@clerk/nextjs'
 import { Skeleton } from '@/components/motion'
 import { wsClient } from '@/lib/websocket'
 import { useAuthStore, useWorkspaceStore, useNotificationStore } from '@/stores'
+import { api } from '@/lib/api-client'
 
 export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
   const { isLoaded, isSignedIn, user } = useUser()
-  const { organization } = useOrganization()
-  const { loadWorkspaces } = useAuthStore()
+  const { session } = useSession()
+  const { loadWorkspaces, workspace } = useAuthStore()
   const { loadSpaces, loadFavorites } = useWorkspaceStore()
   const { loadNotifications } = useNotificationStore()
 
@@ -25,30 +26,34 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
     }
   }, [isLoaded, isSignedIn, pathname, router])
 
-  // Effect 1: Load workspaces when signed in (no org required)
+  // Sync user to DB then load workspaces on sign-in
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user) return
-    loadWorkspaces()
+    const email = user.primaryEmailAddress?.emailAddress ?? ''
+    const name = user.fullName ?? email
+    api.post('/auth/sync', { body: { email, name } })
+      .catch(() => {})
+      .finally(() => loadWorkspaces())
   }, [isLoaded, isSignedIn, user, loadWorkspaces])
 
-  // Effect 2: Load space data and set up WebSocket when org is available
+  // Load workspace data + WebSocket once workspace is resolved
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !user || !organization) return
-
-    loadSpaces(organization.id)
-    loadFavorites(organization.id)
+    if (!workspace || !session) return
+    loadSpaces(workspace.id)
+    loadFavorites(workspace.id)
     loadNotifications('primary')
 
-    // TODO: pass a real Clerk session JWT once api-gateway WS validates Clerk tokens (Task 5)
-    wsClient.connect('')
-    wsClient.subscribe(`workspace:${organization.id}`)
-    wsClient.subscribe(`user:${user.id}`)
+    session.getToken().then((token) => {
+      wsClient.connect(token ?? '')
+      wsClient.subscribe(`workspace:${workspace.id}`)
+      wsClient.subscribe(`user:${user?.id ?? ''}`)
+    })
 
     return () => {
-      wsClient.unsubscribe(`workspace:${organization.id}`)
-      wsClient.unsubscribe(`user:${user.id}`)
+      wsClient.unsubscribe(`workspace:${workspace.id}`)
+      wsClient.unsubscribe(`user:${user?.id ?? ''}`)
     }
-  }, [isLoaded, isSignedIn, user, organization, loadSpaces, loadFavorites, loadNotifications])
+  }, [workspace, session, loadSpaces, loadFavorites, loadNotifications, user?.id])
 
   if (!isLoaded && pathname !== '/login' && pathname !== '/register') {
     return <Skeleton className="h-screen w-screen" />

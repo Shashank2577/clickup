@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const CreateTeamSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100).trim(),
   description: z.string().max(500).optional(),
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
 })
 
 export const UpdateTeamSchema = z.object({

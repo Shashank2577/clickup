@@ -1,4 +1,4 @@
-import express, { Router } from 'express'
+import express, { Router, Request, Response } from 'express'
 import type { Pool } from 'pg'
 import { authRoutes } from './auth/auth.handler.js'
 import { usersRoutes } from './users/users.handler.js'
@@ -38,5 +38,20 @@ export function routes(db: Pool): Router {
   router.use('/teams', teamsRoutes(db))
   router.use('/trash', trashRoutes(db))
   router.use('/sidebar', sidebarRoutes(db))
+
+  // Internal service-to-service routes (not exposed via API gateway)
+  router.get('/internal/workspaces/:workspaceId/members/:userId', async (req: Request, res: Response) => {
+    const { workspaceId, userId } = req.params
+    const { rows } = await db.query(
+      'SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2',
+      [workspaceId, userId]
+    )
+    if (!rows[0]) {
+      res.status(404).json({ error: 'NOT_MEMBER' })
+      return
+    }
+    res.json({ data: { workspaceId, userId, role: rows[0].role } })
+  })
+
   return router
 }

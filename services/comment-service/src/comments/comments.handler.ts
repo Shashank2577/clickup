@@ -30,6 +30,19 @@ export function listCommentsHandler(db: Pool) {
   })
 }
 
+export function listCommentsByQueryHandler(db: Pool) {
+  const service = createCommentService(db)
+  return asyncHandler(async (req: Request, res: Response) => {
+    const taskId = req.query['taskId'] as string | undefined
+    if (!taskId) {
+      res.status(400).json({ error: 'taskId query param required' })
+      return
+    }
+    const comments = await service.listComments(taskId, req.auth!.userId, req.headers['x-trace-id'] as string)
+    res.json({ data: comments })
+  })
+}
+
 export function createDocCommentHandler(db: Pool) {
   const service = createCommentService(db)
   return asyncHandler(async (req: Request, res: Response) => {

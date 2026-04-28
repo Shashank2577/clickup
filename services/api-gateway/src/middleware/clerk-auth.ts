@@ -18,7 +18,18 @@ function getClerk(): ReturnType<typeof createClerkClient> {
 
 export async function clerkAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const requestState = await getClerk().authenticateRequest(req as any)
+    // Express strips the route prefix from req.url (e.g. /workspaces/me → /me).
+    // Clerk's SDK needs an absolute URL to parse. Build one from req.originalUrl.
+    const protocol = (req.headers['x-forwarded-proto'] as string) || 'http'
+    const host = (req.headers['host'] as string) || 'localhost:3333'
+    const fullUrl = `${protocol}://${host}${req.originalUrl}`
+    const syntheticReq = new globalThis.Request(fullUrl, {
+      method: req.method,
+      headers: Object.fromEntries(
+        Object.entries(req.headers).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])
+      ),
+    })
+    const requestState = await getClerk().authenticateRequest(syntheticReq)
 
     if (!requestState.isSignedIn) {
       res.status(401).json({ error: 'Unauthorized' })

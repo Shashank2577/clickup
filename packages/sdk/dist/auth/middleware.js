@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.injectGatewayAuth = injectGatewayAuth;
 exports.requireAuth = requireAuth;
 exports.requireRole = requireRole;
 exports.signToken = signToken;
@@ -13,6 +14,18 @@ const AppError_js_1 = require("../errors/AppError.js");
 // JWT verification middleware
 // Mount on any route that requires authentication
 // ============================================================
+function injectGatewayAuth(req, _res, next) {
+    const userId = req.headers['x-user-id'];
+    if (userId) {
+        req.auth = {
+            userId,
+            workspaceId: req.headers['x-workspace-id'] ?? '',
+            role: req.headers['x-user-role'] ?? 'member',
+            sessionId: req.headers['x-session-id'] ?? '',
+        };
+    }
+    next();
+}
 function requireAuth(req, _res, next) {
     // If auth was already set by gateway X-User header middleware, skip JWT verification
     if (req.auth && req.auth.userId) {

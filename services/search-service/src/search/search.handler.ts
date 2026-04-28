@@ -7,7 +7,7 @@ import { INDEX } from './elastic.client.js'
 
 const SearchQuerySchema = z.object({
   q:           z.string().min(1).max(200),
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
   types:       z.array(z.enum(['task', 'comment'])).optional(),
   listId:      z.string().uuid().optional(),
   page:        z.number().int().min(1).default(1),

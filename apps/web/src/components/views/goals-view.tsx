@@ -49,7 +49,7 @@ export function GoalsView() {
     if (!workspace?.id) return
     try {
       await api.post('/goals', {
-        body: { workspaceId: workspace.id, title: 'New Goal' },
+        body: { workspaceId: workspace.id, name: 'New Goal' },
       })
       const refreshed = await api.get<any[]>(`/goals/workspace/${workspace.id}`)
       setGoals(refreshed)

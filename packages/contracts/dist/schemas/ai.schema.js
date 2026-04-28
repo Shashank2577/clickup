@@ -11,7 +11,7 @@ const uuid = zod_1.z.string().uuid();
 // ============================================================
 exports.TaskBreakdownInputSchema = zod_1.z.object({
     input: zod_1.z.string().min(1, 'Input is required').max(2000, 'Input too long'),
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
     listId: uuid,
     context: zod_1.z
         .object({
@@ -36,7 +36,7 @@ exports.TaskBreakdownOutputSchema = zod_1.z.object({
 exports.SummarizeInputSchema = zod_1.z.object({
     content: zod_1.z.string().min(1).max(20000),
     type: zod_1.z.nativeEnum(enums_js_1.SummarizeTargetType),
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
 });
 exports.SummarizeOutputSchema = zod_1.z.object({
     summary: zod_1.z.string(),
@@ -50,7 +50,7 @@ exports.PrioritizeInputSchema = zod_1.z.object({
         estimatedMinutes: zod_1.z.number().nullable(),
         status: zod_1.z.string(),
     })).min(1).max(50),
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
     userId: uuid,
 });
 exports.PrioritizeOutputSchema = zod_1.z.object({
@@ -61,7 +61,7 @@ exports.PrioritizeOutputSchema = zod_1.z.object({
 });
 exports.DailyPlanInputSchema = zod_1.z.object({
     userId: uuid,
-    workspaceId: uuid,
+    workspaceId: zod_1.z.string().min(1),
     date: zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
     availableMinutes: zod_1.z.number().int().positive().optional().default(480),
 });

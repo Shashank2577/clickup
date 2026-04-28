@@ -4,10 +4,10 @@ import { db } from '../db.js'
 import { clerkAuth } from './clerk-auth.js'
 
 const PUBLIC_PREFIXES = [
-  '/api/v1/auth/webhooks',   // Clerk webhook — verified by svix, not Clerk session
-  '/api/v1/forms/submit/',
-  '/api/v1/tasks/share/',
-  '/api/v1/docs/shared/',
+  '/v1/auth/webhooks',   // Clerk webhook — verified by svix, not Clerk session
+  '/v1/forms/submit/',
+  '/v1/tasks/share/',
+  '/v1/docs/shared/',
   '/health',
 ]
 

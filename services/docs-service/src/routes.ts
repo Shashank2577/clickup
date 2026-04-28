@@ -1,6 +1,6 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { Pool } from 'pg'
-import { requireAuth } from '@clickup/sdk'
+import { requireAuth, asyncHandler } from '@clickup/sdk'
 import {
   createDocHandler,
   getDocHandler,
@@ -36,6 +36,25 @@ export function createRouter(db: Pool): Router {
   // ============================================================
   // Authenticated routes
   // ============================================================
+
+  // List docs for a workspace
+  router.get('/', requireAuth, asyncHandler(async (req: Request, res: Response) => {
+    const workspaceId = req.query['workspaceId'] as string
+    if (!workspaceId) {
+      res.status(400).json({ error: 'workspaceId query param required' })
+      return
+    }
+    const { rows } = await db.query(
+      `SELECT id, workspace_id AS "workspaceId", title, parent_id AS "parentId",
+              is_public AS "isPublic", created_by AS "createdBy",
+              created_at AS "createdAt", updated_at AS "updatedAt"
+       FROM docs
+       WHERE workspace_id = $1 AND deleted_at IS NULL
+       ORDER BY updated_at DESC`,
+      [workspaceId]
+    )
+    res.json({ data: rows })
+  }))
 
   // Base prefix is already stripped by the API Gateway
   router.post('/', requireAuth, createDocHandler(db))
