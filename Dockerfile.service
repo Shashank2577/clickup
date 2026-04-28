@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1
+# Shared Dockerfile for all backend microservices.
+# Usage: docker build --build-arg SERVICE_NAME=identity-service -f Dockerfile.service -t clickup-identity:local .
+
+ARG SERVICE_NAME
+
+# ── Build stage ───────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+ARG SERVICE_NAME
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+# Workspace manifests (for dependency resolution)
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+
+# Shared packages (source — built below)
+COPY packages/ ./packages/
+
+# Service source
+COPY services/${SERVICE_NAME}/ ./services/${SERVICE_NAME}/
+
+# Install workspace deps for this service and its transitive workspace deps
+RUN pnpm install --frozen-lockfile --filter @clickup/${SERVICE_NAME}...
+
+# Build shared packages then the service (... means build deps first)
+RUN pnpm run --filter @clickup/${SERVICE_NAME}... build
+
+# ── Runtime stage ─────────────────────────────────────────────────────────────
+FROM node:20-alpine AS runtime
+ARG SERVICE_NAME
+ENV NODE_ENV=production
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+# Workspace resolution files
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+
+# Package manifests only (pnpm needs these to resolve workspace links)
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/sdk/package.json ./packages/sdk/
+COPY packages/test-helpers/package.json ./packages/test-helpers/
+
+# Built package output from builder
+COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
+COPY --from=builder /app/packages/sdk/dist ./packages/sdk/dist
+
+# Service manifest + built output
+COPY services/${SERVICE_NAME}/package.json ./services/${SERVICE_NAME}/
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./services/${SERVICE_NAME}/dist
+
+# Prod-only deps install
+RUN pnpm install --frozen-lockfile --prod --filter @clickup/${SERVICE_NAME}...
+
+WORKDIR /app/services/${SERVICE_NAME}
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
