@@ -43,7 +43,7 @@ async function listNotifications(
   const query = `SELECT * FROM notifications WHERE ${conditions.join(' AND ')} ORDER BY created_at DESC LIMIT $${params.length}`
 
   const { rows } = await db.query(query, params)
-  return rows.map(mapNotificationRow) as Notification[]
+  return rows.map(mapNotificationRow) as unknown as Notification[]
 }
 
 function mapNotificationRow(r: Record<string, unknown>): Record<string, unknown> {
@@ -92,7 +92,7 @@ async function listClearedNotifications(
     `SELECT * FROM notifications WHERE user_id = $1 AND is_cleared = TRUE ORDER BY cleared_at DESC LIMIT $2`,
     [userId, limit],
   )
-  return rows.map(mapNotificationRow) as Notification[]
+  return rows.map(mapNotificationRow) as unknown as Notification[]
 }
 
 async function markOneRead(

@@ -155,7 +155,7 @@ export class TasksService {
     const meta = await this.repository.getListMetadata(task.list_id)
     const member = await this.verifyMembership(meta.workspace_id, userId, traceId)
     
-    if (task.created_by !== userId && !['owner', 'admin'].includes(member.role || member.data?.role)) {
+    if (task.created_by !== userId && !['owner', 'admin'].includes(member.role)) {
       throw new AppError(ErrorCode.AUTH_INSUFFICIENT_PERMISSION)
     }
 
